@@ -44,3 +44,28 @@ nbdist/
 !*/build/*.java
 !*/build/*.html
 !*/build/*.xml
+
+# Vue project specific ignores
+student-handbook-vue/node_modules/
+student-handbook-vue/dist/
+student-handbook-vue/.env*
+student-handbook-vue/.DS_Store
+student-handbook-vue/.vscode/
+student-handbook-vue/.idea/
+student-handbook-vue/*.log
+student-handbook-vue/*.tgz
+student-handbook-vue/.npmrc
+student-handbook-vue/package-lock.json
+student-handbook-vue/yarn.lock
+student-handbook-vue/pnpm-lock.yaml
+student-handbook-vue/.nuxt/
+student-handbook-vue/.next/
+student-handbook-vue/out/
+student-handbook-vue/.vercel/
+student-handbook-vue/.cache/
+student-handbook-vue/.temp/
+student-handbook-vue/.tmp/
+student-handbook-vue coverage/
+student-handbook-vue/.nyc_output/
+student-handbook-vue *.log
+student-handbook-vue *.lock
