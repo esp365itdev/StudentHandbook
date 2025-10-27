@@ -19,10 +19,6 @@
         class="handbook-card"
         v-for="(item, index) in groupedHandbookList" 
         :key="index"
-        :draggable="true"
-        @dragstart="handleDragStart($event, item)"
-        @dragover.prevent
-        @drop="handleDrop($event, item)"
         :style="{ backgroundColor: getCardBackgroundColor(index) }"
       >
         <div class="card-header">
@@ -58,26 +54,16 @@
 
 <script>
 import axios from 'axios'
-import { 
-  Search,
-  Refresh
-} from '@element-plus/icons-vue'
 
 export default {
   name: 'StudentHandbook',
   components: {
-    Search,
-    Refresh
   },
   data() {
     return {
       loading: false,
       handbookList: [],
       groupedHandbookList: [],
-      searchForm: {
-        subject: '',
-        category: ''
-      },
       dragItem: null,
       isMobile: false,
       showBackToTop: false,
@@ -126,11 +112,7 @@ export default {
       this.loading = true
       try {
         // 使用 /api 前缀以便通过 Vite 代理转发到后端
-        const response = await axios.get('/api/system/handbook/list', {
-          params: {
-            ...this.searchForm
-          }
-        })
+        const response = await axios.get('/api/system/handbook/list')
         
         // 根据后端返回的数据结构处理数据
         let rawData = [];
@@ -151,35 +133,8 @@ export default {
       } catch (error) {
         console.error('获取学生手册列表失败:', error)
         this.$message.error('获取数据失败: ' + (error.message || '未知错误'))
-        // 提供一些示例数据用于测试
-        const sampleData = [
-          {
-            id: 1,
-            subject: '数学',
-            category: '作业',
-            startTime: '2/9/2025',
-            endTime: '2/9/2025',
-            content: '完成复习题1-10页'
-          },
-          {
-            id: 2,
-            subject: '语文',
-            category: '通知',
-            startTime: '2/9/2025',
-            endTime: '2/9/2025',
-            content: '下周五学校组织春游，请同学们做好准备'
-          },
-          {
-            id: 3,
-            subject: '英语',
-            category: '测验',
-            startTime: '2/10/2025',
-            endTime: '2/10/2025',
-            content: '期中考试将于三月第一周举行，请同学们提前复习'
-          }
-        ];
-        
-        this.groupDataByTime(sampleData);
+        // 使用空数组，不显示示例数据
+        this.groupDataByTime([]);
       } finally {
         this.loading = false
       }
@@ -222,37 +177,6 @@ export default {
       const month = parseInt(parts[1], 10) - 1; // 月份从0开始
       const year = parseInt(parts[2], 10);
       return new Date(year, month, day);
-    },
-
-    // 搜索
-    searchHandbooks() {
-      this.fetchHandbookList()
-    },
-
-    // 重置表单
-    resetForm() {
-      this.searchForm = {
-        subject: '',
-        category: ''
-      }
-      this.fetchHandbookList()
-    },
-
-    // 拖拽开始
-    handleDragStart(event, item) {
-      this.dragItem = item
-      event.dataTransfer.effectAllowed = 'move'
-    },
-
-    // 拖拽放置
-    async handleDrop(event, targetItem) {
-      event.preventDefault()
-      if (this.dragItem && this.dragItem.id !== targetItem.id) {
-        // 这里可以实现拖拽排序逻辑，例如调用后端API重新排序
-        // 为了简化示例，我们只给出提示信息
-        this.$message.info('可通过拖拽调整顺序')
-      }
-      this.dragItem = null
     },
 
     // 获取卡片背景颜色
@@ -347,15 +271,6 @@ export default {
 .back-to-top svg {
   /* 移除之前的旋转，因为现在使用了正确的向上箭头图标 */
 }
-
-/* 添加调试边框，帮助识别元素位置 */
-/* .page-title {
-  border: 1px solid red;
-}
-
-.handbook-container {
-  border: 1px solid blue;
-} */
 
 /* 平板设备优化 */
 @media (max-width: 1024px) {
@@ -452,16 +367,6 @@ export default {
   margin-bottom: 0;
 }
 
-.field-label {
-  width: 80px;
-  color: #909399;
-  flex-shrink: 0;
-}
-
-.field-label.nowrap-label {
-  white-space: nowrap;
-}
-
 .field-value {
   flex: 1;
   color: #606266;
@@ -483,17 +388,7 @@ export default {
 
 /* 手机端分页优化 */
 @media (max-width: 768px) {
-  .pagination {
-    text-align: center;
-    margin-top: 10px;
-  }
-  
-  :deep(.el-pagination__sizes) {
-    display: none;
-  }
-  
-  :deep(.el-pagination__jump) {
-    display: none;
-  }
+
 }
+
 </style>
