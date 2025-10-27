@@ -26,13 +26,31 @@
         </div>
         
         <div class="card-content">
-          <div 
-            class="card-field" 
-            v-for="(entry, entryIndex) in item.entries" 
-            :key="entryIndex"
-            :class="{ 'exam-field': entry.category === '測驗' || entry.category === '考试' }"
-          >
-            <span class="field-value">{{ entry.subject }} ： {{ entry.content }}</span>
+          <!-- 按类别分组显示条目 -->
+          <div v-for="(categoryGroup, categoryIndex) in item.categoryGroups" 
+               :key="categoryIndex"
+               class="category-group">
+            <!-- 类别标签 -->
+            <div class="category-container">
+              <div class="category-row">
+                <span 
+                  class="category-badge"
+                  :class="{ 'exam-badge': categoryGroup.category === '測驗' || categoryGroup.category === '考试' }"
+                >
+                  {{ categoryGroup.category }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- 该类别下的条目 -->
+            <div 
+              class="card-field" 
+              v-for="(entry, entryIndex) in categoryGroup.entries" 
+              :key="entryIndex"
+              :class="{ 'exam-field': entry.category === '測驗' || entry.category === '考试' }"
+            >
+              <span class="field-value">{{ entry.subject }} : {{ entry.content }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -62,9 +80,7 @@ export default {
   data() {
     return {
       loading: false,
-      handbookList: [],
       groupedHandbookList: [],
-      dragItem: null,
       isMobile: false,
       showBackToTop: false,
       showNavigation: false // 控制导航菜单的显示
@@ -150,13 +166,30 @@ export default {
         if (!grouped[timeKey]) {
           grouped[timeKey] = {
             timeRange: item.startTime, // 卡片标题只显示开始时间
-            entries: []
+            entries: [],
+            categories: {} // 用于存储类别分组
           };
         }
+        
+        // 添加条目到总列表
         grouped[timeKey].entries.push({
           subject: item.subject,
           content: item.content,
-          category: item.category // 添加类别信息
+          category: item.category
+        });
+        
+        // 按类别分组
+        const category = item.category || '未分类';
+        if (!grouped[timeKey].categories[category]) {
+          grouped[timeKey].categories[category] = {
+            category: category,
+            entries: []
+          };
+        }
+        grouped[timeKey].categories[category].entries.push({
+          subject: item.subject,
+          content: item.content,
+          category: item.category
         });
       });
       
@@ -166,6 +199,33 @@ export default {
         const dateA = this.parseDate(a.timeRange);
         const dateB = this.parseDate(b.timeRange);
         return dateA - dateB;
+      });
+      
+      // 对每个时间分组内的类别进行排序，并将类别对象转换为数组
+      this.groupedHandbookList.forEach(item => {
+        // 转换类别对象为数组
+        item.categoryGroups = Object.values(item.categories);
+        
+        // 对类别进行排序
+        item.categoryGroups.sort((a, b) => {
+          // 确保"未分类"排在最后
+          if (a.category === '未分类') return 1;
+          if (b.category === '未分类') return -1;
+          return a.category.localeCompare(b.category);
+        });
+        
+        // 对每个类别内的条目进行排序
+        item.categoryGroups.forEach(categoryGroup => {
+          categoryGroup.entries.sort((a, b) => {
+            // 先按科目排序
+            const subjectComparison = a.subject.localeCompare(b.subject);
+            if (subjectComparison !== 0) {
+              return subjectComparison;
+            }
+            // 如果科目相同，按内容排序
+            return a.content.localeCompare(b.content);
+          });
+        });
       });
     },
 
@@ -200,12 +260,13 @@ export default {
   margin: 0 !important;
   position: relative;
   top: 0;
+  background-color: #eef5ff !important; /* 调整为与卡片更搭配的浅蓝背景 */
 }
 
 .header-container {
   display: flex;
   align-items: center;
-  background-color: #f5f9ff;
+  background-color: #eef5ff; /* 调整为与卡片更搭配的浅蓝背景 */
   padding: 0 15px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: sticky;
@@ -215,7 +276,7 @@ export default {
 
 .nav-button-container {
   flex: 0 0 auto;
-  margin-right: 30px; /* 增加按钮与标题之间的间距 */
+  margin-right: 20px; /* 调整按钮与标题之间的间距为20px */
 }
 
 .page-title {
@@ -223,25 +284,91 @@ export default {
   font-size: 32px;
   font-weight: bold;
   color: #303133;
-  padding: 15px 0 !important;
+  padding: 10px 0 !important; /* 减小标题的上下内边距 */
   white-space: nowrap;
-}
-
-.spacer {
-  flex: 1;
 }
 
 .handbook-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
-  margin-bottom: 20px;
-  margin-top: 20px !important;
-  padding-top: 0 !important;
-  position: relative;
-  top: 0;
+  gap: 15px; /* 减小卡片之间的间距 */
+  margin: 5px 0 !important; /* 统一上下边距为5px */
   padding: 0 15px;
-  background-color: #f5f9ff;
+  background-color: #eef5ff !important; /* 调整为与卡片更搭配的浅蓝背景 */
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 添加这行使日期水平居中 */
+  padding: 15px; /* 减小卡片头部内边距 */
+  border-bottom: 2px solid #606266;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+  color: #303133;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.card-content {
+  padding: 15px; /* 减小卡片内容区内边距 */
+  text-align: left;
+}
+
+.card-field {
+  display: flex;
+  margin-bottom: 15px; /* 减小条目间距 */
+  font-size: 18px;
+  text-align: left;
+  line-height: 1.5;
+}
+
+.category-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0; /* 统一类别容器间距 */
+  gap: 8px; /* 统一类别标签间距 */
+}
+
+.category-row {
+  display: flex;
+  justify-content: center;
+}
+
+.category-badge {
+  background-color: #409eff;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* 测验/考试类别的特殊样式 */
+.exam-badge {
+  background-color: #f44336 !important; /* 红色背景用于突出显示测验/考试类别 */
+}
+
+.card-field:last-child {
+  margin-bottom: 0;
+}
+
+.field-value {
+  flex: 1;
+  color: #606266;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 20px 0;
 }
 
 /* 回到顶部按钮样式 */
@@ -268,127 +395,5 @@ export default {
   transform: translateY(-2px);
 }
 
-.back-to-top svg {
-  /* 移除之前的旋转，因为现在使用了正确的向上箭头图标 */
-}
-
-/* 平板设备优化 */
-@media (max-width: 1024px) {
-  .handbook-container {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 8px;
-  }
-  
-  .page-title {
-    margin: 0 0 8px 0;
-    padding: 4px 0;
-  }
-}
-
-/* 手机设备优化 */
-@media (max-width: 768px) {
-  .handbook-container {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  
-  .page-title {
-    font-size: 20px;
-    margin: 0 0 6px 0;
-    padding: 3px 0;
-  }
-  
-  .card-content {
-    padding: 12px;
-  }
-  
-  .card-header {
-    padding: 12px;
-  }
-  
-  .card-field {
-    margin-bottom: 8px;
-  }
-}
-
-.handbook-card {
-  border: 1px solid #ebeef5;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  background-color: #fff;
-}
-
-.handbook-card:hover {
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 2px solid #606266;
-}
-
-.card-title {
-  flex: 1;
-  margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-  color: #303133;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
-}
-
-.card-content {
-  padding: 20px;
-  text-align: left;
-}
-
-.card-field {
-  display: flex;
-  margin-bottom: 12px;
-  font-size: 18px;
-  text-align: left;
-  line-height: 1.5;
-}
-
-/* 测验/考试类别的特殊样式 */
-.exam-field {
-  background-color: #f8bbd0 !important; /* 粉红色背景用于突出显示测验/考试 */
-  padding: 4px !important;
-  border-radius: 4px !important;
-}
-
-.card-field:last-child {
-  margin-bottom: 0;
-}
-
-.field-value {
-  flex: 1;
-  color: #606266;
-}
-
-.content-text {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.empty-state {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 20px 0;
-}
-
 /* 手机端分页优化 */
-@media (max-width: 768px) {
-
-}
-
 </style>

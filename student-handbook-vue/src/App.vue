@@ -10,7 +10,7 @@ import StudentHandbook from './components/StudentHandbook.vue'
 
 <style>
 html, body {
-  background-color: #f5f9ff; /* 非常浅的蓝色背景 */
+  background-color: #eef5ff !important; /* 调整为与卡片更搭配的浅蓝背景 */
   margin: 0;
   padding: 0;
 }
@@ -22,7 +22,7 @@ html, body {
   text-align: center;
   color: #2c3e50;
   margin-top: 20px;
-  background-color: #f5f9ff; /* 非常浅的蓝色背景 */
+  background-color: #eef5ff !important; /* 调整为与卡片更搭配的浅蓝背景 */
   min-height: 100vh;
 }
 </style>
