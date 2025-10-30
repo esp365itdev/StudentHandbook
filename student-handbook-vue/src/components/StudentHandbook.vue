@@ -9,15 +9,18 @@
       <!-- 页面标题 -->
       <h2 class="page-title">學生手冊</h2>
       
-      <!-- 占位元素，用于保持标题在导航按钮右侧 -->
-      <div class="spacer"></div>
+      <!-- 左右方向按钮 -->
+      <div class="navigation-buttons">
+        <el-button class="nav-arrow prev-button" type="primary" icon="ArrowLeft" @click="prevPage" :disabled="currentPage === 1"></el-button>
+        <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight" @click="nextPage" :disabled="currentPage >= totalPages"></el-button>
+      </div>
     </div>
     
     <!-- 卡片式数据展示 -->
     <div class="handbook-container" v-loading="loading">
       <div 
         class="handbook-card"
-        v-for="(item, index) in groupedHandbookList" 
+        v-for="(item, index) in paginatedGroupedHandbookList" 
         :key="index"
         :style="{ backgroundColor: getCardBackgroundColor(index) }"
       >
@@ -56,14 +59,14 @@
       </div>
       
       <!-- 空状态 -->
-      <div v-if="groupedHandbookList.length === 0 && !loading" class="empty-state">
+      <div v-if="paginatedGroupedHandbookList.length === 0 && !loading" class="empty-state">
         <el-empty description="暂无数据" />
       </div>
     </div>
     
     <!-- 回到顶部按钮 -->
     <div class="back-to-top" v-show="showBackToTop" @click="scrollToTop">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 8L6 14L7.41 15.41L12 10.83L16.59 15.41L18 14L12 8Z" fill="currentColor"/>
       </svg>
     </div>
@@ -80,10 +83,25 @@ export default {
   data() {
     return {
       loading: false,
-      groupedHandbookList: [],
+      allGroupedHandbookList: [], // 存储所有分组后的数据
+      currentPage: 1, // 当前页码
+      pageSize: 7, // 每页显示条数
       isMobile: false,
       showBackToTop: false,
       showNavigation: false // 控制导航菜单的显示
+    }
+  },
+  computed: {
+    // 计算总页数
+    totalPages() {
+      return Math.ceil(this.allGroupedHandbookList.length / this.pageSize);
+    },
+    
+    // 计算当前页需要显示的数据
+    paginatedGroupedHandbookList() {
+      const startIndex = (this.currentPage - 1) * this.pageSize;
+      const endIndex = startIndex + this.pageSize;
+      return this.allGroupedHandbookList.slice(startIndex, endIndex);
     }
   },
   mounted() {
@@ -194,7 +212,7 @@ export default {
       });
       
       // 转换为数组并按时间顺序排序（从早到晚）
-      this.groupedHandbookList = Object.values(grouped).sort((a, b) => {
+      this.allGroupedHandbookList = Object.values(grouped).sort((a, b) => {
         // 将日期字符串转换为实际日期对象进行比较
         const dateA = this.parseDate(a.timeRange);
         const dateB = this.parseDate(b.timeRange);
@@ -202,7 +220,7 @@ export default {
       });
       
       // 对每个时间分组内的类别进行排序，并将类别对象转换为数组
-      this.groupedHandbookList.forEach(item => {
+      this.allGroupedHandbookList.forEach(item => {
         // 转换类别对象为数组
         item.categoryGroups = Object.values(item.categories);
         
@@ -227,6 +245,9 @@ export default {
           });
         });
       });
+      
+      // 重置到第一页
+      this.currentPage = 1;
     },
 
     // 解析日期字符串为Date对象的辅助函数
@@ -249,6 +270,30 @@ export default {
       
       // 使用索引循环选择颜色
       return colors[index % colors.length];
+    },
+    
+    // 上一页
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        // 滚动到顶部
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+    },
+    
+    // 下一页
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        // 滚动到顶部
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
     }
   }
 }
@@ -260,13 +305,13 @@ export default {
   margin: 0 !important;
   position: relative;
   top: 0;
-  background-color: #eef5ff !important; /* 调整为与卡片更搭配的浅蓝背景 */
+  background-color: #f5f9ff !important; /* 使用更柔和的浅蓝灰色背景 */
 }
 
 .header-container {
   display: flex;
   align-items: center;
-  background-color: #eef5ff; /* 调整为与卡片更搭配的浅蓝背景 */
+  background-color: #f5f9ff; /* 使用更柔和的浅蓝灰色背景 */
   padding: 0 15px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: sticky;
@@ -274,18 +319,35 @@ export default {
   z-index: 100;
 }
 
-.nav-button-container {
-  flex: 0 0 auto;
-  margin-right: 20px; /* 调整按钮与标题之间的间距为20px */
-}
-
 .page-title {
   margin: 0 !important;
   font-size: 32px;
   font-weight: bold;
   color: #303133;
-  padding: 10px 0 !important; /* 减小标题的上下内边距 */
+  padding: 10px 0 !important;
   white-space: nowrap;
+  flex-grow: 1; /* 使标题占据剩余空间 */
+  text-align: center; /* 标题居中 */
+}
+
+.navigation-buttons {
+  display: flex;
+  margin-left: auto;
+  gap: 10px;
+}
+
+.nav-arrow {
+  padding: 8px 12px;
+}
+
+.prev-button, .next-button {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+
+.prev-button:hover, .next-button:hover {
+  background-color: #66b1ff;
+  border-color: #66b1ff;
 }
 
 .handbook-container {
@@ -294,14 +356,26 @@ export default {
   gap: 15px; /* 减小卡片之间的间距 */
   margin: 5px 0 !important; /* 统一上下边距为5px */
   padding: 0 15px;
-  background-color: #eef5ff !important; /* 调整为与卡片更搭配的浅蓝背景 */
+  background-color: #f5f9ff !important; /* 使用更柔和的浅蓝灰色背景 */
+}
+
+.handbook-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  transform: translateY(0);
+}
+
+.handbook-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: center; /* 添加这行使日期水平居中 */
-  padding: 15px; /* 减小卡片头部内边距 */
+  padding: 10px; /* 减小卡片头部内边距 */
   border-bottom: 2px solid #606266;
 }
 
@@ -317,7 +391,7 @@ export default {
 }
 
 .card-content {
-  padding: 15px; /* 减小卡片内容区内边距 */
+  padding: 10px; /* 减小卡片内容区内边距 */
   text-align: left;
 }
 
@@ -333,8 +407,8 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 8px 0; /* 统一类别容器间距 */
-  gap: 8px; /* 统一类别标签间距 */
+  margin: 4px 0; /* 减小类别容器间距 */
+  gap: 4px; /* 减小类别标签间距 */
 }
 
 .category-row {
@@ -349,6 +423,11 @@ export default {
   border-radius: 12px;
   font-size: 14px;
   font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.handbook-card:hover .category-badge {
+  transform: scale(1.05);
 }
 
 /* 测验/考试类别的特殊样式 */
@@ -363,6 +442,11 @@ export default {
 .field-value {
   flex: 1;
   color: #606266;
+  transition: all 0.3s ease;
+}
+
+.handbook-card:hover .field-value {
+  color: #333;
 }
 
 .empty-state {
@@ -374,10 +458,10 @@ export default {
 /* 回到顶部按钮样式 */
 .back-to-top {
   position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 50px;
-  height: 50px;
+  bottom: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
   background-color: #409eff;
   color: white;
   border-radius: 50%;
@@ -393,6 +477,27 @@ export default {
 .back-to-top:hover {
   background-color: #66b1ff;
   transform: translateY(-2px);
+}
+
+/* 导航按钮样式 */
+.navigation-buttons {
+  display: flex;
+  margin-left: auto;
+  gap: 10px;
+}
+
+.nav-arrow {
+  padding: 8px 12px;
+}
+
+.prev-button, .next-button {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+
+.prev-button:hover, .next-button:hover {
+  background-color: #66b1ff;
+  border-color: #66b1ff;
 }
 
 /* 手机端分页优化 */

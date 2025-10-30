@@ -28,7 +28,6 @@ public class StudentHandbookController extends BaseController {
     @Log(title = "查询学生手册列表", businessType = BusinessType.SELECT)
     @GetMapping("/list")
     public TableDataInfo list(StudentHandbook studentHandbook) {
-        // 不使用分页，直接返回所有数据
         List<StudentHandbook> list = studentHandbookService.selectStudentHandbookList(studentHandbook);
         TableDataInfo tableDataInfo = new TableDataInfo();
         tableDataInfo.setCode(0);
@@ -36,7 +35,7 @@ public class StudentHandbookController extends BaseController {
         tableDataInfo.setTotal(list.size());
         return tableDataInfo;
     }
-
+    
     @Anonymous
     @Log(title = "获取学生手册详细信息", businessType = BusinessType.SELECT)
     @GetMapping(value = "/{id}")
