@@ -1,6 +1,7 @@
 package com.sp.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sp.common.core.page.TableDataInfo;
 import com.sp.system.entity.StudentHandbook;
 
 import java.util.List;
@@ -16,5 +17,5 @@ public interface IStudentHandbookService extends IService<StudentHandbook> {
      * @param studentHandbook 学生手册信息
      * @return 学生手册集合
      */
-    List<StudentHandbook> selectStudentHandbookList(StudentHandbook studentHandbook);
+    TableDataInfo selectStudentHandbookList(StudentHandbook studentHandbook);
 }

@@ -11,8 +11,6 @@ import com.sp.system.service.IStudentHandbookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
  * 学生手册Controller
  *
@@ -28,12 +26,7 @@ public class StudentHandbookController extends BaseController {
     @Log(title = "查询学生手册列表", businessType = BusinessType.SELECT)
     @GetMapping("/list")
     public TableDataInfo list(StudentHandbook studentHandbook) {
-        List<StudentHandbook> list = studentHandbookService.selectStudentHandbookList(studentHandbook);
-        TableDataInfo tableDataInfo = new TableDataInfo();
-        tableDataInfo.setCode(0);
-        tableDataInfo.setRows(list);
-        tableDataInfo.setTotal(list.size());
-        return tableDataInfo;
+        return studentHandbookService.selectStudentHandbookList(studentHandbook);
     }
     
     @Anonymous
