@@ -105,6 +105,9 @@ public class PermitAllUrlProperties implements InitializingBean, ApplicationCont
                 }
             }
         }
+        
+        // 添加企业微信OAuth相关URL到匿名访问列表
+        urls.add("/wechat/oauth/callback");
     }
 
     private List<String> rebuildUrl(String[] bases, String[] uris)

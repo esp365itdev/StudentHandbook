@@ -1,11 +1,11 @@
 <template>
   <div id="app">
-    <StudentHandbook />
+    <router-view />
   </div>
 </template>
 
 <script setup>
-import StudentHandbook from './components/StudentHandbook.vue'
+// 移除直接导入的StudentHandbook组件
 </script>
 
 <style>

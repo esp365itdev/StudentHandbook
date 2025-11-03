@@ -19,6 +19,6 @@ create table sys_student_handbook (
 -- ----------------------------
 -- 初始化-学生手册表数据
 -- ----------------------------
-insert into sys_student_handbook values(1, '数学', '作业', '2/9/2025', '2/9/2025', '完成复习题1-10页', 'admin', sysdate(), '', null);
+insert into sys_student_handbook values(1, '数学', '功课', '2/9/2025', '2/9/2025', '完成复习题1-10页', 'admin', sysdate(), '', null);
 insert into sys_student_handbook values(2, '语文', '通知', '2/15/2025', '2/15/2025', '下周五学校组织春游，请同学们做好准备', 'admin', sysdate(), '', null);
 insert into sys_student_handbook values(3, '英语', '考试', '3/1/2025', '3/1/2025', '期中考试将于三月第一周举行，请同学们提前复习', 'admin', sysdate(), '', null);

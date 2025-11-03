@@ -1,8 +1,11 @@
 <template>
-  <div class="student-handbook">
+  <div class="student-handbook" 
+       @touchstart="handleTouchStart"
+       @touchmove="handleTouchMove"
+       @touchend="handleTouchEnd">
     <div class="header-container">
       <!-- 导航栏按钮 -->
-      <div class="nav-button-container">
+      <div class="nav-button-container" style="display: none;">
         <el-button class="nav-button" type="primary" icon="Menu" @click="toggleNavigation"></el-button>
       </div>
       
@@ -88,7 +91,13 @@ export default {
       pageSize: 7, // 每页显示条数
       isMobile: false,
       showBackToTop: false,
-      showNavigation: false // 控制导航菜单的显示
+      showNavigation: false, // 控制导航菜单的显示
+      
+      // 滑动相关数据
+      touchStartX: 0,
+      touchStartY: 0,
+      touchEndX: 0,
+      touchEndY: 0
     }
   },
   computed: {
@@ -139,6 +148,42 @@ export default {
         top: 0,
         behavior: 'smooth' // 平滑滚动
       })
+    },
+    
+    // 触摸开始事件
+    handleTouchStart(event) {
+      const touch = event.touches[0];
+      this.touchStartX = touch.clientX;
+      this.touchStartY = touch.clientY;
+    },
+    
+    // 触摸移动事件
+    handleTouchMove(event) {
+      // 可以在这里添加一些视觉反馈
+    },
+    
+    // 触摸结束事件
+    handleTouchEnd(event) {
+      const touch = event.changedTouches[0];
+      this.touchEndX = touch.clientX;
+      this.touchEndY = touch.clientY;
+      
+      this.handleSwipeGesture();
+    },
+    
+    // 处理滑动手势
+    handleSwipeGesture() {
+      const deltaX = this.touchEndX - this.touchStartX;
+      const deltaY = this.touchEndY - this.touchStartY;
+      const absDeltaX = Math.abs(deltaX);
+      const absDeltaY = Math.abs(deltaY);
+      
+      // 判断是否为有效的向右滑动
+      // 条件：水平滑动距离大于垂直滑动距离，且水平滑动距离足够大（50px），且方向为向右
+      if (absDeltaX > absDeltaY && absDeltaX > 50 && deltaX > 0) {
+        // 回到首页
+        this.$router.push('/');
+      }
     },
     
     // 获取学生手册列表
@@ -264,8 +309,8 @@ export default {
     getCardBackgroundColor(index) {
       // 定义两组交替的浅色背景颜色，与整体背景协调
       const colors = [
-        '#e3f2fd', // 柔和的浅蓝色 1
-        '#f3e5f5'  // 柔和的浅紫色
+        '#e3f2fd', // 柢和的浅蓝色 1
+        '#f3e5f5'  // 柢和的浅紫色
       ];
       
       // 使用索引循环选择颜色
