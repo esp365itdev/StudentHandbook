@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.Filter;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.codec.Base64;
@@ -17,6 +18,7 @@ import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSource
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.servlet.SimpleCookie;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -46,8 +48,10 @@ import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
  *
  */
 @Configuration
-public class ShiroConfig
+public class ShiroConfig implements DisposableBean
 {
+    private volatile net.sf.ehcache.CacheManager cacheManager = null;
+    
     /**
      * Session超时时间，单位为毫秒（默认30分钟）
      */
@@ -154,7 +158,8 @@ public class ShiroConfig
         EhCacheManager em = new EhCacheManager();
         if (StringUtils.isNull(cacheManager))
         {
-            em.setCacheManager(new net.sf.ehcache.CacheManager(getCacheManagerConfigFileInputStream()));
+            this.cacheManager = new net.sf.ehcache.CacheManager(getCacheManagerConfigFileInputStream());
+            em.setCacheManager(this.cacheManager);
             return em;
         }
         else
@@ -313,6 +318,14 @@ public class ShiroConfig
         filterChainDefinitionMap.put("/js/**", "anon");
         filterChainDefinitionMap.put("/sp/**", "anon");
         filterChainDefinitionMap.put("/captcha/captchaImage**", "anon");
+        // 手册API接口匿名访问
+        filterChainDefinitionMap.put("/system/handbook/list", "anon");
+        filterChainDefinitionMap.put("/system/handbook/*", "anon");
+        // 根路径和首页匿名访问
+        filterChainDefinitionMap.put("/", "anon");
+        filterChainDefinitionMap.put("/index", "anon");
+        filterChainDefinitionMap.put("/index.html", "anon");
+        filterChainDefinitionMap.put("/dist/**", "anon");
         // 匿名访问不鉴权注解列表
         List<String> permitAllUrl = SpringUtils.getBean(PermitAllUrlProperties.class).getUrls();
         if (StringUtils.isNotEmpty(permitAllUrl))
@@ -444,5 +457,20 @@ public class ShiroConfig
         AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
         authorizationAttributeSourceAdvisor.setSecurityManager(securityManager);
         return authorizationAttributeSourceAdvisor;
+    }
+    
+    /**
+     * 优雅关闭缓存管理器
+     */
+    @Override
+    public void destroy() throws Exception {
+        if (cacheManager != null) {
+            try {
+                cacheManager.shutdown();
+            } catch (Exception e) {
+                // 忽略关闭异常
+            }
+            cacheManager = null;
+        }
     }
 }

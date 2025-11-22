@@ -190,8 +190,8 @@ export default {
     async fetchHandbookList() {
       this.loading = true
       try {
-        // 使用 /api 前缀以便通过 Vite 代理转发到后端
-        const response = await axios.get('/api/system/handbook/list')
+        // 使用相对路径直接访问API，避免302重定向
+        const response = await axios.get('/system/handbook/list')
         
         // 根据后端返回的数据结构处理数据
         let rawData = [];
