@@ -30,6 +30,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addViewController("/index.html").setViewName("forward:/dist/index.html");
     }
     
+    /*
     @Bean
     public ServletRegistrationBean<DispatcherServlet> dispatcherServletRegistration() {
         ServletRegistrationBean<DispatcherServlet> registration = new ServletRegistrationBean<>(
@@ -38,4 +39,5 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registration.setLoadOnStartup(1);
         return registration;
     }
+    */
 }

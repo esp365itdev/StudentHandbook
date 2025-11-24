@@ -19,7 +19,7 @@ public class StudentHandbook extends BaseEntity {
     private Long id;
 
     /** 科目 */
-    @TableField("subject_teacher")
+    @TableField("subject")
     private String subject;
 
     /** 类型 */

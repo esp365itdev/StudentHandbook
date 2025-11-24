@@ -15,7 +15,7 @@ sp:
 
 # 开发环境配置
 server:
-  # 服务器的HTTP端 port，默认为80
+  # 服务器的HTTP端口，默认为80
   port: 80
   servlet:
     # 应用的访问路径
@@ -80,10 +80,12 @@ spring:
     restart:
       # 热部署开关
       enabled: true
-  # 错误处理配置
+  # 静态资源配置
   web:
     resources:
-      static-locations: classpath:/dist/
+      static-locations: classpath:/dist/,classpath:/static/
+  mvc:
+    throw-exception-if-no-handler-found: true
   autoconfigure:
     exclude: |
       org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration,
