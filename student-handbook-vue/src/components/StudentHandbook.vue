@@ -191,7 +191,7 @@ export default {
       this.loading = true
       try {
         // 使用相对路径直接访问API，避免302重定向
-        const response = await axios.get('/system/handbook/list')
+        const response = await axios.get('/api/sp-api/system/handbook/list')
         
         // 根据后端返回的数据结构处理数据
         let rawData = [];
