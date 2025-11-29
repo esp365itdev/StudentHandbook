@@ -4,8 +4,8 @@ import vue from '@vitejs/plugin-vue'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  // 添加基础路径配置
-  base: './',
+  // 修改基础路径配置以匹配后端部署路径
+  base: '/sp-api/',
   build: {
     // 确保资源路径正确
     assetsDir: 'assets',

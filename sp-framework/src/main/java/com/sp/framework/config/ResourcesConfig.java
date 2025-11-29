@@ -34,6 +34,9 @@ public class ResourcesConfig implements WebMvcConfigurer
     public void addViewControllers(ViewControllerRegistry registry)
     {
         registry.addViewController("/").setViewName("forward:" + indexUrl);
+        // 添加对sp-api路径的支持
+        registry.addViewController("/sp-api/").setViewName("forward:/dist/index.html");
+        registry.addViewController("/sp-api").setViewName("forward:/dist/index.html");
     }
 
     @Override
@@ -44,6 +47,12 @@ public class ResourcesConfig implements WebMvcConfigurer
 
         /** swagger配置 */
         registry.addResourceHandler("/swagger-ui/**").addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/");
+        
+        /** 前端静态资源配置 */
+        registry.addResourceHandler("/dist/**").addResourceLocations("classpath:/dist/");
+        registry.addResourceHandler("/sp-api/dist/**").addResourceLocations("classpath:/dist/");
+        registry.addResourceHandler("/sp-api/assets/**").addResourceLocations("classpath:/dist/assets/");
+        registry.addResourceHandler("/sp-api/**").addResourceLocations("classpath:/dist/");
     }
 
     /**

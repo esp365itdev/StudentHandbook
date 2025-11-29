@@ -20,6 +20,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // 其他静态资源配置
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("classpath:/static/");
+                
+        // 添加对sp-api路径下dist目录的支持
+        registry.addResourceHandler("/sp-api/dist/**")
+                .addResourceLocations("classpath:/dist/");
+                
+        // 添加对sp-api路径下assets目录的支持
+        registry.addResourceHandler("/sp-api/assets/**")
+                .addResourceLocations("classpath:/dist/assets/");
+                
+        // 添加对sp-api根路径的支持
+        registry.addResourceHandler("/sp-api/**")
+                .addResourceLocations("classpath:/dist/");
     }
 
     @Override
@@ -28,6 +40,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addViewController("/").setViewName("forward:/dist/index.html");
         registry.addViewController("/index").setViewName("forward:/dist/index.html");
         registry.addViewController("/index.html").setViewName("forward:/dist/index.html");
+        // 添加对sp-api路径下index.html的支持
+        registry.addViewController("/sp-api/").setViewName("forward:/dist/index.html");
+        registry.addViewController("/sp-api").setViewName("forward:/dist/index.html");
     }
     
     /*

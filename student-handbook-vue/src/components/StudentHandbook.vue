@@ -13,7 +13,7 @@
       <h2 class="page-title">學生手冊</h2>
       
       <!-- 左右方向按钮 -->
-      <div class="navigation-buttons">
+<div class="navigation-buttons">
         <el-button class="nav-arrow prev-button" type="primary" icon="ArrowLeft" @click="prevPage" :disabled="currentPage === 1"></el-button>
         <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight" @click="nextPage" :disabled="currentPage >= totalPages"></el-button>
       </div>
@@ -55,7 +55,7 @@
               :key="entryIndex"
               :class="{ 'exam-field': entry.category === '測驗' || entry.category === '考试' }"
             >
-              <span class="field-value">{{ entry.subject }} : {{ entry.content }}</span>
+             <span class="field-value">{{ entry.subject }} : {{ entry.content }}</span>
             </div>
           </div>
         </div>
@@ -81,7 +81,7 @@ import axios from 'axios'
 
 export default {
   name: 'StudentHandbook',
-  components: {
+components: {
   },
   data() {
     return {
@@ -98,7 +98,7 @@ export default {
       touchStartY: 0,
       touchEndX: 0,
       touchEndY: 0
-    }
+}
   },
   computed: {
     // 计算总页数
@@ -108,7 +108,7 @@ export default {
     
     // 计算当前页需要显示的数据
     paginatedGroupedHandbookList() {
-      const startIndex = (this.currentPage - 1) * this.pageSize;
+      const startIndex=(this.currentPage - 1) * this.pageSize;
       const endIndex = startIndex + this.pageSize;
       return this.allGroupedHandbookList.slice(startIndex, endIndex);
     }
@@ -117,7 +117,7 @@ export default {
     this.checkIsMobile()
     this.fetchHandbookList()
     window.addEventListener('resize', this.checkIsMobile)
-    // 添加滚动事件监听器
+   // 添加滚动事件监听器
     window.addEventListener('scroll', this.handleScroll)
   },
   beforeUnmount() {
@@ -126,7 +126,7 @@ export default {
     window.removeEventListener('scroll', this.handleScroll)
   },
   methods: {
-    // 检查是否为移动设备
+   //检查是否为移动设备
     checkIsMobile() {
       this.isMobile = window.innerWidth < 768
     },
@@ -145,8 +145,8 @@ export default {
     // 滚动到顶部
     scrollToTop() {
       window.scrollTo({
-        top: 0,
-        behavior: 'smooth' // 平滑滚动
+      top: 0,
+       behavior: 'smooth' // 平滑滚动
       })
     },
     
@@ -155,7 +155,7 @@ export default {
       const touch = event.touches[0];
       this.touchStartX = touch.clientX;
       this.touchStartY = touch.clientY;
-    },
+   },
     
     // 触摸移动事件
     handleTouchMove(event) {
@@ -166,7 +166,7 @@ export default {
     handleTouchEnd(event) {
       const touch = event.changedTouches[0];
       this.touchEndX = touch.clientX;
-      this.touchEndY = touch.clientY;
+this.touchEndY = touch.clientY;
       
       this.handleSwipeGesture();
     },
@@ -189,15 +189,15 @@ export default {
     // 获取学生手册列表
     async fetchHandbookList() {
       this.loading = true
-      try {
+try {
         // 使用相对路径直接访问API，避免302重定向
-        const response = await axios.get('/api/sp-api/system/handbook/list')
+        const response = await axios.get('/system/handbook/list')
         
         // 根据后端返回的数据结构处理数据
         let rawData = [];
         if (response.data.rows) {
           rawData = response.data.rows;
-        } else if (Array.isArray(response.data)) {
+        } else if(Array.isArray(response.data)) {
           // 如果后端直接返回数组
           rawData = response.data;
         } else {
@@ -207,8 +207,7 @@ export default {
         
         // 按时间分组数据
         this.groupDataByTime(rawData);
-        
-        console.log('获取到的数据:', response.data)
+      console.log('获取到的数据:', response.data)
       } catch (error) {
         console.error('获取学生手册列表失败:', error)
         this.$message.error('获取数据失败: ' + (error.message || '未知错误'))
@@ -231,7 +230,7 @@ export default {
             timeRange: item.startTime, // 卡片标题只显示开始时间
             entries: [],
             categories: {} // 用于存储类别分组
-          };
+};
         }
         
         // 添加条目到总列表
@@ -243,7 +242,7 @@ export default {
         
         // 按类别分组
         const category = item.category || '未分类';
-        if (!grouped[timeKey].categories[category]) {
+if(!grouped[timeKey].categories[category]) {
           grouped[timeKey].categories[category] = {
             category: category,
             entries: []
@@ -252,7 +251,7 @@ export default {
         grouped[timeKey].categories[category].entries.push({
           subject: item.subject,
           content: item.content,
-          category: item.category
+         category: item.category
         });
       });
       
@@ -260,14 +259,14 @@ export default {
       this.allGroupedHandbookList = Object.values(grouped).sort((a, b) => {
         // 将日期字符串转换为实际日期对象进行比较
         const dateA = this.parseDate(a.timeRange);
-        const dateB = this.parseDate(b.timeRange);
+       const dateB = this.parseDate(b.timeRange);
         return dateA - dateB;
       });
       
       // 对每个时间分组内的类别进行排序，并将类别对象转换为数组
       this.allGroupedHandbookList.forEach(item => {
-        // 转换类别对象为数组
-        item.categoryGroups = Object.values(item.categories);
+        //转换类别对象为数组
+       item.categoryGroups = Object.values(item.categories);
         
         // 对类别进行排序
         item.categoryGroups.sort((a, b) => {
@@ -306,13 +305,12 @@ export default {
     },
 
     // 获取卡片背景颜色
-    getCardBackgroundColor(index) {
+    getCardBackgroundColor(index){
       // 定义两组交替的浅色背景颜色，与整体背景协调
       const colors = [
         '#e3f2fd', // 柢和的浅蓝色 1
         '#f3e5f5'  // 柢和的浅紫色
       ];
-      
       // 使用索引循环选择颜色
       return colors[index % colors.length];
     },
@@ -328,7 +326,6 @@ export default {
         });
       }
     },
-    
     // 下一页
     nextPage() {
       if (this.currentPage < this.totalPages) {
@@ -398,7 +395,7 @@ export default {
 .handbook-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 15px; /* 减小卡片之间的间距 */
+  gap: 15px;/* 减小卡片之间的间距 */
   margin: 5px 0 !important; /* 统一上下边距为5px */
   padding: 0 15px;
   background-color: #f5f9ff !important; /* 使用更柔和的浅蓝灰色背景 */
@@ -545,5 +542,5 @@ export default {
   border-color: #66b1ff;
 }
 
-/* 手机端分页优化 */
+/*手机端分页优化 */
 </style>

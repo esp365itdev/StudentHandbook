@@ -318,6 +318,10 @@ public class ShiroConfig implements DisposableBean
         filterChainDefinitionMap.put("/js/**", "anon");
         filterChainDefinitionMap.put("/sp/**", "anon");
         filterChainDefinitionMap.put("/captcha/captchaImage**", "anon");
+        // 前端静态资源匿名访问
+        filterChainDefinitionMap.put("/dist/**", "anon");
+        filterChainDefinitionMap.put("/sp-api/dist/**", "anon");
+        filterChainDefinitionMap.put("/sp-api/assets/**", "anon");
         // 手册API接口匿名访问
         filterChainDefinitionMap.put("/system/handbook/list", "anon");
         filterChainDefinitionMap.put("/system/handbook/*", "anon");
@@ -325,7 +329,13 @@ public class ShiroConfig implements DisposableBean
         filterChainDefinitionMap.put("/", "anon");
         filterChainDefinitionMap.put("/index", "anon");
         filterChainDefinitionMap.put("/index.html", "anon");
-        filterChainDefinitionMap.put("/dist/**", "anon");
+        filterChainDefinitionMap.put("/sp-api/", "anon");
+        filterChainDefinitionMap.put("/sp-api", "anon");
+        // 登录、注册等页面匿名访问（即使不使用也需要配置）
+        filterChainDefinitionMap.put("/login", "anon");
+        filterChainDefinitionMap.put("/sp-api/login", "anon");
+        filterChainDefinitionMap.put("/register", "anon");
+        filterChainDefinitionMap.put("/sp-api/register", "anon");
         // 匿名访问不鉴权注解列表
         List<String> permitAllUrl = SpringUtils.getBean(PermitAllUrlProperties.class).getUrls();
         if (StringUtils.isNotEmpty(permitAllUrl))
@@ -334,10 +344,6 @@ public class ShiroConfig implements DisposableBean
         }
         // 退出 logout地址，shiro去清除session
         filterChainDefinitionMap.put("/logout", "logout");
-        // 不需要拦截的访问
-        filterChainDefinitionMap.put("/login", "anon,captchaValidate");
-        // 注册相关
-        filterChainDefinitionMap.put("/register", "anon,captchaValidate");
         // 系统权限列表
         // filterChainDefinitionMap.putAll(SpringUtils.getBean(IMenuService.class).selectPermsAll());
 
@@ -351,8 +357,8 @@ public class ShiroConfig implements DisposableBean
         filters.put("logout", logoutFilter());
         shiroFilterFactoryBean.setFilters(filters);
 
-        // 所有请求需要认证
-        filterChainDefinitionMap.put("/**", "user,kickout,onlineSession,syncOnlineSession,csrfValidateFilter");
+        // 所有请求都需要允许匿名访问（因为这是一个公开的学生手册系统）
+        filterChainDefinitionMap.put("/**", "anon");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
 
         return shiroFilterFactoryBean;
@@ -391,7 +397,7 @@ public class ShiroConfig implements DisposableBean
     }
 
     /**
-     * cookie 属性设置
+     * cookie属性设置
      */
     public SimpleCookie rememberMeCookie()
     {
