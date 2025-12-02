@@ -8,7 +8,7 @@ import App from './App.vue'
 import router from './router'
 
 // 设置 axios 的基础 URL
-axios.defaults.baseURL = '/sp-api'
+axios.defaults.baseURL = ''
 
 // 请求拦截器
 axios.interceptors.request.use(

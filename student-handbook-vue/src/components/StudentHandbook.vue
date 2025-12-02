@@ -15,7 +15,7 @@
       <!-- 左右方向按钮 -->
 <div class="navigation-buttons">
         <el-button class="nav-arrow prev-button" type="primary" icon="ArrowLeft" @click="prevPage" :disabled="currentPage === 1"></el-button>
-        <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight" @click="nextPage" :disabled="currentPage >= totalPages"></el-button>
+        <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight"@click="nextPage" :disabled="currentPage >= totalPages"></el-button>
       </div>
     </div>
     
@@ -23,7 +23,7 @@
     <div class="handbook-container" v-loading="loading">
       <div 
         class="handbook-card"
-        v-for="(item, index) in paginatedGroupedHandbookList" 
+        v-for="(item,index) in paginatedGroupedHandbookList" 
         :key="index"
         :style="{ backgroundColor: getCardBackgroundColor(index) }"
       >
@@ -78,17 +78,18 @@
 
 <script>
 import axios from 'axios'
+import { API_ENDPOINTS } from '@/config/api.js'
 
 export default {
   name: 'StudentHandbook',
-components: {
+  components: {
   },
   data() {
     return {
       loading: false,
       allGroupedHandbookList: [], // 存储所有分组后的数据
       currentPage: 1, // 当前页码
-      pageSize: 7, // 每页显示条数
+      pageSize:7, //每页显示条数
       isMobile: false,
       showBackToTop: false,
       showNavigation: false, // 控制导航菜单的显示
@@ -98,7 +99,7 @@ components: {
       touchStartY: 0,
       touchEndX: 0,
       touchEndY: 0
-}
+    }
   },
   computed: {
     // 计算总页数
@@ -107,8 +108,8 @@ components: {
     },
     
     // 计算当前页需要显示的数据
-    paginatedGroupedHandbookList() {
-      const startIndex=(this.currentPage - 1) * this.pageSize;
+paginatedGroupedHandbookList() {
+      const startIndex = (this.currentPage - 1) * this.pageSize;
       const endIndex = startIndex + this.pageSize;
       return this.allGroupedHandbookList.slice(startIndex, endIndex);
     }
@@ -117,7 +118,7 @@ components: {
     this.checkIsMobile()
     this.fetchHandbookList()
     window.addEventListener('resize', this.checkIsMobile)
-   // 添加滚动事件监听器
+    // 添加滚动事件监听器
     window.addEventListener('scroll', this.handleScroll)
   },
   beforeUnmount() {
@@ -126,7 +127,7 @@ components: {
     window.removeEventListener('scroll', this.handleScroll)
   },
   methods: {
-   //检查是否为移动设备
+    //检查是否为移动设备
     checkIsMobile() {
       this.isMobile = window.innerWidth < 768
     },
@@ -145,17 +146,17 @@ components: {
     // 滚动到顶部
     scrollToTop() {
       window.scrollTo({
-      top: 0,
-       behavior: 'smooth' // 平滑滚动
+        top: 0,
+        behavior: 'smooth' // 平滑滚动
       })
     },
     
     // 触摸开始事件
     handleTouchStart(event) {
       const touch = event.touches[0];
-      this.touchStartX = touch.clientX;
+      this.touchStartX= touch.clientX;
       this.touchStartY = touch.clientY;
-   },
+    },
     
     // 触摸移动事件
     handleTouchMove(event) {
@@ -166,7 +167,7 @@ components: {
     handleTouchEnd(event) {
       const touch = event.changedTouches[0];
       this.touchEndX = touch.clientX;
-this.touchEndY = touch.clientY;
+      this.touchEndY = touch.clientY;
       
       this.handleSwipeGesture();
     },
@@ -174,7 +175,7 @@ this.touchEndY = touch.clientY;
     // 处理滑动手势
     handleSwipeGesture() {
       const deltaX = this.touchEndX - this.touchStartX;
-      const deltaY = this.touchEndY - this.touchStartY;
+      const deltaY= this.touchEndY - this.touchStartY;
       const absDeltaX = Math.abs(deltaX);
       const absDeltaY = Math.abs(deltaY);
       
@@ -187,15 +188,15 @@ this.touchEndY = touch.clientY;
     },
     
     // 获取学生手册列表
-    async fetchHandbookList() {
+async fetchHandbookList() {
       this.loading = true
-try {
-        // 使用相对路径直接访问API，避免302重定向
-        const response = await axios.get('/system/handbook/list')
+      try {
+        // 使用配置文件中的API端点
+        const response = await axios.get(API_ENDPOINTS.STUDENT_HANDBOOK_LIST)
         
         // 根据后端返回的数据结构处理数据
         let rawData = [];
-        if (response.data.rows) {
+       if (response.data.rows) {
           rawData = response.data.rows;
         } else if(Array.isArray(response.data)) {
           // 如果后端直接返回数组
@@ -205,9 +206,9 @@ try {
           rawData = response.data;
         }
         
-        // 按时间分组数据
+        //按时间分组数据
         this.groupDataByTime(rawData);
-      console.log('获取到的数据:', response.data)
+        console.log('获取到的数据:', response.data)
       } catch (error) {
         console.error('获取学生手册列表失败:', error)
         this.$message.error('获取数据失败: ' + (error.message || '未知错误'))
@@ -222,15 +223,15 @@ try {
     groupDataByTime(data) {
       const grouped = {};
       
-      // 按时间分组
+      //按时间分组
       data.forEach(item => {
         const timeKey = item.startTime; // 只使用开始时间作为分组键
         if (!grouped[timeKey]) {
           grouped[timeKey] = {
             timeRange: item.startTime, // 卡片标题只显示开始时间
-            entries: [],
+            entries:[],
             categories: {} // 用于存储类别分组
-};
+          };
         }
         
         // 添加条目到总列表
@@ -240,18 +241,18 @@ try {
           category: item.category
         });
         
-        // 按类别分组
-        const category = item.category || '未分类';
-if(!grouped[timeKey].categories[category]) {
+        //按类别分组
+       const category = item.category || '未分类';
+        if (!grouped[timeKey].categories[category]) {
           grouped[timeKey].categories[category] = {
             category: category,
             entries: []
           };
         }
         grouped[timeKey].categories[category].entries.push({
-          subject: item.subject,
+          subject:item.subject,
           content: item.content,
-         category: item.category
+          category: item.category
         });
       });
       
@@ -259,19 +260,19 @@ if(!grouped[timeKey].categories[category]) {
       this.allGroupedHandbookList = Object.values(grouped).sort((a, b) => {
         // 将日期字符串转换为实际日期对象进行比较
         const dateA = this.parseDate(a.timeRange);
-       const dateB = this.parseDate(b.timeRange);
+        const dateB = this.parseDate(b.timeRange);
         return dateA - dateB;
       });
       
       // 对每个时间分组内的类别进行排序，并将类别对象转换为数组
-      this.allGroupedHandbookList.forEach(item => {
-        //转换类别对象为数组
-       item.categoryGroups = Object.values(item.categories);
+     this.allGroupedHandbookList.forEach(item => {
+        // 转换类别对象为数组
+        item.categoryGroups = Object.values(item.categories);
         
         // 对类别进行排序
         item.categoryGroups.sort((a, b) => {
-          // 确保"未分类"排在最后
-          if (a.category === '未分类') return 1;
+          //确保"未分类"排在最后
+          if(a.category === '未分类') return 1;
           if (b.category === '未分类') return -1;
           return a.category.localeCompare(b.category);
         });
@@ -288,7 +289,7 @@ if(!grouped[timeKey].categories[category]) {
             return a.content.localeCompare(b.content);
           });
         });
-      });
+});
       
       // 重置到第一页
       this.currentPage = 1;
@@ -296,20 +297,20 @@ if(!grouped[timeKey].categories[category]) {
 
     // 解析日期字符串为Date对象的辅助函数
     parseDate(dateString) {
-      // 假设日期格式为 dd/mm/yyyy 或 d/m/yyyy
+      // 假设日期格式为 dd/mm/yyyy或 d/m/yyyy
       const parts = dateString.split('/');
-      const day = parseInt(parts[0], 10);
+const day = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1; // 月份从0开始
       const year = parseInt(parts[2], 10);
       return new Date(year, month, day);
     },
 
     // 获取卡片背景颜色
-    getCardBackgroundColor(index){
+    getCardBackgroundColor(index) {
       // 定义两组交替的浅色背景颜色，与整体背景协调
       const colors = [
         '#e3f2fd', // 柢和的浅蓝色 1
-        '#f3e5f5'  // 柢和的浅紫色
+        '#f3e5f5'  //柢和的浅紫色
       ];
       // 使用索引循环选择颜色
       return colors[index % colors.length];
@@ -337,7 +338,7 @@ if(!grouped[timeKey].categories[category]) {
         });
       }
     }
-  }
+}
 }
 </script>
 
@@ -372,38 +373,18 @@ if(!grouped[timeKey].categories[category]) {
   text-align: center; /* 标题居中 */
 }
 
-.navigation-buttons {
-  display: flex;
-  margin-left: auto;
-  gap: 10px;
-}
-
-.nav-arrow {
-  padding: 8px 12px;
-}
-
-.prev-button, .next-button {
-  background-color: #409eff;
-  border-color: #409eff;
-}
-
-.prev-button:hover, .next-button:hover {
-  background-color: #66b1ff;
-  border-color: #66b1ff;
-}
-
 .handbook-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 15px;/* 减小卡片之间的间距 */
   margin: 5px 0 !important; /* 统一上下边距为5px */
   padding: 0 15px;
-  background-color: #f5f9ff !important; /* 使用更柔和的浅蓝灰色背景 */
+  background-color: #f5f9ff!important; /* 使用更柔和的浅蓝灰色背景 */
 }
 
 .handbook-card {
   border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0,0.1);
   transition: all 0.3s ease;
   transform: translateY(0);
 }
@@ -432,28 +413,20 @@ if(!grouped[timeKey].categories[category]) {
   text-align: center;
 }
 
-.card-content {
+.card-content{
   padding: 10px; /* 减小卡片内容区内边距 */
   text-align: left;
-}
-
-.card-field {
-  display: flex;
-  margin-bottom: 15px; /* 减小条目间距 */
-  font-size: 18px;
-  text-align: left;
-  line-height: 1.5;
 }
 
 .category-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 4px 0; /* 减小类别容器间距 */
-  gap: 4px; /* 减小类别标签间距 */
+  margin: 4px 0; /*减小类别容器间距 */
+  gap:4px; /* 减小类别标签间距 */
 }
 
-.category-row {
+.category-row{
   display: flex;
   justify-content: center;
 }
@@ -465,7 +438,7 @@ if(!grouped[timeKey].categories[category]) {
   border-radius: 12px;
   font-size: 14px;
   font-weight: bold;
-  transition: all 0.3s ease;
+transition: all 0.3s ease;
 }
 
 .handbook-card:hover .category-badge {
@@ -477,8 +450,16 @@ if(!grouped[timeKey].categories[category]) {
   background-color: #f44336 !important; /* 红色背景用于突出显示测验/考试类别 */
 }
 
+.card-field {
+  display: flex;
+  margin-bottom: 15px; /* 减小条目间距 */
+  font-size: 18px;
+  text-align: left;
+  line-height: 1.5;
+}
+
 .card-field:last-child {
-  margin-bottom: 0;
+margin-bottom: 0;
 }
 
 .field-value {
@@ -521,7 +502,7 @@ if(!grouped[timeKey].categories[category]) {
   transform: translateY(-2px);
 }
 
-/* 导航按钮样式 */
+/*导航按钮样式 */
 .navigation-buttons {
   display: flex;
   margin-left: auto;

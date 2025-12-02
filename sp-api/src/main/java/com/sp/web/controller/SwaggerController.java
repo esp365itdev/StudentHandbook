@@ -1,6 +1,6 @@
-package com.sp.web.controller.tool;
+package com.sp.web.controller;
 
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.sp.common.annotation.Anonymous;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +14,7 @@ import com.sp.common.core.controller.BaseController;
 @RequestMapping("/tool/swagger")
 public class SwaggerController extends BaseController
 {
-    @RequiresPermissions("tool:swagger:view")
+    @Anonymous
     @GetMapping()
     public String index()
     {
