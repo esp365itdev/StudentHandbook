@@ -60,13 +60,11 @@
           </div>
         </div>
       </div>
-      
       <!-- 空状态 -->
       <div v-if="paginatedGroupedHandbookList.length === 0 && !loading" class="empty-state">
         <el-empty description="暂无数据" />
       </div>
     </div>
-    
     <!-- 回到顶部按钮 -->
     <div class="back-to-top" v-show="showBackToTop" @click="scrollToTop">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
