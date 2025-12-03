@@ -5,26 +5,26 @@ const apiEndpoints = {
   STUDENT_HANDBOOK_LIST: '/system/handbook/list'
 };
 
-// 根据环境设置配置
-const config = {
-  development: {
-    baseURL: '/api'
-  },
-  test: {
-    baseURL: ''
-  },
-  production: {
-    baseURL: '/sp-api'
+// 获取基础URL - 从环境变量读取或者使用默认值
+const getBaseURL = () => {
+  const envBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envBaseUrl !== undefined && envBaseUrl !== null && envBaseUrl !== '') {
+    return envBaseUrl;
   }
+  // 默认值 - 在test环境下为空，在其他环境下为/api
+  const nodeEnv = import.meta.env.NODE_ENV;
+  if (nodeEnv === 'test') {
+    return '';
+  }
+  return '/api';
 };
-
-// 获取当前环境的配置
-const currentConfig = config.development;
 
 // 构建完整的API端点URL
 const API_ENDPOINTS = {};
+const baseURL = getBaseURL();
 for (const [key, value] of Object.entries(apiEndpoints)) {
-  API_ENDPOINTS[key] = currentConfig.baseURL + value;
+  // 如果baseURL为空，则直接使用value（相对路径）
+  API_ENDPOINTS[key] = baseURL ? baseURL + value : value;
 }
 
 export { API_ENDPOINTS };

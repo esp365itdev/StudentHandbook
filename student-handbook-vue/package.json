@@ -4,8 +4,9 @@
   "description": "学生手册管理系统Vue前端",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --mode development",
     "build": "vite build",
+    "build:test": "vite build --mode test",
     "serve": "vite preview"
   },
   "dependencies": {

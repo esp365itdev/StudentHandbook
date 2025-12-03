@@ -17,7 +17,7 @@
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
-<maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <frontend-maven-plugin.version>1.12.1</frontend-maven-plugin.version>
     </properties>
@@ -48,9 +48,9 @@
             <groupId>io.swagger</groupId>
             <artifactId>swagger-models</artifactId>
             <version>1.6.2</version>
-</dependency>
+        </dependency>
 
-<!-- Mysql驱动包 -->
+        <!-- Mysql驱动包 -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -69,7 +69,7 @@
             <scope>provided</scope>
         </dependency>
 
-</dependencies>
+    </dependencies>
 
    <build>
         <plugins>
@@ -97,7 +97,7 @@
                     <warName>${project.artifactId}</warName>
                 </configuration>   
             </plugin>
-<!-- 前端构建插件 -->
+            <!-- 前端构建插件 -->
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
@@ -110,7 +110,7 @@
                     <execution>
                         <id>install node and npm</id>
                         <goals>
-<goal>install-node-and-npm</goal>
+                            <goal>install-node-and-npm</goal>
                         </goals>
                         <configuration>
                             <nodeVersion>v16.20.2</nodeVersion>
@@ -121,7 +121,7 @@
                         <goals>
                             <goal>npm</goal>
                         </goals>
-<configuration>
+                        <configuration>
                             <arguments>install</arguments>
                         </configuration>
                     </execution>
@@ -132,7 +132,7 @@
                         </goals>
                         <configuration>
                             <arguments>npm run build</arguments>
-</configuration>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -167,7 +167,7 @@
                         <configuration>
                             <outputDirectory>${project.build.outputDirectory}/dist</outputDirectory>
                             <resources>
-<resource>
+                                <resource>
                                     <directory>${project.parent.basedir}/student-handbook-vue/dist</directory>
                                 </resource>
                             </resources>
@@ -178,5 +178,23 @@
      </plugins>
         <finalName>${project.artifactId}</finalName>
     </build>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <spring.profiles.active>dev</spring.profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>test</id>
+            <properties>
+                <spring.profiles.active>test</spring.profiles.active>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>

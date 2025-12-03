@@ -13,7 +13,7 @@
       <h2 class="page-title">學生手冊</h2>
       
       <!-- 左右方向按钮 -->
-<div class="navigation-buttons">
+      <div class="navigation-buttons">
         <el-button class="nav-arrow prev-button" type="primary" icon="ArrowLeft" @click="prevPage" :disabled="currentPage === 1"></el-button>
         <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight"@click="nextPage" :disabled="currentPage >= totalPages"></el-button>
       </div>
@@ -108,7 +108,7 @@ export default {
     },
     
     // 计算当前页需要显示的数据
-paginatedGroupedHandbookList() {
+    paginatedGroupedHandbookList() {
       const startIndex = (this.currentPage - 1) * this.pageSize;
       const endIndex = startIndex + this.pageSize;
       return this.allGroupedHandbookList.slice(startIndex, endIndex);
@@ -188,7 +188,7 @@ paginatedGroupedHandbookList() {
     },
     
     // 获取学生手册列表
-async fetchHandbookList() {
+    async fetchHandbookList() {
       this.loading = true
       try {
         // 使用配置文件中的API端点
@@ -289,7 +289,7 @@ async fetchHandbookList() {
             return a.content.localeCompare(b.content);
           });
         });
-});
+      });
       
       // 重置到第一页
       this.currentPage = 1;
@@ -299,7 +299,7 @@ async fetchHandbookList() {
     parseDate(dateString) {
       // 假设日期格式为 dd/mm/yyyy或 d/m/yyyy
       const parts = dateString.split('/');
-const day = parseInt(parts[0], 10);
+      const day = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1; // 月份从0开始
       const year = parseInt(parts[2], 10);
       return new Date(year, month, day);
@@ -310,7 +310,7 @@ const day = parseInt(parts[0], 10);
       // 定义两组交替的浅色背景颜色，与整体背景协调
       const colors = [
         '#e3f2fd', // 柢和的浅蓝色 1
-        '#f3e5f5'  //柢和的浅紫色
+        '#f3e5f5'  // 柢和的浅紫色
       ];
       // 使用索引循环选择颜色
       return colors[index % colors.length];
@@ -338,7 +338,7 @@ const day = parseInt(parts[0], 10);
         });
       }
     }
-}
+  }
 }
 </script>
 
@@ -438,7 +438,7 @@ const day = parseInt(parts[0], 10);
   border-radius: 12px;
   font-size: 14px;
   font-weight: bold;
-transition: all 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .handbook-card:hover .category-badge {
@@ -459,7 +459,7 @@ transition: all 0.3s ease;
 }
 
 .card-field:last-child {
-margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .field-value {
