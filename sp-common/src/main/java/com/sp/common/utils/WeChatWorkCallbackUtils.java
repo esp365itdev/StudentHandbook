@@ -83,13 +83,14 @@ public class WeChatWorkCallbackUtils {
         // 去掉前16位随机字符串和4位msg长度，截取之后的为corpId
         byte[] bytes = Arrays.copyOfRange(original, 20, original.length);
         
-        // 找到corpId结束位置
+        // 获取msg长度
         int len = 0;
         for (int i = 0; i < 4; i++) {
             len <<= 8;
             len |= bytes[i] & 0xFF;
         }
         
+        // 返回明文消息内容（即msg字段）
         return new String(Arrays.copyOfRange(bytes, 4, 4 + len), StandardCharsets.UTF_8);
     }
     

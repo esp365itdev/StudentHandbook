@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+import java.net.URLDecoder;
 
 /**
  * 企业微信回调控制器
@@ -56,19 +57,27 @@ public class WeChatWorkCallbackController extends BaseController {
         logger.info("本地配置: token={}, encodingAesKey={}", token, encodingAesKey);
         
         try {
-            // 验证签名
-            if (!WeChatWorkCallbackUtils.verifySignature(token, timestamp, nonce, msgSignature)) {
+            // 对参数进行Urldecode处理
+            String decodedMsgSignature = URLDecoder.decode(msgSignature, "UTF-8");
+            String decodedTimestamp = URLDecoder.decode(timestamp, "UTF-8");
+            String decodedNonce = URLDecoder.decode(nonce, "UTF-8");
+            String decodedEchostr = URLDecoder.decode(echostr, "UTF-8");
+            
+            // 根据已有的token，结合timestamp, nonce, echostr重新计算签名
+            if (!WeChatWorkCallbackUtils.verifySignature(token, decodedTimestamp, decodedNonce, decodedMsgSignature)) {
                 logger.warn("签名验证失败");
-                return "签名验证失败";
+                return "";
             }
             
-            // 解密echostr并返回
-            String result = WeChatWorkCallbackUtils.decryptEchoStr(echostr, encodingAesKey);
+            // 解密echostr参数得到消息内容（即msg字段）
+            String result = WeChatWorkCallbackUtils.decryptEchoStr(decodedEchostr, encodingAesKey);
+            
+            // 在1秒内响应GET请求，响应内容为上一步得到的明文消息内容
             logger.info("URL验证成功");
             return result;
         } catch (Exception e) {
             logger.error("URL验证过程中出现异常", e);
-            return "验证失败: " + e.getMessage();
+            return "";
         }
     }
     
