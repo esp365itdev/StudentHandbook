@@ -1,8 +1,5 @@
 package com.sp.common.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -17,8 +14,6 @@ import java.util.Formatter;
  * 用于处理企业微信回调相关的签名验证和消息解密
  */
 public class WeChatWorkCallbackUtils {
-    
-    private static final Logger logger = LoggerFactory.getLogger(WeChatWorkCallbackUtils.class);
     
     /**
      * 验证签名
@@ -46,10 +41,10 @@ public class WeChatWorkCallbackUtils {
             byte[] digest = md.digest(content.toString().getBytes(StandardCharsets.UTF_8));
             tmpStr = byteToHex(digest);
         } catch (NoSuchAlgorithmException e) {
-            logger.error("SHA1算法不可用", e);
+            System.err.println("SHA1算法不可用" + e.getMessage());
         }
         
-        logger.debug("计算得出的签名为: {}, 企业微信传递的签名为: {}", tmpStr, signature);
+        System.out.println("计算得出的签名为: " + tmpStr + ", 企业微信传递的签名为: " + signature);
         
         return tmpStr != null && tmpStr.equals(signature);
     }
@@ -81,12 +76,12 @@ public class WeChatWorkCallbackUtils {
             byte[] digest = md.digest(content.toString().getBytes(StandardCharsets.UTF_8));
             tmpStr = byteToHex(digest);
         } catch (NoSuchAlgorithmException e) {
-            logger.error("SHA1算法不可用", e);
+            System.err.println("SHA1算法不可用" + e.getMessage());
         }
         
-        logger.debug("参与签名的参数排序后: {}", Arrays.toString(arr));
-        logger.debug("拼接后的字符串: {}", content.toString());
-        logger.debug("计算得出的签名为: {}, 企业微信传递的签名为: {}", tmpStr, signature);
+        System.out.println("参与签名的参数排序后: " + Arrays.toString(arr));
+        System.out.println("拼接后的字符串: " + content.toString());
+        System.out.println("计算得出的签名为: " + tmpStr + ", 企业微信传递的签名为: " + signature);
         
         return tmpStr != null && tmpStr.equalsIgnoreCase(signature);
     }
@@ -116,25 +111,18 @@ public class WeChatWorkCallbackUtils {
      * @throws Exception 解密异常
      */
     public static String decryptEchoStr(String echostr, String encodingAesKey) throws Exception {
-        // 清理Base64字符串，移除空格等非法字符
-        String cleanedEchostr = echostr.replaceAll("\\s+", "");
-        String cleanedEncodingAesKey = encodingAesKey.replaceAll("\\s+", "");
-        
-        // 确保encodingAesKey是合法的43位Base64字符串
-        // 如果是43位，则补齐为44位；如果已经是44位，则不需要处理
-        if (cleanedEncodingAesKey.length() == 43) {
-            cleanedEncodingAesKey += "=";
-        } else if (cleanedEncodingAesKey.length() != 44) {
-            logger.error("Invalid encodingAesKey length: {}, expected 43 or 44", cleanedEncodingAesKey.length());
-            throw new IllegalArgumentException("Invalid encodingAesKey length");
+        // 处理encodingAesKey，确保它是有效的Base64字符串
+        String processedEncodingAesKey = encodingAesKey.trim();
+        if (processedEncodingAesKey.length() == 43) {
+            processedEncodingAesKey += "=";
         }
         
-        logger.debug("清理后的echostr: {}", cleanedEchostr);
-        logger.debug("清理后的encodingAesKey: {}", cleanedEncodingAesKey);
+        System.out.println("处理后的echostr: " + echostr);
+        System.out.println("处理后的encodingAesKey: " + processedEncodingAesKey);
         
         // 对密文进行Base64解码
-        byte[] aesKey = decodeBase64(cleanedEncodingAesKey);
-        byte[] encryptedData = decodeBase64(cleanedEchostr);
+        byte[] aesKey = decodeBase64(processedEncodingAesKey);
+        byte[] encryptedData = decodeBase64(echostr);
         
         // 使用AESKey做AES解密
         byte[] decryptedData = decrypt(aesKey, encryptedData);
