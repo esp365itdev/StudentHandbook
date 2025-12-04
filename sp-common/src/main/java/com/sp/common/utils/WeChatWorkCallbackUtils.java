@@ -121,28 +121,36 @@ public class WeChatWorkCallbackUtils {
         String cleanedEncodingAesKey = encodingAesKey.replaceAll("\\s+", "");
         
         // 确保encodingAesKey是合法的43位Base64字符串
+        // 如果是43位，则补齐为44位；如果已经是44位，则不需要处理
         if (cleanedEncodingAesKey.length() == 43) {
-            cleanedEncodingAesKey += "="; // 补齐为44位，使其成为有效的Base64字符串
+            cleanedEncodingAesKey += "=";
+        } else if (cleanedEncodingAesKey.length() != 44) {
+            logger.error("Invalid encodingAesKey length: {}, expected 43 or 44", cleanedEncodingAesKey.length());
+            throw new IllegalArgumentException("Invalid encodingAesKey length");
         }
         
         logger.debug("清理后的echostr: {}", cleanedEchostr);
         logger.debug("清理后的encodingAesKey: {}", cleanedEncodingAesKey);
         
+        // 对密文进行Base64解码
         byte[] aesKey = decodeBase64(cleanedEncodingAesKey);
-        byte[] original = decrypt(aesKey, decodeBase64(cleanedEchostr));
+        byte[] encryptedData = decodeBase64(cleanedEchostr);
         
-        // 去掉前16位随机字符串和4位msg长度，截取之后的为corpId
-        byte[] bytes = Arrays.copyOfRange(original, 20, original.length);
+        // 使用AESKey做AES解密
+        byte[] decryptedData = decrypt(aesKey, encryptedData);
         
-        // 获取msg长度
-        int len = 0;
+        // 去掉头部的16个随机字节
+        byte[] content = Arrays.copyOfRange(decryptedData, 16, decryptedData.length);
+        
+        // 获取msg长度（前4个字节）
+        int msgLen = 0;
         for (int i = 0; i < 4; i++) {
-            len <<= 8;
-            len |= bytes[i] & 0xFF;
+            msgLen <<= 8;
+            msgLen |= content[i] & 0xFF;
         }
         
-        // 返回明文消息内容（即msg字段）
-        return new String(Arrays.copyOfRange(bytes, 4, 4 + len), StandardCharsets.UTF_8);
+        // 截取msg_len长度的部分即为msg
+        return new String(Arrays.copyOfRange(content, 4, 4 + msgLen), StandardCharsets.UTF_8);
     }
     
     /**
