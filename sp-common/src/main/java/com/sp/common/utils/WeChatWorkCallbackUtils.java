@@ -118,7 +118,15 @@ public class WeChatWorkCallbackUtils {
     public static String decryptEchoStr(String echostr, String encodingAesKey) throws Exception {
         // 清理Base64字符串，移除空格等非法字符
         String cleanedEchostr = echostr.replaceAll("\\s+", "");
-        String cleanedEncodingAesKey = encodingAesKey.replaceAll("\\s+", "") + "=";
+        String cleanedEncodingAesKey = encodingAesKey.replaceAll("\\s+", "");
+        
+        // 确保encodingAesKey是合法的43位Base64字符串
+        if (cleanedEncodingAesKey.length() == 43) {
+            cleanedEncodingAesKey += "="; // 补齐为44位，使其成为有效的Base64字符串
+        }
+        
+        logger.debug("清理后的echostr: {}", cleanedEchostr);
+        logger.debug("清理后的encodingAesKey: {}", cleanedEncodingAesKey);
         
         byte[] aesKey = decodeBase64(cleanedEncodingAesKey);
         byte[] original = decrypt(aesKey, decodeBase64(cleanedEchostr));
