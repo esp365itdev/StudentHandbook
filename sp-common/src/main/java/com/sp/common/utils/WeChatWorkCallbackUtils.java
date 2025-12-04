@@ -17,9 +17,9 @@ import java.util.Formatter;
  * 用于处理企业微信回调相关的签名验证和消息解密
  */
 public class WeChatWorkCallbackUtils {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(WeChatWorkCallbackUtils.class);
-
+    
     /**
      * 验证签名
      *
@@ -32,26 +32,28 @@ public class WeChatWorkCallbackUtils {
     public static boolean verifySignature(String token, String timestamp, String nonce, String signature) {
         String[] arr = new String[]{token, timestamp, nonce};
         Arrays.sort(arr);
-
+        
         StringBuilder content = new StringBuilder();
         for (String s : arr) {
             content.append(s);
         }
-
+        
         MessageDigest md;
         String tmpStr = null;
-
+        
         try {
             md = MessageDigest.getInstance("SHA1");
-            byte[] digest = md.digest(content.toString().getBytes());
+            byte[] digest = md.digest(content.toString().getBytes(StandardCharsets.UTF_8));
             tmpStr = byteToHex(digest);
         } catch (NoSuchAlgorithmException e) {
             logger.error("SHA1算法不可用", e);
         }
-
+        
+        logger.debug("计算得出的签名为: {}, 企业微信传递的签名为: {}", tmpStr, signature);
+        
         return tmpStr != null && tmpStr.equals(signature);
     }
-
+    
     /**
      * 验证签名（用于URL验证，包含echostr参数）
      *
@@ -65,26 +67,30 @@ public class WeChatWorkCallbackUtils {
     public static boolean verifySignatureWithEchoStr(String token, String timestamp, String nonce, String echostr, String signature) {
         String[] arr = new String[]{token, timestamp, nonce, echostr};
         Arrays.sort(arr);
-
+        
         StringBuilder content = new StringBuilder();
         for (String s : arr) {
             content.append(s);
         }
-
+        
         MessageDigest md;
         String tmpStr = null;
-
+        
         try {
             md = MessageDigest.getInstance("SHA1");
-            byte[] digest = md.digest(content.toString().getBytes());
+            byte[] digest = md.digest(content.toString().getBytes(StandardCharsets.UTF_8));
             tmpStr = byteToHex(digest);
         } catch (NoSuchAlgorithmException e) {
             logger.error("SHA1算法不可用", e);
         }
-
+        
+        logger.debug("参与签名的参数排序后: {}", Arrays.toString(arr));
+        logger.debug("拼接后的字符串: {}", content.toString());
+        logger.debug("计算得出的签名为: {}, 企业微信传递的签名为: {}", tmpStr, signature);
+        
         return tmpStr != null && tmpStr.equalsIgnoreCase(signature);
     }
-
+    
     /**
      * 字节数组转十六进制字符串
      *
@@ -100,7 +106,7 @@ public class WeChatWorkCallbackUtils {
         formatter.close();
         return result;
     }
-
+    
     /**
      * 解密echostr
      *
@@ -112,21 +118,21 @@ public class WeChatWorkCallbackUtils {
     public static String decryptEchoStr(String echostr, String encodingAesKey) throws Exception {
         byte[] aesKey = decodeBase64(encodingAesKey + "="); // 补充最后的=
         byte[] original = decrypt(aesKey, decodeBase64(echostr));
-
+        
         // 去掉前16位随机字符串和4位msg长度，截取之后的为corpId
         byte[] bytes = Arrays.copyOfRange(original, 20, original.length);
-
+        
         // 获取msg长度
         int len = 0;
         for (int i = 0; i < 4; i++) {
             len <<= 8;
             len |= bytes[i] & 0xFF;
         }
-
+        
         // 返回明文消息内容（即msg字段）
         return new String(Arrays.copyOfRange(bytes, 4, 4 + len), StandardCharsets.UTF_8);
     }
-
+    
     /**
      * 解密方法
      *
@@ -143,7 +149,7 @@ public class WeChatWorkCallbackUtils {
         cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
         return cipher.doFinal(encryptedData);
     }
-
+    
     /**
      * Base64解码
      *
