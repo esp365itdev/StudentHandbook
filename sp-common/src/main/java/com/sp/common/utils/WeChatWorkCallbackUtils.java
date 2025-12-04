@@ -116,8 +116,12 @@ public class WeChatWorkCallbackUtils {
      * @throws Exception 解密异常
      */
     public static String decryptEchoStr(String echostr, String encodingAesKey) throws Exception {
-        byte[] aesKey = decodeBase64(encodingAesKey + "="); // 补充最后的=
-        byte[] original = decrypt(aesKey, decodeBase64(echostr));
+        // 清理Base64字符串，移除空格等非法字符
+        String cleanedEchostr = echostr.replaceAll("\\s+", "");
+        String cleanedEncodingAesKey = encodingAesKey.replaceAll("\\s+", "") + "=";
+        
+        byte[] aesKey = decodeBase64(cleanedEncodingAesKey);
+        byte[] original = decrypt(aesKey, decodeBase64(cleanedEchostr));
         
         // 去掉前16位随机字符串和4位msg长度，截取之后的为corpId
         byte[] bytes = Arrays.copyOfRange(original, 20, original.length);
