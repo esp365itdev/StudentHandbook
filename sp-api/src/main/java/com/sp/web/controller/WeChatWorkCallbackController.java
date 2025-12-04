@@ -52,6 +52,8 @@ public class WeChatWorkCallbackController extends BaseController {
         
         logger.info("接收到企业微信URL验证请求: msg_signature={}, timestamp={}, nonce={}, echostr={}",
                 msgSignature, timestamp, nonce, echostr);
+
+        logger.info("本地配置: token={}, encodingAesKey={}", token, encodingAesKey);
         
         try {
             // 验证签名
@@ -89,6 +91,8 @@ public class WeChatWorkCallbackController extends BaseController {
         
         logger.info("接收到企业微信推送消息: msg_signature={}, timestamp={}, nonce={}, postData={}",
                 msgSignature, timestamp, nonce, postData);
+
+        logger.info("本地配置: token={}, encodingAesKey={}", token, encodingAesKey);
         
         try {
             // 验证签名
