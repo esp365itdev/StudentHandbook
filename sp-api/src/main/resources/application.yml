@@ -40,7 +40,7 @@ wechat:
     redirectUri: ${server.servlet.context-path:/}/wechat/oauth/callback
     # 回调配置
     callback:
-      token: YAhmCsbcN5dtvkN44t5aywaOxcxDWWMO
+      token: YWhmCsbcN5dtvkN44t5aywaOxcxDWWMO
       encodingAesKey: 4C7hzSn2qFrO1hzMIJBY5iTL7UPKFZSUwmMX9TLF80D
       corpId: wpV9pWDAAA1nyVENSNCp5_m185fWSXEg
       permanentCode: I31-B5clKayPf4vNl2bibhL1ia8x4cwIc884xK888Fc
