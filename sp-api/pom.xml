@@ -62,6 +62,12 @@
             <artifactId>sp-framework</artifactId>
         </dependency>
 
+        <!-- 通用工具模块 -->
+        <dependency>
+            <groupId>com.sp</groupId>
+            <artifactId>sp-common</artifactId>
+        </dependency>
+
         <!-- 添加对Tomcat的依赖，用于WAR部署 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
