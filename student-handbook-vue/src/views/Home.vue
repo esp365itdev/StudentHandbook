@@ -49,14 +49,26 @@
         </div>
       </button>
       
-      <!-- 新增的手动检查用户类型按钮 -->
+      <!-- 修改后的检查身份按钮 -->
       <button 
         class="feature-button warning-button"
-        @click="manualCheckUserType"
+        @click="checkMyIdentity"
+        :disabled="checking"
       >
         <div class="button-content">
-          <span class="button-icon">🔍</span>
-          <span class="button-text">檢查我的身份</span>
+          <span class="button-icon">{{ checking ? '⏳' : '🔍' }}</span>
+          <span class="button-text">{{ checking ? '檢查中...' : '檢查我的身份' }}</span>
+        </div>
+      </button>
+      
+      <!-- 企业微信登录按钮 -->
+      <button 
+        class="feature-button info-button"
+        @click="loginWithWeChatWork"
+      >
+        <div class="button-content">
+          <span class="button-icon">💬</span>
+          <span class="button-text">企业微信登录</span>
         </div>
       </button>
     </div>
@@ -72,7 +84,8 @@ export default {
     return {
       userType: null,
       loading: false,
-      error: null
+      error: null,
+      checking: false
     };
   },
   mounted() {
@@ -114,14 +127,15 @@ export default {
       }
     },
     
-    async manualCheckUserType() {
+    async checkMyIdentity() {
       try {
-        // 手动触发检查用户类型功能
-        this.loading = true;
+        // 直接检查当前页面URL中的code参数
+        this.checking = true;
         this.error = null;
         
-        // 弹出输入框让用户输入code
-        const code = prompt("请输入企业微信授权code:");
+        // 从URL参数中获取code
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
         
         if (code) {
           // 调用后端API检查用户类型
@@ -139,15 +153,23 @@ export default {
             alert('检查失败: ' + result.msg);
           }
         } else {
-          this.error = '未输入code';
+          this.error = '当前页面URL中没有找到企业微信授权code，请先通过企业微信登录';
+          alert('当前页面URL中没有找到企业微信授权code，请先通过企业微信登录');
         }
       } catch (error) {
         console.error('检查用户类型时发生错误:', error);
         this.error = '检查用户类型时发生错误: ' + error.message;
         alert('检查时发生错误: ' + error.message);
       } finally {
-        this.loading = false;
+        this.checking = false;
       }
+    },
+    
+    // 通过企业微信登录获取code
+    loginWithWeChatWork() {
+      // 重定向到企业微信OAuth授权页面
+      // 这里使用相对路径，实际部署时需要根据实际情况调整
+      window.location.href = '/sp-api/wechat/oauth/authorize?redirect=/sp-api/dist/index.html';
     },
     
     goToStudentHandbook() {
@@ -315,6 +337,11 @@ export default {
   overflow: hidden;
 }
 
+.feature-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .feature-button::before {
   content: '';
   position: absolute;
@@ -327,16 +354,16 @@ export default {
   transition: transform 0.6s ease;
 }
 
-.feature-button:hover::before {
+.feature-button:hover:not(:disabled)::before {
   transform: translateX(100%);
 }
 
-.feature-button:hover {
+.feature-button:hover:not(:disabled) {
   transform: translateY(-5px);
   box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
 }
 
-.feature-button:active {
+.feature-button:active:not(:disabled) {
   transform: translateY(1px);
 }
 
@@ -352,6 +379,11 @@ export default {
 
 .warning-button {
   background: linear-gradient(135deg, #e6a23c 0%, #d1942e 100%);
+  color: white;
+}
+
+.info-button {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%);
   color: white;
 }
 
