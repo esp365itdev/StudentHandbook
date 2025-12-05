@@ -162,15 +162,16 @@ export default {
         this.redirecting = true;
         this.logDebugInfo('Redirecting to WeChat Work authorization');
         
-        // 构造重定向URL，使用完整的回调地址
+        // 构造重定向URL，使用前端首页作为回调地址
         const currentOrigin = window.location.origin;
-        const currentPath = window.location.pathname;
-        const callbackUrl = `${currentOrigin}${currentPath}`;
+        // 确保回调URL指向前端首页而不是API路径
+        const indexPath = '/sp-api/dist/index.html'; // 或者根据实际情况调整路径
+        const callbackUrl = `${currentOrigin}${indexPath}`;
         const encodedCallbackUrl = encodeURIComponent(callbackUrl);
         const authUrl = `/sp-api/wechat/oauth/authorize?redirect=${encodedCallbackUrl}`;
         
         this.logDebugInfo(`Current origin: ${currentOrigin}`);
-        this.logDebugInfo(`Current path: ${currentPath}`);
+        this.logDebugInfo(`Index path: ${indexPath}`);
         this.logDebugInfo(`Callback URL: ${callbackUrl}`);
         this.logDebugInfo(`Encoded callback URL: ${encodedCallbackUrl}`);
         this.logDebugInfo(`Auth URL: ${authUrl}`);
