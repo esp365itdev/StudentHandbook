@@ -162,11 +162,18 @@ export default {
         this.redirecting = true;
         this.logDebugInfo('Redirecting to WeChat Work authorization');
         
-        // 构造重定向URL
-        const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
-        const authUrl = `/sp-api/wechat/oauth/authorize?redirect=${redirectUri}`;
+        // 构造重定向URL，使用完整的回调地址
+        const currentOrigin = window.location.origin;
+        const currentPath = window.location.pathname;
+        const callbackUrl = `${currentOrigin}${currentPath}`;
+        const encodedCallbackUrl = encodeURIComponent(callbackUrl);
+        const authUrl = `/sp-api/wechat/oauth/authorize?redirect=${encodedCallbackUrl}`;
         
-        this.logDebugInfo(`Redirect URL: ${authUrl}`);
+        this.logDebugInfo(`Current origin: ${currentOrigin}`);
+        this.logDebugInfo(`Current path: ${currentPath}`);
+        this.logDebugInfo(`Callback URL: ${callbackUrl}`);
+        this.logDebugInfo(`Encoded callback URL: ${encodedCallbackUrl}`);
+        this.logDebugInfo(`Auth URL: ${authUrl}`);
         
         // 执行重定向
         window.location.href = authUrl;
