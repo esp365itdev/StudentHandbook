@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+
 import java.net.URLDecoder;
 
 /**
@@ -19,7 +20,7 @@ public class WeChatWorkCallbackController extends BaseController {
     
     private static final Logger logger = LoggerFactory.getLogger(WeChatWorkCallbackController.class);
     
-    // 回调配置参数
+   // 回调配置参数
     @Value("${wechat.work.callback.token}")
     private String token;
     
@@ -29,7 +30,7 @@ public class WeChatWorkCallbackController extends BaseController {
     @Value("${wechat.work.callback.corpId}")
     private String corpId;
     
-    // 永久授权码（用于第三方应用）
+    //永久授权码（用于第三方应用）
     @Value("${wechat.work.callback.permanentCode}")
     private String permanentCode;
     
@@ -57,14 +58,17 @@ public class WeChatWorkCallbackController extends BaseController {
         logger.info("本地配置: token={}, encodingAesKey={}", token, encodingAesKey);
         
         try {
-            // 先使用原始参数进行签名验证（不需要预先解码）
-            if (!WeChatWorkCallbackUtils.verifySignatureWithEchoStr(token, timestamp, nonce, echostr, msgSignature)) {
+            // 先对echostr进行预处理，将空格转换回加号
+            String processedEchostr = echostr.replace(" ", "+");
+            
+            // 使用处理后的参数进行签名验证
+            if (!WeChatWorkCallbackUtils.verifySignatureWithEchoStr(token, timestamp, nonce, processedEchostr, msgSignature)) {
                 logger.warn("签名验证失败");
                 return "";
             }
             
             // 验证通过后再对参数进行Urldecode处理
-            String decodedEchostr = URLDecoder.decode(echostr, "UTF-8");
+            String decodedEchostr = URLDecoder.decode(processedEchostr, "UTF-8");
             
             // 解密echostr参数得到消息内容（即msg字段）
             String result = WeChatWorkCallbackUtils.decryptEchoStr(decodedEchostr, encodingAesKey);
@@ -93,7 +97,7 @@ public class WeChatWorkCallbackController extends BaseController {
             @RequestParam("msg_signature") String msgSignature,
             @RequestParam("timestamp") String timestamp,
             @RequestParam("nonce") String nonce,
-            @RequestBody String postData) {
+            @RequestBody String postData){
         
         logger.info("接收到企业微信推送消息: msg_signature={}, timestamp={}, nonce={}, postData={}",
                 msgSignature, timestamp, nonce, postData);
@@ -117,4 +121,5 @@ public class WeChatWorkCallbackController extends BaseController {
             return "fail";
         }
     }
+
 }
