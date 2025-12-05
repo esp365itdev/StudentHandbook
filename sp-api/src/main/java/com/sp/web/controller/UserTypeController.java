@@ -40,6 +40,7 @@ public class UserTypeController extends BaseController {
             
             // 根据code获取用户信息
             JSONObject userInfo = weChatWorkOAuth2Utils.getUserInfo(code);
+            logger.info("获取到的用户信息: {}", userInfo.toJSONString());
             
             if (!userInfo.containsKey("UserId")) {
                 logger.error("获取企业微信用户信息失败: {}", userInfo.getString("errmsg"));
@@ -52,16 +53,19 @@ public class UserTypeController extends BaseController {
             
             // 获取access_token
             String accessToken = weChatWorkOAuth2Utils.getAccessToken();
+            logger.info("获取到的access_token: {}", accessToken);
             
             // 获取学生或家长详细信息
             JSONObject contactUserInfo = SchoolContactUtils.getUserInfo(accessToken, userId);
+            logger.info("获取到的家校通讯录用户信息: {}", contactUserInfo != null ? contactUserInfo.toJSONString() : "null");
             
             if (contactUserInfo == null) {
                 logger.error("获取家校通讯录用户信息失败");
                 return AjaxResult.error("获取家校通讯录用户信息失败");
             }
             
-            if (!contactUserInfo.containsKey("errcode") || !"0".equals(contactUserInfo.getString("errcode"))) {
+            // 检查是否有错误信息
+            if (contactUserInfo.containsKey("errcode") && !"0".equals(contactUserInfo.getString("errcode"))) {
                 logger.error("获取家校通讯录用户信息失败: {}", contactUserInfo.getString("errmsg"));
                 return AjaxResult.error("获取家校通讯录用户信息失败: " + contactUserInfo.getString("errmsg"));
             }

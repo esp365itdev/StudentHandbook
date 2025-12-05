@@ -16,6 +16,12 @@
       <div v-if="userType" class="user-type-info">
         <p>您當前的身份是: {{ userType === 'student' ? '學生' : '家長' }}</p>
       </div>
+      <div v-if="loading" class="loading-info">
+        <p>正在檢查用戶身份...</p>
+      </div>
+      <div v-if="error" class="error-info">
+        <p>{{ error }}</p>
+      </div>
     </div>
     
     <div class="image-container">
@@ -53,7 +59,9 @@ export default {
   name: 'Home',
   data() {
     return {
-      userType: null
+      userType: null,
+      loading: false,
+      error: null
     };
   },
   mounted() {
@@ -66,19 +74,32 @@ export default {
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         
+        console.log('Checking user type with code:', code);
+        
         if (code) {
+          this.loading = true;
+          this.error = null;
+          
           // 调用后端API检查用户类型
-          const response = await fetch(`${API_ENDPOINTS.CHECK_USER_TYPE}?code=${code}`);
+          const response = await fetch(`${API_ENDPOINTS.CHECK_USER_TYPE}?code=${encodeURIComponent(code)}`);
           const result = await response.json();
+          
+          console.log('API response:', result);
           
           if (result.code === 200) {
             this.userType = result.data.userType;
           } else {
             console.error('检查用户类型失败:', result.msg);
+            this.error = '检查用户类型失败: ' + result.msg;
           }
+        } else {
+          console.log('No code found in URL parameters');
         }
       } catch (error) {
         console.error('检查用户类型时发生错误:', error);
+        this.error = '检查用户类型时发生错误: ' + error.message;
+      } finally {
+        this.loading = false;
       }
     },
     
@@ -136,6 +157,23 @@ export default {
   border-radius: 8px;
   color: #1a73e8;
   font-weight: bold;
+}
+
+.loading-info, .error-info {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.loading-info {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.error-info {
+  background-color: #f8d7da;
+  color: #721c24;
 }
 
 .logo-badge {
