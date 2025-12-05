@@ -33,7 +33,10 @@ public class SchoolContactUtils {
             String response = HttpUtils.sendGet(urlBuilder.toString());
             logger.info("获取家校通讯录用户信息结果: {}", response);
             
-            return JSONObject.parseObject(response);
+            JSONObject result = JSONObject.parseObject(response);
+            logger.info("解析后的JSON对象: {}", result.toJSONString());
+            
+            return result;
         } catch (Exception e) {
             logger.error("获取家校通讯录用户信息异常", e);
             return null;
