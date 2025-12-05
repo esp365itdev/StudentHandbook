@@ -13,6 +13,9 @@
         </svg>
       </div>
       <h1 class="welcome-title">歡迎使用學生系統</h1>
+      <div v-if="userType" class="user-type-info">
+        <p>您當前的身份是: {{ userType === 'student' ? '學生' : '家長' }}</p>
+      </div>
     </div>
     
     <div class="image-container">
@@ -44,9 +47,41 @@
 </template>
 
 <script>
+import { API_ENDPOINTS } from '../config/api';
+
 export default {
   name: 'Home',
+  data() {
+    return {
+      userType: null
+    };
+  },
+  mounted() {
+    this.checkUserType();
+  },
   methods: {
+    async checkUserType() {
+      try {
+        // 从URL参数中获取code
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        
+        if (code) {
+          // 调用后端API检查用户类型
+          const response = await fetch(`${API_ENDPOINTS.CHECK_USER_TYPE}?code=${code}`);
+          const result = await response.json();
+          
+          if (result.code === 200) {
+            this.userType = result.data.userType;
+          } else {
+            console.error('检查用户类型失败:', result.msg);
+          }
+        }
+      } catch (error) {
+        console.error('检查用户类型时发生错误:', error);
+      }
+    },
+    
     goToStudentHandbook() {
       // 跳轉到學生手冊頁面
       this.$router.push('/handbook');
@@ -92,6 +127,15 @@ export default {
   animation: fadeInDown 1s ease;
   position: relative;
   z-index: 1;
+}
+
+.user-type-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #e8f4ff;
+  border-radius: 8px;
+  color: #1a73e8;
+  font-weight: bold;
 }
 
 .logo-badge {
