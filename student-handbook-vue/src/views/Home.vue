@@ -33,6 +33,11 @@
       <div v-if="error" class="error-info">
         <p>{{ error }}</p>
       </div>
+      
+      <!-- 提示信息 -->
+      <div v-if="!codeInUrl" class="warning-info">
+        <p>注意：当前页面URL中没有企业微信授权码，需要进行企业微信授权才能识别您的身份。</p>
+      </div>
     </div>
     
     <div class="image-container">
@@ -72,9 +77,21 @@
         </div>
       </button>
       
-      <!-- 显示URL参数按钮 -->
+      <!-- 企业微信授权按钮 -->
       <button 
         class="feature-button info-button"
+        @click="redirectToWeChatAuth"
+        :disabled="redirecting"
+      >
+        <div class="button-content">
+          <span class="button-icon">{{ redirecting ? '⏳' : '💬' }}</span>
+          <span class="button-text">{{ redirecting ? '跳转中...' : '企业微信授权' }}</span>
+        </div>
+      </button>
+      
+      <!-- 显示URL参数按钮 -->
+      <button 
+        class="feature-button secondary-button"
         @click="showUrlParams"
       >
         <div class="button-content">
@@ -99,12 +116,16 @@ export default {
       loading: false,
       error: null,
       checking: false,
-      debugInfo: null
+      redirecting: false,
+      debugInfo: null,
+      codeInUrl: false
     };
   },
   mounted() {
     // 页面加载时记录调试信息
     this.logDebugInfo('Page mounted');
+    // 检查URL中是否有code参数
+    this.checkCodeInUrl();
     // 页面加载时自动检查用户身份
     this.autoCheckIdentity();
   },
@@ -113,6 +134,13 @@ export default {
       const currentTime = new Date().toISOString();
       this.debugInfo = `${currentTime}: ${info}\n${this.debugInfo || ''}`;
       console.log(info);
+    },
+    
+    checkCodeInUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      this.codeInUrl = !!code;
+      this.logDebugInfo(`Code in URL: ${code ? 'Yes' : 'No'}`);
     },
     
     showUrlParams() {
@@ -126,6 +154,27 @@ export default {
         alert('URL参数:\n' + paramsStr);
       } else {
         alert('URL中没有参数');
+      }
+    },
+    
+    redirectToWeChatAuth() {
+      try {
+        this.redirecting = true;
+        this.logDebugInfo('Redirecting to WeChat Work authorization');
+        
+        // 构造重定向URL
+        const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+        const authUrl = `/sp-api/wechat/oauth/authorize?redirect=${redirectUri}`;
+        
+        this.logDebugInfo(`Redirect URL: ${authUrl}`);
+        
+        // 执行重定向
+        window.location.href = authUrl;
+      } catch (error) {
+        this.logDebugInfo(`Redirect error: ${error.message}`);
+        console.error('重定向到企业微信授权页面时发生错误:', error);
+        this.error = '重定向到企业微信授权页面时发生错误: ' + error.message;
+        this.redirecting = false;
       }
     },
     
@@ -244,7 +293,7 @@ export default {
           }
         } else {
           this.error = '当前页面URL中没有找到企业微信授权code';
-          alert('当前页面URL中没有找到企业微信授权code');
+          alert('当前页面URL中没有找到企业微信授权code，请先点击"企业微信授权"按钮进行授权');
         }
       } catch (error) {
         this.logDebugInfo(`Manual check exception: ${error.message}`);
@@ -332,6 +381,15 @@ export default {
 
 .user-detail-info {
   background-color: #d1e7ff;
+}
+
+.warning-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #fff3cd;
+  border-radius: 8px;
+  color: #856404;
+  font-weight: bold;
 }
 
 .loading-info, .error-info {
@@ -490,6 +548,11 @@ export default {
 
 .info-button {
   background: linear-gradient(135deg, #909399 0%, #606266 100%);
+  color: white;
+}
+
+.secondary-button {
+  background: linear-gradient(135deg, #409eff 0%, #1a73e8 100%);
   color: white;
 }
 
