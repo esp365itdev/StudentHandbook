@@ -48,7 +48,7 @@ public class WeChatWorkCallbackUtils {
         
         return tmpStr != null && tmpStr.equals(signature);
     }
-    
+
     /**
      * 验证签名（用于URL验证，包含echostr参数）
      *
@@ -62,15 +62,15 @@ public class WeChatWorkCallbackUtils {
     public static boolean verifySignatureWithEchoStr(String token, String timestamp, String nonce, String echostr, String signature) {
         String[] arr = new String[]{token, timestamp, nonce, echostr};
         Arrays.sort(arr);
-        
+
         StringBuilder content = new StringBuilder();
         for (String s : arr) {
             content.append(s);
         }
-        
+
         MessageDigest md;
         String tmpStr = null;
-        
+
         try {
             md = MessageDigest.getInstance("SHA1");
             byte[] digest = md.digest(content.toString().getBytes(StandardCharsets.UTF_8));
@@ -78,14 +78,14 @@ public class WeChatWorkCallbackUtils {
         } catch (NoSuchAlgorithmException e) {
             System.err.println("SHA1算法不可用" + e.getMessage());
         }
-        
+
         System.out.println("参与签名的参数排序后: " + Arrays.toString(arr));
         System.out.println("拼接后的字符串: " + content.toString());
         System.out.println("计算得出的签名为: " + tmpStr + ", 企业微信传递的签名为: " + signature);
-        
+
         return tmpStr != null && tmpStr.equalsIgnoreCase(signature);
     }
-    
+
     /**
      * 字节数组转十六进制字符串
      *
