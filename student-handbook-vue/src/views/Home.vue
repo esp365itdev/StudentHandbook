@@ -48,6 +48,17 @@
           <span class="button-text">家校通知</span>
         </div>
       </button>
+      
+      <!-- 新增的手动检查用户类型按钮 -->
+      <button 
+        class="feature-button warning-button"
+        @click="manualCheckUserType"
+      >
+        <div class="button-content">
+          <span class="button-icon">🔍</span>
+          <span class="button-text">檢查我的身份</span>
+        </div>
+      </button>
     </div>
   </div>
 </template>
@@ -98,6 +109,42 @@ export default {
       } catch (error) {
         console.error('检查用户类型时发生错误:', error);
         this.error = '检查用户类型时发生错误: ' + error.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    async manualCheckUserType() {
+      try {
+        // 手动触发检查用户类型功能
+        this.loading = true;
+        this.error = null;
+        
+        // 弹出输入框让用户输入code
+        const code = prompt("请输入企业微信授权code:");
+        
+        if (code) {
+          // 调用后端API检查用户类型
+          const response = await fetch(`${API_ENDPOINTS.CHECK_USER_TYPE}?code=${encodeURIComponent(code)}`);
+          const result = await response.json();
+          
+          console.log('Manual check API response:', result);
+          
+          if (result.code === 200) {
+            this.userType = result.data.userType;
+            alert(`检查成功！您的身份是：${this.userType === 'student' ? '学生' : '家长'}`);
+          } else {
+            console.error('检查用户类型失败:', result.msg);
+            this.error = '检查用户类型失败: ' + result.msg;
+            alert('检查失败: ' + result.msg);
+          }
+        } else {
+          this.error = '未输入code';
+        }
+      } catch (error) {
+        console.error('检查用户类型时发生错误:', error);
+        this.error = '检查用户类型时发生错误: ' + error.message;
+        alert('检查时发生错误: ' + error.message);
       } finally {
         this.loading = false;
       }
@@ -300,6 +347,11 @@ export default {
 
 .success-button {
   background: linear-gradient(135deg, #67c23a 0%, #4caf50 100%);
+  color: white;
+}
+
+.warning-button {
+  background: linear-gradient(135deg, #e6a23c 0%, #d1942e 100%);
   color: white;
 }
 
