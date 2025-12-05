@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URLDecoder;
-
 /**
  * 企业微信回调控制器
  * 用于处理企业微信的回调配置URL验证和消息接收
@@ -20,7 +18,7 @@ public class WeChatWorkCallbackController extends BaseController {
     
     private static final Logger logger = LoggerFactory.getLogger(WeChatWorkCallbackController.class);
     
-   // 回调配置参数
+    // 回调配置参数
     @Value("${wechat.work.callback.token}")
     private String token;
     
@@ -67,11 +65,9 @@ public class WeChatWorkCallbackController extends BaseController {
                 return "";
             }
             
-            // 验证通过后再对参数进行Urldecode处理
-            String decodedEchostr = URLDecoder.decode(processedEchostr, "UTF-8");
-            
-            // 解密echostr参数得到消息内容（即msg字段）
-            String result = WeChatWorkCallbackUtils.decryptEchoStr(decodedEchostr, encodingAesKey);
+            // 直接使用处理后的echostr进行解密，不再进行额外的URL解码
+            // 因为URL解码会把"+"转换为空格，破坏Base64格式
+            String result = WeChatWorkCallbackUtils.decryptEchoStr(processedEchostr, encodingAesKey);
             
             // 在1秒内响应GET请求，响应内容为上一步得到的明文消息内容
             logger.info("URL验证成功，返回结果: {}", result);
@@ -121,5 +117,4 @@ public class WeChatWorkCallbackController extends BaseController {
             return "fail";
         }
     }
-
 }
