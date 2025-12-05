@@ -16,6 +16,10 @@
       <div v-if="userType" class="user-type-info">
         <p>您當前的身份是: {{ userType === 'student' ? '學生' : '家長' }}</p>
       </div>
+      <div v-if="userInfo" class="user-detail-info">
+        <p v-if="userType === 'student'">學生姓名: {{ studentInfo.name }}</p>
+        <p v-if="userType === 'parent'">家長姓名: {{ parentInfo.name }}</p>
+      </div>
       <div v-if="loading" class="loading-info">
         <p>正在檢查用戶身份...</p>
       </div>
@@ -49,15 +53,15 @@
         </div>
       </button>
       
-      <!-- 修改后的检查身份按钮 -->
+      <!-- 自动检查身份按钮 -->
       <button 
         class="feature-button warning-button"
-        @click="checkMyIdentity"
+        @click="autoCheckIdentity"
         :disabled="checking"
       >
         <div class="button-content">
           <span class="button-icon">{{ checking ? '⏳' : '🔍' }}</span>
-          <span class="button-text">{{ checking ? '檢查中...' : '檢查我的身份' }}</span>
+          <span class="button-text">{{ checking ? '自動檢查中...' : '自動檢查身份' }}</span>
         </div>
       </button>
       
@@ -83,83 +87,70 @@ export default {
   data() {
     return {
       userType: null,
+      userInfo: null,
+      studentInfo: null,
+      parentInfo: null,
       loading: false,
       error: null,
       checking: false
     };
   },
   mounted() {
-    this.checkUserType();
+    // 页面加载时自动检查用户身份
+    this.autoCheckIdentity();
   },
   methods: {
-    async checkUserType() {
+    async autoCheckIdentity() {
       try {
         // 从URL参数中获取code
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         
-        console.log('Checking user type with code:', code);
+        console.log('Auto checking user identity with code:', code);
         
         if (code) {
-          this.loading = true;
+          this.checking = true;
           this.error = null;
           
           // 调用后端API检查用户类型
           const response = await fetch(`${API_ENDPOINTS.CHECK_USER_TYPE}?code=${encodeURIComponent(code)}`);
           const result = await response.json();
           
-          console.log('API response:', result);
+          console.log('Auto check API response:', result);
           
           if (result.code === 200) {
             this.userType = result.data.userType;
+            this.userInfo = result.data;
+            
+            if (result.data.studentInfo) {
+              this.studentInfo = result.data.studentInfo;
+            }
+            
+            if (result.data.parentInfo) {
+              this.parentInfo = result.data.parentInfo;
+            }
+            
+            // 显示欢迎信息
+            let welcomeMsg = '';
+            if (this.userType === 'student') {
+              welcomeMsg = `歡迎你，${this.studentInfo.name}同學！`;
+            } else if (this.userType === 'parent') {
+              welcomeMsg = `歡迎你，${this.parentInfo.name}家長！`;
+            }
+            
+            if (welcomeMsg) {
+              alert(welcomeMsg);
+            }
           } else {
-            console.error('检查用户类型失败:', result.msg);
-            this.error = '检查用户类型失败: ' + result.msg;
+            console.error('自动检查用户身份失败:', result.msg);
+            this.error = '自动检查用户身份失败: ' + result.msg;
           }
         } else {
           console.log('No code found in URL parameters');
         }
       } catch (error) {
-        console.error('检查用户类型时发生错误:', error);
-        this.error = '检查用户类型时发生错误: ' + error.message;
-      } finally {
-        this.loading = false;
-      }
-    },
-    
-    async checkMyIdentity() {
-      try {
-        // 直接检查当前页面URL中的code参数
-        this.checking = true;
-        this.error = null;
-        
-        // 从URL参数中获取code
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        
-        if (code) {
-          // 调用后端API检查用户类型
-          const response = await fetch(`${API_ENDPOINTS.CHECK_USER_TYPE}?code=${encodeURIComponent(code)}`);
-          const result = await response.json();
-          
-          console.log('Manual check API response:', result);
-          
-          if (result.code === 200) {
-            this.userType = result.data.userType;
-            alert(`检查成功！您的身份是：${this.userType === 'student' ? '学生' : '家长'}`);
-          } else {
-            console.error('检查用户类型失败:', result.msg);
-            this.error = '检查用户类型失败: ' + result.msg;
-            alert('检查失败: ' + result.msg);
-          }
-        } else {
-          this.error = '当前页面URL中没有找到企业微信授权code，请先通过企业微信登录';
-          alert('当前页面URL中没有找到企业微信授权code，请先通过企业微信登录');
-        }
-      } catch (error) {
-        console.error('检查用户类型时发生错误:', error);
-        this.error = '检查用户类型时发生错误: ' + error.message;
-        alert('检查时发生错误: ' + error.message);
+        console.error('自动检查用户身份时发生错误:', error);
+        this.error = '自动检查用户身份时发生错误: ' + error.message;
       } finally {
         this.checking = false;
       }
@@ -168,7 +159,6 @@ export default {
     // 通过企业微信登录获取code
     loginWithWeChatWork() {
       // 重定向到企业微信OAuth授权页面
-      // 这里使用相对路径，实际部署时需要根据实际情况调整
       window.location.href = '/sp-api/wechat/oauth/authorize?redirect=/sp-api/dist/index.html';
     },
     
@@ -219,13 +209,17 @@ export default {
   z-index: 1;
 }
 
-.user-type-info {
+.user-type-info, .user-detail-info {
   margin-top: 15px;
   padding: 10px;
   background-color: #e8f4ff;
   border-radius: 8px;
   color: #1a73e8;
   font-weight: bold;
+}
+
+.user-detail-info {
+  background-color: #d1e7ff;
 }
 
 .loading-info, .error-info {

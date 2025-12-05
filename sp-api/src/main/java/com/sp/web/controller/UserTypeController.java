@@ -76,12 +76,14 @@ public class UserTypeController extends BaseController {
             
             if (SchoolContactUtils.isStudent(contactUserInfo)) {
                 result.put("userType", "student");
-                result.put("studentInfo", SchoolContactUtils.getStudentInfo(contactUserInfo));
-                logger.info("用户 {} 是学生", userId);
+                JSONObject studentInfo = SchoolContactUtils.getStudentInfo(contactUserInfo);
+                result.put("studentInfo", studentInfo);
+                logger.info("用户 {} 是学生, 姓名: {}", userId, studentInfo != null ? studentInfo.getString("name") : "未知");
             } else if (SchoolContactUtils.isParent(contactUserInfo)) {
                 result.put("userType", "parent");
-                result.put("parentInfo", SchoolContactUtils.getParentInfo(contactUserInfo));
-                logger.info("用户 {} 是家长", userId);
+                JSONObject parentInfo = SchoolContactUtils.getParentInfo(contactUserInfo);
+                result.put("parentInfo", parentInfo);
+                logger.info("用户 {} 是家长, 姓名: {}", userId, parentInfo != null ? parentInfo.getString("name") : "未知");
             } else {
                 result.put("userType", "unknown");
                 logger.warn("无法确定用户 {} 的类型", userId);
