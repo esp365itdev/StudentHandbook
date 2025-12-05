@@ -55,6 +55,11 @@ public class UserTypeController extends BaseController {
             String accessToken = weChatWorkOAuth2Utils.getAccessToken();
             logger.info("获取到的access_token: {}", accessToken);
             
+            if (accessToken == null) {
+                logger.error("获取access_token失败");
+                return AjaxResult.error("获取access_token失败");
+            }
+            
             // 获取学生或家长详细信息
             JSONObject contactUserInfo = SchoolContactUtils.getUserInfo(accessToken, userId);
             logger.info("获取到的家校通讯录用户信息: {}", contactUserInfo != null ? contactUserInfo.toJSONString() : "null");
@@ -89,6 +94,7 @@ public class UserTypeController extends BaseController {
                 logger.warn("无法确定用户 {} 的类型", userId);
             }
             
+            logger.info("检查用户类型完成，结果: {}", result.toJSONString());
             return AjaxResult.success("获取用户类型成功", result);
         } catch (Exception e) {
             logger.error("检查用户类型时发生错误", e);

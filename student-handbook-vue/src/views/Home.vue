@@ -13,12 +13,19 @@
         </svg>
       </div>
       <h1 class="welcome-title">歡迎使用學生系統</h1>
+      
+      <!-- 调试信息显示 -->
+      <div class="debug-info" v-if="debugInfo">
+        <p>调试信息:</p>
+        <pre>{{ debugInfo }}</pre>
+      </div>
+      
       <div v-if="userType" class="user-type-info">
         <p>您當前的身份是: {{ userType === 'student' ? '學生' : '家長' }}</p>
       </div>
-      <div v-if="userInfo" class="user-detail-info">
-        <p v-if="userType === 'student'">學生姓名: {{ studentInfo.name }}</p>
-        <p v-if="userType === 'parent'">家長姓名: {{ parentInfo.name }}</p>
+      <div v-if="studentInfo || parentInfo" class="user-detail-info">
+        <p v-if="userType === 'student' && studentInfo">學生姓名: {{ studentInfo.name }}</p>
+        <p v-if="userType === 'parent' && parentInfo">家長姓名: {{ parentInfo.name }}</p>
       </div>
       <div v-if="loading" class="loading-info">
         <p>正在檢查用戶身份...</p>
@@ -53,26 +60,26 @@
         </div>
       </button>
       
-      <!-- 自动检查身份按钮 -->
+      <!-- 手动触发检查按钮 -->
       <button 
         class="feature-button warning-button"
-        @click="autoCheckIdentity"
+        @click="manualCheckIdentity"
         :disabled="checking"
       >
         <div class="button-content">
           <span class="button-icon">{{ checking ? '⏳' : '🔍' }}</span>
-          <span class="button-text">{{ checking ? '自動檢查中...' : '自動檢查身份' }}</span>
+          <span class="button-text">{{ checking ? '檢查中...' : '手動檢查身份' }}</span>
         </div>
       </button>
       
-      <!-- 企业微信登录按钮 -->
+      <!-- 显示URL参数按钮 -->
       <button 
         class="feature-button info-button"
-        @click="loginWithWeChatWork"
+        @click="showUrlParams"
       >
         <div class="button-content">
-          <span class="button-icon">💬</span>
-          <span class="button-text">企业微信登录</span>
+          <span class="button-icon">🔗</span>
+          <span class="button-text">顯示URL參數</span>
         </div>
       </button>
     </div>
@@ -87,54 +94,82 @@ export default {
   data() {
     return {
       userType: null,
-      userInfo: null,
       studentInfo: null,
       parentInfo: null,
       loading: false,
       error: null,
-      checking: false
+      checking: false,
+      debugInfo: null
     };
   },
   mounted() {
+    // 页面加载时记录调试信息
+    this.logDebugInfo('Page mounted');
     // 页面加载时自动检查用户身份
     this.autoCheckIdentity();
   },
   methods: {
+    logDebugInfo(info) {
+      const currentTime = new Date().toISOString();
+      this.debugInfo = `${currentTime}: ${info}\n${this.debugInfo || ''}`;
+      console.log(info);
+    },
+    
+    showUrlParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      let paramsStr = '';
+      for (const [key, value] of urlParams) {
+        paramsStr += `${key}=${value}\n`;
+      }
+      
+      if (paramsStr) {
+        alert('URL参数:\n' + paramsStr);
+      } else {
+        alert('URL中没有参数');
+      }
+    },
+    
     async autoCheckIdentity() {
       try {
+        this.logDebugInfo('Starting auto check identity');
+        
         // 从URL参数中获取code
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         
-        console.log('Auto checking user identity with code:', code);
+        this.logDebugInfo(`Code from URL: ${code || 'None'}`);
         
         if (code) {
           this.checking = true;
           this.error = null;
           
+          this.logDebugInfo('Calling backend API to check user type');
+          
           // 调用后端API检查用户类型
           const response = await fetch(`${API_ENDPOINTS.CHECK_USER_TYPE}?code=${encodeURIComponent(code)}`);
           const result = await response.json();
           
-          console.log('Auto check API response:', result);
+          this.logDebugInfo(`API response: ${JSON.stringify(result)}`);
           
           if (result.code === 200) {
             this.userType = result.data.userType;
-            this.userInfo = result.data;
+            this.logDebugInfo(`User type: ${this.userType}`);
             
             if (result.data.studentInfo) {
               this.studentInfo = result.data.studentInfo;
+              this.logDebugInfo(`Student info: ${JSON.stringify(this.studentInfo)}`);
             }
             
             if (result.data.parentInfo) {
               this.parentInfo = result.data.parentInfo;
+              this.logDebugInfo(`Parent info: ${JSON.stringify(this.parentInfo)}`);
             }
             
             // 显示欢迎信息
             let welcomeMsg = '';
-            if (this.userType === 'student') {
+            if (this.userType === 'student' && this.studentInfo) {
               welcomeMsg = `歡迎你，${this.studentInfo.name}同學！`;
-            } else if (this.userType === 'parent') {
+            } else if (this.userType === 'parent' && this.parentInfo) {
               welcomeMsg = `歡迎你，${this.parentInfo.name}家長！`;
             }
             
@@ -142,13 +177,14 @@ export default {
               alert(welcomeMsg);
             }
           } else {
-            console.error('自动检查用户身份失败:', result.msg);
+            this.logDebugInfo(`API error: ${result.msg}`);
             this.error = '自动检查用户身份失败: ' + result.msg;
           }
         } else {
-          console.log('No code found in URL parameters');
+          this.logDebugInfo('No code found in URL parameters');
         }
       } catch (error) {
+        this.logDebugInfo(`Exception occurred: ${error.message}`);
         console.error('自动检查用户身份时发生错误:', error);
         this.error = '自动检查用户身份时发生错误: ' + error.message;
       } finally {
@@ -156,10 +192,68 @@ export default {
       }
     },
     
-    // 通过企业微信登录获取code
-    loginWithWeChatWork() {
-      // 重定向到企业微信OAuth授权页面
-      window.location.href = '/sp-api/wechat/oauth/authorize?redirect=/sp-api/dist/index.html';
+    async manualCheckIdentity() {
+      try {
+        this.logDebugInfo('Starting manual check identity');
+        
+        // 从URL参数中获取code
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        
+        this.logDebugInfo(`Code from URL for manual check: ${code || 'None'}`);
+        
+        if (code) {
+          this.checking = true;
+          this.error = null;
+          
+          this.logDebugInfo('Calling backend API to check user type (manual)');
+          
+          // 调用后端API检查用户类型
+          const response = await fetch(`${API_ENDPOINTS.CHECK_USER_TYPE}?code=${encodeURIComponent(code)}`);
+          const result = await response.json();
+          
+          this.logDebugInfo(`Manual check API response: ${JSON.stringify(result)}`);
+          
+          if (result.code === 200) {
+            this.userType = result.data.userType;
+            this.logDebugInfo(`User type (manual): ${this.userType}`);
+            
+            if (result.data.studentInfo) {
+              this.studentInfo = result.data.studentInfo;
+              this.logDebugInfo(`Student info (manual): ${JSON.stringify(this.studentInfo)}`);
+            }
+            
+            if (result.data.parentInfo) {
+              this.parentInfo = result.data.parentInfo;
+              this.logDebugInfo(`Parent info (manual): ${JSON.stringify(this.parentInfo)}`);
+            }
+            
+            // 显示欢迎信息
+            let welcomeMsg = '';
+            if (this.userType === 'student' && this.studentInfo) {
+              welcomeMsg = `歡迎你，${this.studentInfo.name}同學！`;
+            } else if (this.userType === 'parent' && this.parentInfo) {
+              welcomeMsg = `歡迎你，${this.parentInfo.name}家長！`;
+            }
+            
+            alert(welcomeMsg || '身份检查完成');
+          } else {
+            this.logDebugInfo(`Manual check API error: ${result.msg}`);
+            this.error = '检查用户身份失败: ' + result.msg;
+            alert('检查失败: ' + result.msg);
+          }
+        } else {
+          this.error = '当前页面URL中没有找到企业微信授权code';
+          alert('当前页面URL中没有找到企业微信授权code');
+        }
+      } catch (error) {
+        this.logDebugInfo(`Manual check exception: ${error.message}`);
+        console.error('检查用户身份时发生错误:', error);
+        this.error = '检查用户身份时发生错误: ' + error.message;
+        alert('检查时发生错误: ' + error.message);
+      } finally {
+        this.checking = false;
+      }
     },
     
     goToStudentHandbook() {
@@ -207,6 +301,24 @@ export default {
   animation: fadeInDown 1s ease;
   position: relative;
   z-index: 1;
+}
+
+.debug-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #fff3cd;
+  border-radius: 8px;
+  color: #856404;
+  font-weight: bold;
+  text-align: left;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.debug-info pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
 }
 
 .user-type-info, .user-detail-info {
