@@ -2,46 +2,10 @@
   <div class="home-container">
     <div class="welcome-section">
       <div class="logo-badge">
-        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 14L12 20" stroke="#409EFF" stroke-width="2" stroke-linecap="round"/>
-          <path d="M12 4L12 6" stroke="#409EFF" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="12" cy="10" r="6" stroke="#409EFF" stroke-width="2"/>
-          <path d="M5 19L6.5 16.5" stroke="#409EFF" stroke-width="2" stroke-linecap="round"/>
-          <path d="M19 19L17.5 16.5" stroke="#409EFF" stroke-width="2" stroke-linecap="round"/>
-          <path d="M17.5 16.5L15.5 13.5" stroke="#409EFF" stroke-width="2" stroke-linecap="round"/>
-          <path d="M6.5 16.5L8.5 13.5" stroke="#409EFF" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        <!-- 在这里放置学校Logo -->
+        <img src="../logo/sp.jpg" alt="School Logo" class="school-logo-img">
       </div>
       <h1 class="welcome-title">歡迎使用學生系統</h1>
-      
-      <!-- 调试信息显示 -->
-      <div class="debug-info" v-if="debugInfo">
-        <p>调试信息:</p>
-        <pre>{{ debugInfo }}</pre>
-      </div>
-      
-      <div v-if="userType" class="user-type-info">
-        <p>您當前的身份是: {{ userType === 'student' ? '學生' : '家長' }}</p>
-      </div>
-      <div v-if="studentInfo || parentInfo" class="user-detail-info">
-        <p v-if="userType === 'student' && studentInfo">學生姓名: {{ studentInfo.name }}</p>
-        <p v-if="userType === 'parent' && parentInfo">家長姓名: {{ parentInfo.name }}</p>
-      </div>
-      <div v-if="loading" class="loading-info">
-        <p>正在檢查用戶身份...</p>
-      </div>
-      <div v-if="error" class="error-info">
-        <p>{{ error }}</p>
-      </div>
-      
-      <!-- 提示信息 -->
-      <div v-if="!codeInUrl" class="warning-info">
-        <p>注意：当前页面URL中没有企业微信授权码，需要进行企业微信授权才能识别您的身份。</p>
-      </div>
-    </div>
-    
-    <div class="image-container">
-      <img src="../logo/sp.jpg" alt="School Logo" class="school-logo">
     </div>
     
     <div class="buttons-container">
@@ -64,255 +28,14 @@
           <span class="button-text">家校通知</span>
         </div>
       </button>
-      
-      <!-- 手动触发检查按钮 -->
-      <button 
-        class="feature-button warning-button"
-        @click="manualCheckIdentity"
-        :disabled="checking"
-      >
-        <div class="button-content">
-          <span class="button-icon">{{ checking ? '⏳' : '🔍' }}</span>
-          <span class="button-text">{{ checking ? '檢查中...' : '手動檢查身份' }}</span>
-        </div>
-      </button>
-      
-      <!-- 企业微信授权按钮 -->
-      <button 
-        class="feature-button info-button"
-        @click="redirectToWeChatAuth"
-        :disabled="redirecting"
-      >
-        <div class="button-content">
-          <span class="button-icon">{{ redirecting ? '⏳' : '💬' }}</span>
-          <span class="button-text">{{ redirecting ? '跳转中...' : '企业微信授权' }}</span>
-        </div>
-      </button>
-      
-      <!-- 显示URL参数按钮 -->
-      <button 
-        class="feature-button secondary-button"
-        @click="showUrlParams"
-      >
-        <div class="button-content">
-          <span class="button-icon">🔗</span>
-          <span class="button-text">顯示URL參數</span>
-        </div>
-      </button>
     </div>
   </div>
 </template>
 
 <script>
-import { API_ENDPOINTS } from '../config/api';
-
 export default {
   name: 'Home',
-  data() {
-    return {
-      userType: null,
-      studentInfo: null,
-      parentInfo: null,
-      loading: false,
-      error: null,
-      checking: false,
-      redirecting: false,
-      debugInfo: null,
-      codeInUrl: false
-    };
-  },
-  mounted() {
-    // 页面加载时记录调试信息
-    this.logDebugInfo('Page mounted');
-    // 检查URL中是否有code参数
-    this.checkCodeInUrl();
-    // 页面加载时自动检查用户身份
-    this.autoCheckIdentity();
-  },
   methods: {
-    logDebugInfo(info) {
-      const currentTime = new Date().toISOString();
-      this.debugInfo = `${currentTime}: ${info}\n${this.debugInfo || ''}`;
-      console.log(info);
-    },
-    
-    checkCodeInUrl() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      this.codeInUrl = !!code;
-      this.logDebugInfo(`Code in URL: ${code ? 'Yes' : 'No'}`);
-    },
-    
-    showUrlParams() {
-      const urlParams = new URLSearchParams(window.location.search);
-      let paramsStr = '';
-      for (const [key, value] of urlParams) {
-        paramsStr += `${key}=${value}\n`;
-      }
-      
-      if (paramsStr) {
-        alert('URL参数:\n' + paramsStr);
-      } else {
-        alert('URL中没有参数');
-      }
-    },
-    
-    redirectToWeChatAuth() {
-      try {
-        this.redirecting = true;
-        this.logDebugInfo('Redirecting to WeChat Work authorization');
-        
-        // 构造重定向URL，使用前端首页作为回调地址
-        const currentOrigin = window.location.origin;
-        // 确保回调URL指向前端首页而不是API路径
-        const indexPath = '/sp-api/dist/index.html'; // 或者根据实际情况调整路径
-        const callbackUrl = `${currentOrigin}${indexPath}`;
-        const encodedCallbackUrl = encodeURIComponent(callbackUrl);
-        const authUrl = `/sp-api/wechat/oauth/authorize?redirect=${encodedCallbackUrl}`;
-        
-        this.logDebugInfo(`Current origin: ${currentOrigin}`);
-        this.logDebugInfo(`Index path: ${indexPath}`);
-        this.logDebugInfo(`Callback URL: ${callbackUrl}`);
-        this.logDebugInfo(`Encoded callback URL: ${encodedCallbackUrl}`);
-        this.logDebugInfo(`Auth URL: ${authUrl}`);
-        
-        // 执行重定向
-        window.location.href = authUrl;
-      } catch (error) {
-        this.logDebugInfo(`Redirect error: ${error.message}`);
-        console.error('重定向到企业微信授权页面时发生错误:', error);
-        this.error = '重定向到企业微信授权页面时发生错误: ' + error.message;
-        this.redirecting = false;
-      }
-    },
-    
-    async autoCheckIdentity() {
-      try {
-        this.logDebugInfo('Starting auto check identity');
-        
-        // 从URL参数中获取code
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        
-        this.logDebugInfo(`Code from URL: ${code || 'None'}`);
-        
-        if (code) {
-          this.checking = true;
-          this.error = null;
-          
-          this.logDebugInfo('Calling backend API to check user type');
-          
-          // 调用后端API检查用户类型
-          const response = await fetch(`${API_ENDPOINTS.CHECK_USER_TYPE}?code=${encodeURIComponent(code)}`);
-          const result = await response.json();
-          
-          this.logDebugInfo(`API response: ${JSON.stringify(result)}`);
-          
-          if (result.code === 200) {
-            this.userType = result.data.userType;
-            this.logDebugInfo(`User type: ${this.userType}`);
-            
-            if (result.data.studentInfo) {
-              this.studentInfo = result.data.studentInfo;
-              this.logDebugInfo(`Student info: ${JSON.stringify(this.studentInfo)}`);
-            }
-            
-            if (result.data.parentInfo) {
-              this.parentInfo = result.data.parentInfo;
-              this.logDebugInfo(`Parent info: ${JSON.stringify(this.parentInfo)}`);
-            }
-            
-            // 显示欢迎信息
-            let welcomeMsg = '';
-            if (this.userType === 'student' && this.studentInfo) {
-              welcomeMsg = `歡迎你，${this.studentInfo.name}同學！`;
-            } else if (this.userType === 'parent' && this.parentInfo) {
-              welcomeMsg = `歡迎你，${this.parentInfo.name}家長！`;
-            }
-            
-            if (welcomeMsg) {
-              alert(welcomeMsg);
-            }
-          } else {
-            this.logDebugInfo(`API error: ${result.msg}`);
-            this.error = '自动检查用户身份失败: ' + result.msg;
-          }
-        } else {
-          this.logDebugInfo('No code found in URL parameters');
-        }
-      } catch (error) {
-        this.logDebugInfo(`Exception occurred: ${error.message}`);
-        console.error('自动检查用户身份时发生错误:', error);
-        this.error = '自动检查用户身份时发生错误: ' + error.message;
-      } finally {
-        this.checking = false;
-      }
-    },
-    
-    async manualCheckIdentity() {
-      try {
-        this.logDebugInfo('Starting manual check identity');
-        
-        // 从URL参数中获取code
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        
-        this.logDebugInfo(`Code from URL for manual check: ${code || 'None'}`);
-        
-        if (code) {
-          this.checking = true;
-          this.error = null;
-          
-          this.logDebugInfo('Calling backend API to check user type (manual)');
-          
-          // 调用后端API检查用户类型
-          const response = await fetch(`${API_ENDPOINTS.CHECK_USER_TYPE}?code=${encodeURIComponent(code)}`);
-          const result = await response.json();
-          
-          this.logDebugInfo(`Manual check API response: ${JSON.stringify(result)}`);
-          
-          if (result.code === 200) {
-            this.userType = result.data.userType;
-            this.logDebugInfo(`User type (manual): ${this.userType}`);
-            
-            if (result.data.studentInfo) {
-              this.studentInfo = result.data.studentInfo;
-              this.logDebugInfo(`Student info (manual): ${JSON.stringify(this.studentInfo)}`);
-            }
-            
-            if (result.data.parentInfo) {
-              this.parentInfo = result.data.parentInfo;
-              this.logDebugInfo(`Parent info (manual): ${JSON.stringify(this.parentInfo)}`);
-            }
-            
-            // 显示欢迎信息
-            let welcomeMsg = '';
-            if (this.userType === 'student' && this.studentInfo) {
-              welcomeMsg = `歡迎你，${this.studentInfo.name}同學！`;
-            } else if (this.userType === 'parent' && this.parentInfo) {
-              welcomeMsg = `歡迎你，${this.parentInfo.name}家長！`;
-            }
-            
-            alert(welcomeMsg || '身份检查完成');
-          } else {
-            this.logDebugInfo(`Manual check API error: ${result.msg}`);
-            this.error = '检查用户身份失败: ' + result.msg;
-            alert('检查失败: ' + result.msg);
-          }
-        } else {
-          this.error = '当前页面URL中没有找到企业微信授权code';
-          alert('当前页面URL中没有找到企业微信授权code，请先点击"企业微信授权"按钮进行授权');
-        }
-      } catch (error) {
-        this.logDebugInfo(`Manual check exception: ${error.message}`);
-        console.error('检查用户身份时发生错误:', error);
-        this.error = '检查用户身份时发生错误: ' + error.message;
-        alert('检查时发生错误: ' + error.message);
-      } finally {
-        this.checking = false;
-      }
-    },
-    
     goToStudentHandbook() {
       // 跳轉到學生手冊頁面
       this.$router.push('/handbook');
@@ -354,73 +77,15 @@ export default {
 
 .welcome-section {
   text-align: center;
-  margin: 20px 0 30px 0;
+  margin: 20px 0 15px 0; /* 减少下方边距 */
   animation: fadeInDown 1s ease;
   position: relative;
   z-index: 1;
 }
 
-.debug-info {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #fff3cd;
-  border-radius: 8px;
-  color: #856404;
-  font-weight: bold;
-  text-align: left;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.debug-info pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  margin: 0;
-}
-
-.user-type-info, .user-detail-info {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #e8f4ff;
-  border-radius: 8px;
-  color: #1a73e8;
-  font-weight: bold;
-}
-
-.user-detail-info {
-  background-color: #d1e7ff;
-}
-
-.warning-info {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #fff3cd;
-  border-radius: 8px;
-  color: #856404;
-  font-weight: bold;
-}
-
-.loading-info, .error-info {
-  margin-top: 15px;
-  padding: 10px;
-  border-radius: 8px;
-  font-weight: bold;
-}
-
-.loading-info {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
-.error-info {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
 .logo-badge {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #409eff, #1a73e8);
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -428,6 +93,13 @@ export default {
   margin: 0 auto 15px;
   box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
   animation: pulse 2s infinite;
+  overflow: hidden;
+}
+
+.school-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .welcome-title {
@@ -438,36 +110,11 @@ export default {
   letter-spacing: 1px;
 }
 
-.image-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 40px;
-  animation: fadeIn 1.5s ease;
-  position: relative;
-  z-index: 1;
-}
-
-.school-logo {
-  max-width: 90%;
-  height: auto;
-  object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  transform: translateY(0);
-}
-
-.school-logo:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
-}
-
 /* 按鈕容器樣式 */
 .buttons-container {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 15px; /* 减少按钮之间的间距 */
   width: 100%;
   max-width: 320px;
   animation: fadeInUp 1s ease;
@@ -549,30 +196,15 @@ export default {
   color: white;
 }
 
-.warning-button {
-  background: linear-gradient(135deg, #e6a23c 0%, #d1942e 100%);
-  color: white;
-}
-
-.info-button {
-  background: linear-gradient(135deg, #909399 0%, #606266 100%);
-  color: white;
-}
-
-.secondary-button {
-  background: linear-gradient(135deg, #409eff 0%, #1a73e8 100%);
-  color: white;
-}
-
 /* 手機屏幕適配 - 調整間距 */
 @media (max-width: 768px) {
   .buttons-container {
-    gap: 20px;
+    gap: 12px; /* 在手机上进一步减少间距 */
     max-width: 280px;
   }
-  
-  .image-container {
-    margin-bottom: 30px;
+
+  .welcome-section {
+    margin: 20px 0 10px 0; /* 在手机上减少间距 */
   }
   
   .welcome-title {
@@ -582,17 +214,22 @@ export default {
   .button-text {
     font-size: 22px;
   }
+  
+  .logo-badge {
+    width: 120px;
+    height: 120px;
+  }
 }
 
 /* 平板和桌面屏幕適配 */
 @media (min-width: 769px) {
   .buttons-container {
-    gap: 30px;
+    gap: 15px;
     max-width: 350px;
   }
   
-  .image-container {
-    margin-bottom: 40px;
+  .welcome-section {
+    margin: 20px 0 15px 0;
   }
   
   .welcome-title {
@@ -601,6 +238,11 @@ export default {
   
   .button-text {
     font-size: 24px;
+  }
+  
+  .logo-badge {
+    width: 150px;
+    height: 150px;
   }
 }
 
