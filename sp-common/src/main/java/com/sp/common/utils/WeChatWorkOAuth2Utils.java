@@ -73,9 +73,12 @@ public class WeChatWorkOAuth2Utils {
         JSONObject jsonObject = JSONObject.parseObject(response);
         
         if (jsonObject.containsKey("access_token")) {
+            logger.info("成功获取access_token");
             return jsonObject.getString("access_token");
         } else {
-            throw new Exception("获取access_token失败: " + jsonObject.getString("errmsg"));
+            String errorMsg = "获取access_token失败: " + jsonObject.getString("errmsg");
+            logger.error(errorMsg);
+            throw new Exception(errorMsg);
         }
     }
     
@@ -92,7 +95,11 @@ public class WeChatWorkOAuth2Utils {
         urlBuilder.append("?access_token=").append(accessToken);
         urlBuilder.append("&code=").append(code);
         
+        logger.info("准备获取用户信息，URL: {}", urlBuilder.toString());
+        
         String response = HttpUtils.sendGet(urlBuilder.toString());
+        logger.info("获取用户信息响应: {}", response);
+        
         JSONObject jsonObject = JSONObject.parseObject(response);
         logger.info("获取企业微信用户信息结果: {}", jsonObject.toJSONString());
         return jsonObject;

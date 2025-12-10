@@ -44,10 +44,14 @@
     <!-- 显示用户信息的模态框 -->
     <div v-if="showUserInfoModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
-        <h3>当前微信用户信息</h3>
-        <div v-if="userInfoLoading" class="loading">正在获取用户信息...</div>
+        <h3>微信用户信息测试</h3>
+        <div v-if="userInfoLoading" class="loading">
+          <div class="loading-spinner"></div>
+          <p>{{ currentLogMessage || '正在获取用户信息...' }}</p>
+        </div>
         <div v-else-if="userInfoError" class="error">获取用户信息失败: {{ userInfoError }}</div>
         <div v-else class="user-info">
+          <h4>用户信息</h4>
           <p><strong>用户ID:</strong> {{ currentUserInfo.userid || currentUserInfo.UserId || 'N/A' }}</p>
           <p><strong>用户名:</strong> {{ currentUserInfo.name || currentUserInfo.Name || 'N/A' }}</p>
           <p><strong>部门:</strong> {{ currentUserInfo.department || currentUserInfo.Department || 'N/A' }}</p>
@@ -55,6 +59,17 @@
           <p><strong>手机号:</strong> {{ currentUserInfo.mobile || currentUserInfo.Mobile || 'N/A' }}</p>
           <p><strong>邮箱:</strong> {{ currentUserInfo.email || currentUserInfo.Email || 'N/A' }}</p>
         </div>
+        
+        <!-- 日志显示区域 -->
+        <div class="log-section">
+          <h4>操作日志</h4>
+          <div class="log-content">
+            <div v-for="(log, index) in logs" :key="index" class="log-item">
+              {{ log }}
+            </div>
+          </div>
+        </div>
+        
         <button class="close-button" @click="closeModal">关闭</button>
       </div>
     </div>
@@ -72,7 +87,9 @@ export default {
       showUserInfoModal: false,
       currentUserInfo: {},
       userInfoLoading: false,
-      userInfoError: null
+      userInfoError: null,
+      currentLogMessage: '',
+      logs: [] // 存储操作日志
     }
   },
   mounted() {
@@ -80,6 +97,12 @@ export default {
     this.checkWeChatAuthCode();
   },
   methods: {
+    addToLog(message) {
+      const timestamp = new Date().toLocaleTimeString();
+      this.logs.push(`[${timestamp}] ${message}`);
+      console.log(message);
+    },
+    
     goToStudentHandbook() {
       // 跳轉到學生手冊頁面
       this.$router.push('/handbook');
@@ -99,63 +122,102 @@ export default {
       // 检查是否有错误参数
       const errcode = urlParams.get('errcode');
       if (errcode) {
-        console.error('微信授权错误，错误码:', errcode);
+        this.addToLog(`微信授权错误，错误码: ${errcode}`);
         return;
       }
       
       if (code && state === 'wechat_test') {
-        console.log('检测到微信授权code:', code);
+        this.addToLog('检测到微信授权code，开始获取用户信息');
         // 如果有code，尝试获取用户信息
         this.showUserInfoModal = true;
         this.userInfoLoading = true;
         this.userInfoError = null;
+        this.logs = []; // 清空之前的日志
+        this.addToLog(`接收到的code: ${code}`);
         
         try {
-          const response = await axios.get(`${API_ENDPOINTS.WECHAT_USER_INFO}?code=${code}`);
+          // 添加超时设置
+          const source = axios.CancelToken.source();
+          const timeout = setTimeout(() => {
+            source.cancel('请求超时');
+          }, 10000); // 10秒超时
+          
+          this.currentLogMessage = '正在请求后端获取用户信息...';
+          this.addToLog('发送请求到后端接口: ' + API_ENDPOINTS.WECHAT_USER_INFO);
+          
+          const response = await axios.get(`${API_ENDPOINTS.WECHAT_USER_INFO}?code=${code}`, {
+            cancelToken: source.token
+          });
+          
+          clearTimeout(timeout);
+          
+          this.addToLog('收到后端响应');
+          
           if (response.data.code === 200) {
-            console.log('通过code获取用户信息成功:', response.data.data);
+            this.addToLog('成功获取用户信息');
             this.currentUserInfo = response.data.data;
             this.userInfoLoading = false;
+            this.currentLogMessage = '';
           } else {
             this.userInfoLoading = false;
             this.userInfoError = response.data.msg;
+            this.currentLogMessage = '';
+            this.addToLog(`获取用户信息失败: ${response.data.msg}`);
           }
         } catch (error) {
-          console.error('通过code获取用户信息失败:', error);
           this.userInfoLoading = false;
-          this.userInfoError = error.message || '获取用户信息失败';
+          this.currentLogMessage = '';
+          if (axios.isCancel(error)) {
+            this.userInfoError = '请求超时，请稍后重试';
+            this.addToLog('请求超时');
+          } else {
+            this.userInfoError = error.message || '获取用户信息失败';
+            this.addToLog(`获取用户信息失败: ${error.message}`);
+          }
         }
       }
     },
     
     // 测试微信用户信息获取
     async testWeChatUserInfo() {
+      this.logs = []; // 清空之前的日志
+      this.addToLog('开始微信用户信息测试');
+      
       // 显示模态框
       this.showUserInfoModal = true;
       this.userInfoLoading = true;
       this.userInfoError = null;
-      this.currentUserInfo = {};
+      this.currentLogMessage = '正在检查环境...';
       
       try {
         // 检查是否在微信环境中
         const isWeChat = navigator.userAgent.includes('MicroMessenger');
+        this.addToLog(`当前环境检查: ${isWeChat ? '微信环境' : '非微信环境'}`);
+        
         if (isWeChat) {
+          this.currentLogMessage = '正在跳转到微信授权页面...';
+          this.addToLog('环境检查通过，准备跳转到微信授权页面');
           // 尝试通过OAuth2方式获取用户信息
           await this.getWeChatUserInfoByOAuth();
         } else {
           // 如果没有在微信环境中，显示提示信息
           this.userInfoLoading = false;
           this.userInfoError = '请在微信或企业微信环境中打开应用';
+          this.currentLogMessage = '';
+          this.addToLog('环境检查失败：请在微信或企业微信环境中打开应用');
         }
       } catch (error) {
         this.userInfoLoading = false;
+        this.currentLogMessage = '';
         this.userInfoError = error.message || '获取用户信息时发生错误';
+        this.addToLog(`发生错误: ${error.message}`);
       }
     },
     
     // 通过OAuth2方式获取微信用户信息
     async getWeChatUserInfoByOAuth() {
       try {
+        this.addToLog('构建微信授权链接');
         // 使用企业微信可信域名作为回调地址
         const redirectUri = encodeURIComponent('http://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback');
         const state = 'wechat_test'; // 固定state值用于识别
@@ -165,11 +227,14 @@ export default {
         // 构造适合手机端的企业微信OAuth2授权链接
         const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=${state}#wechat_redirect`;
         
+        this.addToLog('跳转到微信授权页面: ' + authUrl);
         // 重定向到授权页面
         window.location.href = authUrl;
       } catch (error) {
         this.userInfoLoading = false;
+        this.currentLogMessage = '';
         this.userInfoError = error.message || '发起微信授权失败';
+        this.addToLog(`发起微信授权失败: ${error.message}`);
       }
     },
     
@@ -361,15 +426,64 @@ export default {
   text-align: center;
 }
 
+.modal-content h4 {
+  margin-top: 15px;
+  margin-bottom: 10px;
+  color: #303133;
+}
+
 .user-info p {
-  margin: 10px 0;
-  padding: 5px 0;
+  margin: 8px 0;
+  padding: 4px 0;
   border-bottom: 1px solid #eee;
 }
 
-.loading, .error {
+.loading {
   text-align: center;
   padding: 20px;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #409eff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error {
+  color: #f56c6c;
+  text-align: center;
+  padding: 20px;
+}
+
+/* 日志区域样式 */
+.log-section {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.log-content {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.log-item {
+  margin: 5px 0;
+  line-height: 1.4;
 }
 
 .close-button {
