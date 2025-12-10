@@ -68,13 +68,21 @@ public class WeChatWorkOAuth2Utils {
         logger.info("准备获取access_token，URL: {}", urlBuilder.toString());
         
         String response = HttpUtils.sendGet(urlBuilder.toString());
-        logger.info("获取access_token响应: {}", response);
+        logger.info("获取access_token响应长度: {}", response != null ? response.length() : 0);
+        
+        if (response == null || response.isEmpty()) {
+            logger.error("获取access_token失败，响应为空");
+            throw new Exception("获取access_token失败，响应为空");
+        }
+        
+        logger.debug("access_token响应内容(前100字符): {}", response.length() > 100 ? response.substring(0, 100) : response);
         
         JSONObject jsonObject = JSONObject.parseObject(response);
         
         if (jsonObject.containsKey("access_token")) {
-            logger.info("成功获取access_token");
-            return jsonObject.getString("access_token");
+            String token = jsonObject.getString("access_token");
+            logger.info("成功获取access_token，长度: {}", token != null ? token.length() : 0);
+            return token;
         } else {
             String errorMsg = "获取access_token失败: " + jsonObject.getString("errmsg");
             logger.error(errorMsg);
@@ -98,7 +106,12 @@ public class WeChatWorkOAuth2Utils {
         logger.info("准备获取用户信息，URL: {}", urlBuilder.toString());
         
         String response = HttpUtils.sendGet(urlBuilder.toString());
-        logger.info("获取用户信息响应: {}", response);
+        logger.info("获取用户信息响应长度: {}", response != null ? response.length() : 0);
+        
+        if (response == null || response.isEmpty()) {
+            logger.error("获取用户信息失败，响应为空");
+            throw new Exception("获取用户信息失败，响应为空");
+        }
         
         JSONObject jsonObject = JSONObject.parseObject(response);
         logger.info("获取企业微信用户信息结果: {}", jsonObject.toJSONString());

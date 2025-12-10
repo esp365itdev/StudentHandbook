@@ -133,14 +133,14 @@ export default {
         this.userInfoLoading = true;
         this.userInfoError = null;
         this.logs = []; // 清空之前的日志
-        this.addToLog(`接收到的code: ${code}`);
+        this.addToLog(`接收到的code: ${code.substring(0, 10)}...`); // 只显示前10位
         
         try {
           // 添加超时设置
           const source = axios.CancelToken.source();
           const timeout = setTimeout(() => {
             source.cancel('请求超时');
-          }, 10000); // 10秒超时
+          }, 8000); // 8秒超时（略小于后端超时时间）
           
           this.currentLogMessage = '正在请求后端获取用户信息...';
           this.addToLog('发送请求到后端接口: ' + API_ENDPOINTS.WECHAT_USER_INFO);
@@ -151,7 +151,7 @@ export default {
           
           clearTimeout(timeout);
           
-          this.addToLog('收到后端响应');
+          this.addToLog('收到后端响应，状态码: ' + response.status);
           
           if (response.data.code === 200) {
             this.addToLog('成功获取用户信息');
@@ -221,13 +221,14 @@ export default {
         // 使用企业微信可信域名作为回调地址
         const redirectUri = encodeURIComponent('http://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback');
         const state = 'wechat_test'; // 固定state值用于识别
-        const appId = 'ww04fad852e91fd490'; // 企业微信应用ID
+        // 根据用户提供的信息，使用新的corpid
+        const corpId = 'wpV9pWDAAA1nyVENSNCp5_m185fWSXEg'; // 企业微信应用ID
         const agentId = '1000032'; // 企业微信应用agentId
         
         // 构造适合手机端的企业微信OAuth2授权链接
-        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=${state}#wechat_redirect`;
+        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=${state}#wechat_redirect`;
         
-        this.addToLog('跳转到微信授权页面: ' + authUrl);
+        this.addToLog('跳转到微信授权页面' + authUrl);
         // 重定向到授权页面
         window.location.href = authUrl;
       } catch (error) {
