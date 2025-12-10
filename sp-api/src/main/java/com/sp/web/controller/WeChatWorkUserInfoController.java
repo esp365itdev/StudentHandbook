@@ -71,7 +71,27 @@ public class WeChatWorkUserInfoController extends BaseController {
                     }
                 } else {
                     // 如果没有user_ticket，只返回基本信息
-                    return AjaxResult.success("获取用户基本信息成功", userResult);
+                    // 检查是否有UserId，如果有则获取用户详情
+                    if (userResult.containsKey("UserId")) {
+                        String userId = userResult.getString("UserId");
+                        
+                        // 获取用户详情
+                        String getUserDetailUrl = "https://qyapi.weixin.qq.com/cgi-bin/user/get?access_token=" + accessToken + "&userid=" + userId;
+                        String detailResponse = HttpUtils.sendGet(getUserDetailUrl);
+                        JSONObject detailResult = JSONObject.parseObject(detailResponse);
+                        
+                        logger.info("获取用户详情结果: {}", detailResult.toJSONString());
+                        
+                        if (!detailResult.containsKey("errcode") || detailResult.getIntValue("errcode") == 0) {
+                            return AjaxResult.success("获取用户详情成功", detailResult);
+                        } else {
+                            // 如果获取详情失败，返回基本信息
+                            return AjaxResult.success("获取用户基本信息成功", userResult);
+                        }
+                    } else {
+                        // 如果没有UserId，只返回基本信息
+                        return AjaxResult.success("获取用户基本信息成功", userResult);
+                    }
                 }
             } else {
                 return AjaxResult.error("获取用户基本信息失败: " + userResult.getString("errmsg"));

@@ -94,17 +94,36 @@ export default {
     async checkWeChatAuthCode() {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
+      const state = urlParams.get('state');
       
-      if (code) {
+      // 检查是否有错误参数
+      const errcode = urlParams.get('errcode');
+      if (errcode) {
+        console.error('微信授权错误，错误码:', errcode);
+        return;
+      }
+      
+      if (code && state === 'wechat_test') {
         console.log('检测到微信授权code:', code);
         // 如果有code，尝试获取用户信息
+        this.showUserInfoModal = true;
+        this.userInfoLoading = true;
+        this.userInfoError = null;
+        
         try {
           const response = await axios.get(`${API_ENDPOINTS.WECHAT_USER_INFO}?code=${code}`);
           if (response.data.code === 200) {
             console.log('通过code获取用户信息成功:', response.data.data);
+            this.currentUserInfo = response.data.data;
+            this.userInfoLoading = false;
+          } else {
+            this.userInfoLoading = false;
+            this.userInfoError = response.data.msg;
           }
         } catch (error) {
           console.error('通过code获取用户信息失败:', error);
+          this.userInfoLoading = false;
+          this.userInfoError = error.message || '获取用户信息失败';
         }
       }
     },
@@ -118,15 +137,15 @@ export default {
       this.currentUserInfo = {};
       
       try {
-        // 检查是否加载了微信JS-SDK
-        // 在微信中打开企业微信应用时，应该也能检测到wx对象
-        if (typeof wx !== 'undefined') {
+        // 检查是否在微信环境中
+        const isWeChat = navigator.userAgent.includes('MicroMessenger');
+        if (isWeChat) {
           // 尝试通过OAuth2方式获取用户信息
           await this.getWeChatUserInfoByOAuth();
         } else {
-          // 如果没有加载微信JS-SDK，显示提示信息
+          // 如果没有在微信环境中，显示提示信息
           this.userInfoLoading = false;
-          this.userInfoError = '未检测到微信JS-SDK，请确保在微信或企业微信环境中打开应用';
+          this.userInfoError = '请在微信或企业微信环境中打开应用';
         }
       } catch (error) {
         this.userInfoLoading = false;
@@ -139,13 +158,13 @@ export default {
       try {
         // 重新加载页面，触发企业微信OAuth2授权
         const redirectUri = encodeURIComponent(window.location.href.split('?')[0]);
-        const state = Math.random().toString(36).substring(2);
+        const state = 'wechat_test'; // 固定state值用于识别
         const appId = 'ww04fad852e91fd490'; // 企业微信应用ID
         const agentId = '1000032'; // 企业微信应用agentId
         
-        // 构造OAuth2授权链接
+        // 构造企业微信OAuth2授权链接
         // 使用snsapi_privateinfo可以获取用户敏感信息（如手机号）
-        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_privateinfo&agentid=${agentId}&state=${state}#wechat_redirect`;
+        const authUrl = `https://open.work.weixin.qq.com/wwopen/sso/3rd_qrConnect?appid=${appId}&agentid=${agentId}&redirect_uri=${redirectUri}&state=${state}`;
         
         // 重定向到授权页面
         window.location.href = authUrl;
