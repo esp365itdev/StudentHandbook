@@ -219,14 +219,13 @@ export default {
       try {
         this.addToLog('构建微信授权链接');
         // 使用企业微信可信域名作为回调地址
-        const redirectUri = encodeURIComponent('https://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback');
-        const state = 'wechat_test'; // 固定state值用于识别
+        const redirectUri = encodeURIComponent('https%3a%2f%2fmo-stu-sys.org-assistant.com%2fsp-api%2fwechat%2foauth%2fcallback');
         // 根据用户提供的信息，使用新的corpid
         const corpId = 'ww04fad852e91fd490'; // 企业微信应用ID
         const agentId = '1000032'; // 企业微信应用agentId
         
         // 构造适合手机端的企业微信OAuth2授权链接
-        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=${state}#wechat_redirect`;
+        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=#wechat_redirect`;
         
         this.addToLog('跳转到微信授权页面' + authUrl);
         // 重定向到授权页面
