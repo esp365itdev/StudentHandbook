@@ -73,7 +73,7 @@ public class WeChatWorkOAuthController extends BaseController {
     public AjaxResult callback(
             @RequestParam String code,
             @RequestParam String state,
-            HttpSession session) {
+            HttpSession session) throws IOException {
         
         logger.info("接收到企业微信授权回调，code: {}, state: {}", code, state);
         
@@ -100,11 +100,12 @@ public class WeChatWorkOAuthController extends BaseController {
                 // 清除临时session数据
                 session.removeAttribute("wechat_oauth_state");
                 
-                // 返回成功结果
+                // 重定向到首页并携带用户信息
                 JSONObject result = new JSONObject();
                 result.put("userId", userId);
                 result.put("userInfo", userInfo);
                 
+                // 由于是API接口，返回JSON结果而不是重定向
                 return AjaxResult.success("授权成功", result);
             } else {
                 logger.error("获取企业微信用户信息失败: {}", userInfo.getString("errmsg"));

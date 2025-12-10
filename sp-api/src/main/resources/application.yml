@@ -37,7 +37,7 @@ wechat:
     corpId: ww04fad852e91fd490
     agentId: 1000032
     secret: CqFIJ9HcirbRTxGUkLmsGzu1aLPJZarRtxgmziVzrfQ
-    redirectUri: http://tals-wcapp.esp.edu.mo/sp-api/wechat/oauth/callback
+    redirectUri: http://mo-stu-sys.org-assistant.com/wechat/oauth/callback
     # 回调配置
     callback:
       token: YWhmCsbcN5dtvkN44t5aywaOxcxDWWMO
