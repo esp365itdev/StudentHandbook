@@ -65,7 +65,11 @@ public class WeChatWorkOAuth2Utils {
         urlBuilder.append("?corpid=").append(corpId);
         urlBuilder.append("&corpsecret=").append(secret);
         
+        logger.info("准备获取access_token，URL: {}", urlBuilder.toString());
+        
         String response = HttpUtils.sendGet(urlBuilder.toString());
+        logger.info("获取access_token响应: {}", response);
+        
         JSONObject jsonObject = JSONObject.parseObject(response);
         
         if (jsonObject.containsKey("access_token")) {
