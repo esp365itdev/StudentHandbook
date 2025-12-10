@@ -48,12 +48,12 @@
         <div v-if="userInfoLoading" class="loading">正在获取用户信息...</div>
         <div v-else-if="userInfoError" class="error">获取用户信息失败: {{ userInfoError }}</div>
         <div v-else class="user-info">
-          <p><strong>用户ID:</strong> {{ currentUserInfo.userid || 'N/A' }}</p>
-          <p><strong>用户名:</strong> {{ currentUserInfo.name || 'N/A' }}</p>
-          <p><strong>部门:</strong> {{ currentUserInfo.department || 'N/A' }}</p>
-          <p><strong>职位:</strong> {{ currentUserInfo.position || 'N/A' }}</p>
-          <p><strong>手机号:</strong> {{ currentUserInfo.mobile || 'N/A' }}</p>
-          <p><strong>邮箱:</strong> {{ currentUserInfo.email || 'N/A' }}</p>
+          <p><strong>用户ID:</strong> {{ currentUserInfo.userid || currentUserInfo.UserId || 'N/A' }}</p>
+          <p><strong>用户名:</strong> {{ currentUserInfo.name || currentUserInfo.Name || 'N/A' }}</p>
+          <p><strong>部门:</strong> {{ currentUserInfo.department || currentUserInfo.Department || 'N/A' }}</p>
+          <p><strong>职位:</strong> {{ currentUserInfo.position || currentUserInfo.Position || 'N/A' }}</p>
+          <p><strong>手机号:</strong> {{ currentUserInfo.mobile || currentUserInfo.Mobile || 'N/A' }}</p>
+          <p><strong>邮箱:</strong> {{ currentUserInfo.email || currentUserInfo.Email || 'N/A' }}</p>
         </div>
         <button class="close-button" @click="closeModal">关闭</button>
       </div>
@@ -75,6 +75,10 @@ export default {
       userInfoError: null
     }
   },
+  mounted() {
+    // 页面加载时检查URL参数中是否有code
+    this.checkWeChatAuthCode();
+  },
   methods: {
     goToStudentHandbook() {
       // 跳轉到學生手冊頁面
@@ -86,6 +90,25 @@ export default {
       this.$message.info('家校通知功能正在開發中');
     },
     
+    // 检查URL参数中是否有微信授权code
+    async checkWeChatAuthCode() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      
+      if (code) {
+        console.log('检测到微信授权code:', code);
+        // 如果有code，尝试获取用户信息
+        try {
+          const response = await axios.get(`${API_ENDPOINTS.WECHAT_USER_INFO}?code=${code}`);
+          if (response.data.code === 200) {
+            console.log('通过code获取用户信息成功:', response.data.data);
+          }
+        } catch (error) {
+          console.error('通过code获取用户信息失败:', error);
+        }
+      }
+    },
+    
     // 测试微信用户信息获取
     async testWeChatUserInfo() {
       // 显示模态框
@@ -95,17 +118,15 @@ export default {
       this.currentUserInfo = {};
       
       try {
-        // 检查是否在企业微信环境中
-        if (typeof wx !== 'undefined' && wx.config) {
-          // 初始化企业微信JS-SDK配置
-          await this.initWeChatConfig();
-          
-          // 等待wx.ready回调后再获取用户信息
-          await this.getWeChatUserInfo();
+        // 检查是否加载了微信JS-SDK
+        // 在微信中打开企业微信应用时，应该也能检测到wx对象
+        if (typeof wx !== 'undefined') {
+          // 尝试通过OAuth2方式获取用户信息
+          await this.getWeChatUserInfoByOAuth();
         } else {
-          // 如果不在企业微信环境中，显示提示信息
+          // 如果没有加载微信JS-SDK，显示提示信息
           this.userInfoLoading = false;
-          this.userInfoError = '当前环境不支持企业微信JS-SDK';
+          this.userInfoError = '未检测到微信JS-SDK，请确保在微信或企业微信环境中打开应用';
         }
       } catch (error) {
         this.userInfoLoading = false;
@@ -113,71 +134,25 @@ export default {
       }
     },
     
-    // 初始化企业微信JS-SDK配置
-    initWeChatConfig() {
-      return new Promise(async (resolve, reject) => {
-        try {
-          // 获取当前页面URL（不包含hash部分）
-          const url = window.location.href.split('#')[0];
-          
-          // 请求后端获取JS-SDK配置
-          const response = await axios.get(`${API_ENDPOINTS.WECHAT_JS_CONFIG}?url=${encodeURIComponent(url)}`);
-          
-          if (response.data.code === 200) {
-            const config = response.data.data;
-            
-            // 配置企业微信JS-SDK
-            wx.config({
-              beta: true,
-              debug: false,
-              appId: config.appId,
-              timestamp: config.timestamp,
-              nonceStr: config.nonceStr,
-              signature: config.signature,
-              jsApiList: ['getUserInfo'] // 需要使用的JS接口列表
-            });
-            
-            // 监听配置成功的回调
-            wx.ready(() => {
-              console.log('企业微信JS-SDK配置成功');
-              resolve();
-            });
-            
-            // 监听配置失败的回调
-            wx.error((res) => {
-              console.error('企业微信JS-SDK配置失败:', res);
-              reject(new Error('企业微信JS-SDK配置失败: ' + JSON.stringify(res)));
-            });
-          } else {
-            reject(new Error('获取JS-SDK配置失败: ' + response.data.msg));
-          }
-        } catch (error) {
-          reject(error);
-        }
-      });
-    },
-    
-    // 获取企业微信用户信息
-    getWeChatUserInfo() {
-      return new Promise((resolve, reject) => {
-        try {
-          // 使用企业微信JS-SDK获取用户信息
-          wx.invoke('getUserInfo', {}, (res) => {
-            this.userInfoLoading = false;
-            if (res.err_msg === 'getUserInfo:ok') {
-              this.currentUserInfo = res.userInfo;
-              resolve(res.userInfo);
-            } else {
-              this.userInfoError = res.err_msg;
-              reject(new Error(res.err_msg));
-            }
-          });
-        } catch (error) {
-          this.userInfoLoading = false;
-          this.userInfoError = error.message || '获取用户信息时发生错误';
-          reject(error);
-        }
-      });
+    // 通过OAuth2方式获取微信用户信息
+    async getWeChatUserInfoByOAuth() {
+      try {
+        // 重新加载页面，触发企业微信OAuth2授权
+        const redirectUri = encodeURIComponent(window.location.href.split('?')[0]);
+        const state = Math.random().toString(36).substring(2);
+        const appId = 'ww04fad852e91fd490'; // 企业微信应用ID
+        const agentId = '1000032'; // 企业微信应用agentId
+        
+        // 构造OAuth2授权链接
+        // 使用snsapi_privateinfo可以获取用户敏感信息（如手机号）
+        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_privateinfo&agentid=${agentId}&state=${state}#wechat_redirect`;
+        
+        // 重定向到授权页面
+        window.location.href = authUrl;
+      } catch (error) {
+        this.userInfoLoading = false;
+        this.userInfoError = error.message || '发起微信授权失败';
+      }
     },
     
     closeModal() {

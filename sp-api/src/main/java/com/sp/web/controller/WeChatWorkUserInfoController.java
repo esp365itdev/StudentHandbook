@@ -1,0 +1,84 @@
+package com.sp.web.controller;
+
+import com.alibaba.fastjson.JSONObject;
+import com.sp.common.annotation.Anonymous;
+import com.sp.common.core.controller.BaseController;
+import com.sp.common.core.domain.AjaxResult;
+import com.sp.common.utils.WeChatWorkOAuth2Utils;
+import com.sp.common.utils.http.HttpUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 企业微信用户信息控制器
+ * 用于获取企业微信用户的详细信息
+ */
+@RestController
+@RequestMapping("/wechat/user")
+public class WeChatWorkUserInfoController extends BaseController {
+    
+    private static final Logger logger = LoggerFactory.getLogger(WeChatWorkUserInfoController.class);
+    
+    @Autowired
+    private WeChatWorkOAuth2Utils weChatWorkOAuth2Utils;
+    
+    /**
+     * 根据code获取企业微信用户详细信息
+     * 
+     * @param code 企业微信授权code
+     * @return 用户详细信息
+     */
+    @Anonymous
+    @GetMapping("/getUserInfoByCode")
+    public AjaxResult getUserInfoByCode(@RequestParam String code) {
+        logger.info("根据code获取企业微信用户详细信息，code: {}", code);
+        
+        try {
+            // 1. 获取access_token
+            String accessToken = weChatWorkOAuth2Utils.getAccessToken();
+            
+            // 2. 根据code获取用户基本信息（包含user_ticket）
+            String getUserInfoUrl = "https://qyapi.weixin.qq.com/cgi-bin/auth/getuserinfo?access_token=" + accessToken + "&code=" + code;
+            String userResponse = HttpUtils.sendGet(getUserInfoUrl);
+            JSONObject userResult = JSONObject.parseObject(userResponse);
+            
+            logger.info("获取用户基本信息结果: {}", userResult.toJSONString());
+            
+            if (!userResult.containsKey("errcode") || userResult.getIntValue("errcode") == 0) {
+                // 如果包含user_ticket，继续获取详细信息
+                if (userResult.containsKey("user_ticket")) {
+                    String userTicket = userResult.getString("user_ticket");
+                    
+                    // 3. 根据user_ticket获取用户详细信息（包括手机号等敏感信息）
+                    String getDetailUrl = "https://qyapi.weixin.qq.com/cgi-bin/auth/getuserdetail?access_token=" + accessToken;
+                    JSONObject postData = new JSONObject();
+                    postData.put("user_ticket", userTicket);
+                    
+                    String detailResponse = HttpUtils.sendPost(getDetailUrl, postData.toJSONString());
+                    JSONObject detailResult = JSONObject.parseObject(detailResponse);
+                    
+                    logger.info("获取用户详细信息结果: {}", detailResult.toJSONString());
+                    
+                    if (!detailResult.containsKey("errcode") || detailResult.getIntValue("errcode") == 0) {
+                        return AjaxResult.success("获取用户详细信息成功", detailResult);
+                    } else {
+                        return AjaxResult.error("获取用户详细信息失败: " + detailResult.getString("errmsg"));
+                    }
+                } else {
+                    // 如果没有user_ticket，只返回基本信息
+                    return AjaxResult.success("获取用户基本信息成功", userResult);
+                }
+            } else {
+                return AjaxResult.error("获取用户基本信息失败: " + userResult.getString("errmsg"));
+            }
+        } catch (Exception e) {
+            logger.error("获取企业微信用户信息失败", e);
+            return AjaxResult.error("获取用户信息失败: " + e.getMessage());
+        }
+    }
+}

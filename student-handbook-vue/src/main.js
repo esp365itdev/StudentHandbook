@@ -13,10 +13,12 @@ app.mount('#app')
 
 // 动态加载企业微信JS-SDK
 function loadWeChatSDK() {
-  // 检查是否在企业微信环境中
-  const isWeChatWork = navigator.userAgent.includes('wxwork');
+  // 检查是否在微信相关环境中（包括微信和企业微信）
+  const isWeChat = navigator.userAgent.includes('MicroMessenger');
   
-  if (isWeChatWork) {
+  // 无论是在普通微信还是企业微信环境中，都尝试加载企业微信JS-SDK
+  // 因为企业微信应用在微信中打开时也需要使用企业微信JS-SDK
+  if (isWeChat) {
     const script = document.createElement('script');
     script.src = 'https://res.wx.qq.com/open/js/jweixin-1.2.0.js';
     script.onload = () => {
