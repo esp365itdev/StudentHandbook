@@ -60,9 +60,14 @@ spring:
           config:
             multi-statement-allow: true
 
-# 企业微信回调配置
+# 企业微信配置
 wechat:
   work:
+    corpId: ww04fad852e91fd490
+    agentId: 1000032
+    secret: CqFIJ9HcirbRTxGUkLmsGzu1aLPJZarRtxgmziVzrfQ
+    redirectUri: http://mo-stu-sys.org-assistant.com/wechat/oauth/callback
+    # 回调配置
     callback:
       token: YWhmCsbcN5dtvkN44t5aywaOxcxDWWMO
       encodingAesKey: 4C7hzSn2qFrO1hzMIJBY5iTL7UPKFZSUwmMX9TLF80D
