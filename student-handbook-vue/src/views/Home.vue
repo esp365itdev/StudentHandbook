@@ -162,9 +162,9 @@ export default {
         const appId = 'ww04fad852e91fd490'; // 企业微信应用ID
         const agentId = '1000032'; // 企业微信应用agentId
         
-        // 构造企业微信OAuth2授权链接
-        // 使用snsapi_privateinfo可以获取用户敏感信息（如手机号）
-        const authUrl = `https://open.work.weixin.qq.com/wwopen/sso/3rd_qrConnect?appid=${appId}&agentid=${agentId}&redirect_uri=${redirectUri}&state=${state}`;
+        // 构造适合手机端的企业微信OAuth2授权链接
+        // 使用适合手机端的oauth2授权链接
+        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=${state}#wechat_redirect`;
         
         // 重定向到授权页面
         window.location.href = authUrl;
