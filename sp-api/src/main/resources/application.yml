@@ -34,10 +34,10 @@ server:
 # 企业微信配置
 wechat:
   work:
-    corpId: wpV9pWDAAA1nyVENSNCp5_m185fWSXEg
+    corpId: ww04fad852e91fd490
     agentId: 1000032
     secret: CqFIJ9HcirbRTxGUkLmsGzu1aLPJZarRtxgmziVzrfQ
-    redirectUri: http://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback
+    redirectUri: https://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback
     # 回调配置
     callback:
       token: YWhmCsbcN5dtvkN44t5aywaOxcxDWWMO
