@@ -42,12 +42,17 @@ public class WeChatWorkUserInfoController extends BaseController {
             // 1. 获取access_token
             String accessToken = weChatWorkOAuth2Utils.getAccessToken();
             
+            // 增加日志输出，方便排查504问题
+            logger.info("获取access_token成功: {}", accessToken);
+            
             // 2. 根据code获取用户基本信息（包含user_ticket）
             String getUserInfoUrl = "https://qyapi.weixin.qq.com/cgi-bin/auth/getuserinfo?access_token=" + accessToken + "&code=" + code;
-            String userResponse = HttpUtils.sendGet(getUserInfoUrl);
-            JSONObject userResult = JSONObject.parseObject(userResponse);
+            logger.info("准备请求用户基本信息，URL: {}", getUserInfoUrl);
             
-            logger.info("获取用户基本信息结果: {}", userResult.toJSONString());
+            String userResponse = HttpUtils.sendGet(getUserInfoUrl);
+            logger.info("获取用户基本信息响应: {}", userResponse);
+            
+            JSONObject userResult = JSONObject.parseObject(userResponse);
             
             if (!userResult.containsKey("errcode") || userResult.getIntValue("errcode") == 0) {
                 // 如果包含user_ticket，继续获取详细信息
@@ -59,10 +64,11 @@ public class WeChatWorkUserInfoController extends BaseController {
                     JSONObject postData = new JSONObject();
                     postData.put("user_ticket", userTicket);
                     
+                    logger.info("准备请求用户详细信息，URL: {}", getDetailUrl);
                     String detailResponse = HttpUtils.sendPost(getDetailUrl, postData.toJSONString());
-                    JSONObject detailResult = JSONObject.parseObject(detailResponse);
+                    logger.info("获取用户详细信息响应: {}", detailResponse);
                     
-                    logger.info("获取用户详细信息结果: {}", detailResult.toJSONString());
+                    JSONObject detailResult = JSONObject.parseObject(detailResponse);
                     
                     if (!detailResult.containsKey("errcode") || detailResult.getIntValue("errcode") == 0) {
                         return AjaxResult.success("获取用户详细信息成功", detailResult);
@@ -77,10 +83,12 @@ public class WeChatWorkUserInfoController extends BaseController {
                         
                         // 获取用户详情
                         String getUserDetailUrl = "https://qyapi.weixin.qq.com/cgi-bin/user/get?access_token=" + accessToken + "&userid=" + userId;
-                        String detailResponse = HttpUtils.sendGet(getUserDetailUrl);
-                        JSONObject detailResult = JSONObject.parseObject(detailResponse);
+                        logger.info("准备请求用户详情，URL: {}", getUserDetailUrl);
                         
-                        logger.info("获取用户详情结果: {}", detailResult.toJSONString());
+                        String detailResponse = HttpUtils.sendGet(getUserDetailUrl);
+                        logger.info("获取用户详情响应: {}", detailResponse);
+                        
+                        JSONObject detailResult = JSONObject.parseObject(detailResponse);
                         
                         if (!detailResult.containsKey("errcode") || detailResult.getIntValue("errcode") == 0) {
                             return AjaxResult.success("获取用户详情成功", detailResult);

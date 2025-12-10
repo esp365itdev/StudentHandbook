@@ -30,6 +30,10 @@ import org.springframework.http.MediaType;
 public class HttpUtils
 {
     private static final Logger log = LoggerFactory.getLogger(HttpUtils.class);
+    
+    // 设置连接超时时间和读取超时时间，避免504超时
+    private static final int CONNECT_TIMEOUT = 10000; // 10秒
+    private static final int READ_TIMEOUT = 30000;    // 30秒
 
     /**
      * 向指定 URL 发送GET方法的请求
@@ -75,6 +79,9 @@ public class HttpUtils
             connection.setRequestProperty("accept", "*/*");
             connection.setRequestProperty("connection", "Keep-Alive");
             connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+            // 设置连接和读取超时时间
+            connection.setConnectTimeout(CONNECT_TIMEOUT);
+            connection.setReadTimeout(READ_TIMEOUT);
             connection.connect();
             in = new BufferedReader(new InputStreamReader(connection.getInputStream(), contentType));
             String line;
@@ -152,6 +159,9 @@ public class HttpUtils
             conn.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
             conn.setRequestProperty("Accept-Charset", "utf-8");
             conn.setRequestProperty("Content-Type", contentType);
+            // 设置连接和读取超时时间
+            conn.setConnectTimeout(CONNECT_TIMEOUT);
+            conn.setReadTimeout(READ_TIMEOUT);
             conn.setDoOutput(true);
             conn.setDoInput(true);
             out = new PrintWriter(conn.getOutputStream());
@@ -223,6 +233,9 @@ public class HttpUtils
             conn.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
             conn.setRequestProperty("Accept-Charset", "utf-8");
             conn.setRequestProperty("Content-Type", contentType);
+            // 设置连接和读取超时时间
+            conn.setConnectTimeout(CONNECT_TIMEOUT);
+            conn.setReadTimeout(READ_TIMEOUT);
             conn.setDoOutput(true);
             conn.setDoInput(true);
 
