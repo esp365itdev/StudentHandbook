@@ -157,7 +157,7 @@ export default {
     async getWeChatUserInfoByOAuth() {
       try {
         // 使用企业微信可信域名作为回调地址
-        const redirectUri = encodeURIComponent('http://mo-stu-sys.org-assistant.com/wechat/oauth/callback');
+        const redirectUri = encodeURIComponent('http://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback');
         const state = 'wechat_test'; // 固定state值用于识别
         const appId = 'ww04fad852e91fd490'; // 企业微信应用ID
         const agentId = '1000032'; // 企业微信应用agentId
