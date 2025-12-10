@@ -31,9 +31,9 @@ public class HttpUtils
 {
     private static final Logger log = LoggerFactory.getLogger(HttpUtils.class);
     
-    // 设置连接超时时间和读取超时时间，避免504超时
-    private static final int CONNECT_TIMEOUT = 10000; // 10秒
-    private static final int READ_TIMEOUT = 30000;    // 30秒
+    // 设置更短的连接超时时间和读取超时时间，避免504超时
+    private static final int CONNECT_TIMEOUT = 5000; // 5秒
+    private static final int READ_TIMEOUT = 10000;   // 10秒
 
     /**
      * 向指定 URL 发送GET方法的请求

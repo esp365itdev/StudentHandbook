@@ -40,9 +40,8 @@ public class WeChatWorkUserInfoController extends BaseController {
         
         try {
             // 1. 获取access_token
+            logger.info("开始获取access_token");
             String accessToken = weChatWorkOAuth2Utils.getAccessToken();
-            
-            // 增加日志输出，方便排查504问题
             logger.info("获取access_token成功: {}", accessToken);
             
             // 2. 根据code获取用户基本信息（包含user_ticket）
@@ -71,9 +70,12 @@ public class WeChatWorkUserInfoController extends BaseController {
                     JSONObject detailResult = JSONObject.parseObject(detailResponse);
                     
                     if (!detailResult.containsKey("errcode") || detailResult.getIntValue("errcode") == 0) {
+                        logger.info("成功获取用户详细信息");
                         return AjaxResult.success("获取用户详细信息成功", detailResult);
                     } else {
-                        return AjaxResult.error("获取用户详细信息失败: " + detailResult.getString("errmsg"));
+                        String errorMsg = "获取用户详细信息失败: " + detailResult.getString("errmsg");
+                        logger.error(errorMsg);
+                        return AjaxResult.error(errorMsg);
                     }
                 } else {
                     // 如果没有user_ticket，只返回基本信息
@@ -91,18 +93,23 @@ public class WeChatWorkUserInfoController extends BaseController {
                         JSONObject detailResult = JSONObject.parseObject(detailResponse);
                         
                         if (!detailResult.containsKey("errcode") || detailResult.getIntValue("errcode") == 0) {
+                            logger.info("成功获取用户详情");
                             return AjaxResult.success("获取用户详情成功", detailResult);
                         } else {
                             // 如果获取详情失败，返回基本信息
+                            logger.warn("获取用户详情失败: {}，返回基本信息", detailResult.getString("errmsg"));
                             return AjaxResult.success("获取用户基本信息成功", userResult);
                         }
                     } else {
                         // 如果没有UserId，只返回基本信息
+                        logger.info("成功获取用户基本信息");
                         return AjaxResult.success("获取用户基本信息成功", userResult);
                     }
                 }
             } else {
-                return AjaxResult.error("获取用户基本信息失败: " + userResult.getString("errmsg"));
+                String errorMsg = "获取用户基本信息失败: " + userResult.getString("errmsg");
+                logger.error(errorMsg);
+                return AjaxResult.error(errorMsg);
             }
         } catch (Exception e) {
             logger.error("获取企业微信用户信息失败", e);
