@@ -219,7 +219,7 @@ export default {
       try {
         this.addToLog('构建微信授权链接');
         // 使用企业微信可信域名作为回调地址
-        const redirectUri = encodeURIComponent('https://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback');
+        const redirectUri = encodeURIComponent('http://10.32.96.55:80/sp-api/wechat/oauth/callback');
         // 根据用户提供的信息，使用新的corpid
         const corpId = 'ww04fad852e91fd490'; // 企业微信应用ID
         const agentId = '1000032'; // 企业微信应用agentId
