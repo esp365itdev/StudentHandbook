@@ -66,7 +66,7 @@ wechat:
     corpId: ww04fad852e91fd490
     agentId: 1000032
     secret: CqFIJ9HcirbRTxGUkLmsGzu1aLPJZarRtxgmziVzrfQ
-    redirectUri: https://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback
+    redirectUri: http://10.32.96.55:80/sp-api/wechat/oauth/callback
     # 回调配置
     callback:
       token: YWhmCsbcN5dtvkN44t5aywaOxcxDWWMO
