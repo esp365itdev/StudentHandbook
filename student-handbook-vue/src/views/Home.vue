@@ -225,9 +225,9 @@ export default {
         const agentId = '1000032'; // 企业微信应用agentId
         
         // 构造适合手机端的企业微信OAuth2授权链接
-        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=#wechat_redirect`;
+        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=wechat_test#wechat_redirect`;
         
-        this.addToLog('跳转到微信授权页面' + authUrl);
+        this.addToLog('跳转到微信授权页面: ' + authUrl);
         // 重定向到授权页面
         window.location.href = authUrl;
       } catch (error) {

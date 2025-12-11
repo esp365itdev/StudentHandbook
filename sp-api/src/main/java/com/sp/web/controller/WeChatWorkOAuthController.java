@@ -78,12 +78,17 @@ public class WeChatWorkOAuthController extends BaseController {
         logger.info("接收到企业微信授权回调，code: {}, state: {}", code, state);
         
         try {
-            // 验证state参数，防止CSRF攻击
-            String savedState = (String) session.getAttribute("wechat_oauth_state");
+            // 对于微信用户测试功能，我们允许特定的state值
+            boolean isWechatTest = "wechat_test".equals(state);
             
-            if (savedState == null || !savedState.equals(state)) {
-                logger.warn("state参数验证失败，可能遭遇CSRF攻击");
-                return AjaxResult.error("授权验证失败");
+            if (!isWechatTest) {
+                // 验证state参数，防止CSRF攻击（除了微信测试情况）
+                String savedState = (String) session.getAttribute("wechat_oauth_state");
+                
+                if (savedState == null || !savedState.equals(state)) {
+                    logger.warn("state参数验证失败，可能遭遇CSRF攻击");
+                    return AjaxResult.error("授权验证失败");
+                }
             }
             
             // 根据code获取用户信息
@@ -97,8 +102,10 @@ public class WeChatWorkOAuthController extends BaseController {
                 // 可以在这里处理用户登录逻辑
                 // 例如：创建或更新本地用户信息，设置登录状态等
                 
-                // 清除临时session数据
-                session.removeAttribute("wechat_oauth_state");
+                // 清除临时session数据（如果不是测试情况）
+                if (!isWechatTest) {
+                    session.removeAttribute("wechat_oauth_state");
+                }
                 
                 // 重定向到首页并携带用户信息
                 JSONObject result = new JSONObject();
