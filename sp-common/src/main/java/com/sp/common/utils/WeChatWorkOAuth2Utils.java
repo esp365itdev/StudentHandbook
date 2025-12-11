@@ -31,7 +31,8 @@ public class WeChatWorkOAuth2Utils {
     @Value("${wechat.work.redirectUri}")
     private String redirectUri;
     
-    private static final String AUTHORIZE_URL = "https://open.work.weixin.qq.com/wwopen/sso/qrConnect";
+    // 修改为OAuth2授权链接
+    private static final String AUTHORIZE_URL = "https://open.weixin.qq.com/connect/oauth2/authorize";
     private static final String TOKEN_URL = "https://qyapi.weixin.qq.com/cgi-bin/gettoken";
     private static final String USER_INFO_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo";
     
@@ -43,14 +44,17 @@ public class WeChatWorkOAuth2Utils {
     public String getAuthorizeUrl(String state) {
         StringBuilder urlBuilder = new StringBuilder(AUTHORIZE_URL);
         urlBuilder.append("?appid=").append(corpId);
-        urlBuilder.append("&agentid=").append(agentId);
         try {
             urlBuilder.append("&redirect_uri=").append(URLEncoder.encode(redirectUri, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             logger.error("URL编码失败", e);
             urlBuilder.append("&redirect_uri=").append(redirectUri);
         }
+        urlBuilder.append("&response_type=code");
+        urlBuilder.append("&scope=snsapi_base");
+        urlBuilder.append("&agentid=").append(agentId);
         urlBuilder.append("&state=").append(state);
+        urlBuilder.append("#wechat_redirect");
         logger.info("企业微信授权链接: {}", urlBuilder.toString());
         return urlBuilder.toString();
     }
@@ -102,6 +106,7 @@ public class WeChatWorkOAuth2Utils {
         StringBuilder urlBuilder = new StringBuilder(USER_INFO_URL);
         urlBuilder.append("?access_token=").append(accessToken);
         urlBuilder.append("&code=").append(code);
+        urlBuilder.append("&agentid=").append(agentId); // 添加agentid参数
         
         logger.info("准备获取用户信息，URL: {}", urlBuilder.toString());
         
