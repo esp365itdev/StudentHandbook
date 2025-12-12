@@ -93,6 +93,8 @@ public class WeChatWorkOAuthController extends BaseController {
             
             // 根据code获取用户信息
             JSONObject userInfo = weChatWorkOAuth2Utils.getUserInfo(code);
+
+            logger.info("企业微信授权成功，用户userInfo: {}", userInfo);
             
             if (userInfo.containsKey("UserId")) {
                 // 获取用户信息成功
