@@ -5,6 +5,7 @@ import com.sp.common.annotation.Anonymous;
 import com.sp.common.core.controller.BaseController;
 import com.sp.common.core.domain.AjaxResult;
 import com.sp.common.utils.WeChatWorkOAuth2Utils;
+import com.sp.common.utils.WeChatWorkSchoolUtils;
 import com.sp.common.utils.http.HttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,9 @@ public class WeChatWorkUserInfoController extends BaseController {
     
     @Autowired
     private WeChatWorkOAuth2Utils weChatWorkOAuth2Utils;
+    
+    @Autowired
+    private WeChatWorkSchoolUtils weChatWorkSchoolUtils;
     
     /**
      * 根据code获取企业微信用户详细信息
@@ -140,6 +144,34 @@ public class WeChatWorkUserInfoController extends BaseController {
         } catch (Exception e) {
             logger.error("获取企业微信用户信息失败", e);
             return AjaxResult.error("获取用户信息失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 根据userid获取家校用户详细信息（家长或学生）
+     * 
+     * @param userid 家校通讯录的userid
+     * @return 用户详细信息
+     */
+    @Anonymous
+    @GetMapping("/getSchoolUserDetail")
+    public AjaxResult getSchoolUserDetail(@RequestParam String userid) {
+        logger.info("根据userid获取家校用户详细信息，userid: {}", userid);
+        
+        try {
+            JSONObject userDetail = weChatWorkSchoolUtils.getSchoolUserDetail(userid);
+            
+            if (!userDetail.containsKey("errcode") || userDetail.getIntValue("errcode") == 0) {
+                logger.info("成功获取家校用户详细信息");
+                return AjaxResult.success("获取家校用户详细信息成功", userDetail);
+            } else {
+                String errorMsg = "获取家校用户详细信息失败: " + userDetail.getString("errmsg");
+                logger.error(errorMsg);
+                return AjaxResult.error(errorMsg);
+            }
+        } catch (Exception e) {
+            logger.error("获取家校用户详细信息失败", e);
+            return AjaxResult.error("获取家校用户详细信息失败: " + e.getMessage());
         }
     }
 }

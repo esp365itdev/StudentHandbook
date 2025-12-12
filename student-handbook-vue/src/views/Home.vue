@@ -39,6 +39,17 @@
           <span class="button-text">微信用户测试</span>
         </div>
       </button>
+      
+      <!-- 添加获取家校用户详细信息按钮 -->
+      <button 
+        class="feature-button info-button"
+        @click="testWeChatSchoolUserInfo"
+      >
+        <div class="button-content">
+          <span class="button-icon">👨‍👩‍👧‍👦</span>
+          <span class="button-text">获取家校用户详情</span>
+        </div>
+      </button>
     </div>
     
     <!-- 显示用户信息的模态框 -->
@@ -52,12 +63,24 @@
         <div v-else-if="userInfoError" class="error">获取用户信息失败: {{ userInfoError }}</div>
         <div v-else class="user-info">
           <h4>用户信息</h4>
-          <p><strong>用户ID:</strong> {{ currentUserInfo.userid || currentUserInfo.UserId || 'N/A' }}</p>
+          <p><strong>用户ID:</strong> {{ currentUserInfo.userid || currentUserInfo.UserId || currentUserInfo.parent_userid || currentUserInfo.student_userid || 'N/A' }}</p>
           <p><strong>用户名:</strong> {{ currentUserInfo.name || currentUserInfo.Name || 'N/A' }}</p>
           <p><strong>部门:</strong> {{ currentUserInfo.department || currentUserInfo.Department || 'N/A' }}</p>
           <p><strong>职位:</strong> {{ currentUserInfo.position || currentUserInfo.Position || 'N/A' }}</p>
           <p><strong>手机号:</strong> {{ currentUserInfo.mobile || currentUserInfo.Mobile || 'N/A' }}</p>
           <p><strong>邮箱:</strong> {{ currentUserInfo.email || currentUserInfo.Email || 'N/A' }}</p>
+          <div v-if="currentUserInfo.user_type">
+            <p><strong>用户类型:</strong> {{ currentUserInfo.user_type == 1 ? '学生' : '家长' }}</p>
+          </div>
+          <div v-if="currentUserInfo.student">
+            <h5>学生信息</h5>
+            <p><strong>学生姓名:</strong> {{ currentUserInfo.student.name }}</p>
+            <p><strong>班级ID:</strong> {{ currentUserInfo.student.department.join(', ') }}</p>
+          </div>
+          <div v-if="currentUserInfo.parent">
+            <h5>家长信息</h5>
+            <p><strong>手机号:</strong> {{ currentUserInfo.parent.mobile }}</p>
+          </div>
         </div>
         
         <!-- 日志显示区域 -->
@@ -89,7 +112,9 @@ export default {
       userInfoLoading: false,
       userInfoError: null,
       currentLogMessage: '',
-      logs: [] // 存储操作日志
+      logs: [], // 存储操作日志
+      // 添加一个变量来跟踪当前测试类型
+      currentTestType: ''
     }
   },
   mounted() {
@@ -180,6 +205,7 @@ export default {
     
     // 测试微信用户信息获取
     async testWeChatUserInfo() {
+      this.currentTestType = 'normal';
       this.logs = []; // 清空之前的日志
       this.addToLog('开始微信用户信息测试');
       
@@ -211,6 +237,73 @@ export default {
         this.currentLogMessage = '';
         this.userInfoError = error.message || '获取用户信息时发生错误';
         this.addToLog(`发生错误: ${error.message}`);
+      }
+    },
+    
+    // 测试家校用户详细信息获取
+    async testWeChatSchoolUserInfo() {
+      this.currentTestType = 'school';
+      this.logs = []; // 清空之前的日志
+      this.addToLog('开始获取家校用户详细信息测试');
+      
+      // 显示模态框
+      this.showUserInfoModal = true;
+      this.userInfoLoading = true;
+      this.userInfoError = null;
+      this.currentLogMessage = '请输入用户ID...';
+      
+      try {
+        // 弹出输入框让用户输入用户ID
+        const userid = prompt("请输入家校通讯录中的用户ID（家长或学生的userid）:");
+        
+        if (!userid) {
+          this.userInfoLoading = false;
+          this.userInfoError = '用户取消操作或未输入用户ID';
+          this.currentLogMessage = '';
+          this.addToLog('用户取消操作或未输入用户ID');
+          return;
+        }
+        
+        this.currentLogMessage = '正在请求后端获取家校用户详细信息...';
+        this.addToLog(`用户输入的用户ID: ${userid}`);
+        
+        // 添加超时设置
+        const source = axios.CancelToken.source();
+        const timeout = setTimeout(() => {
+          source.cancel('请求超时');
+        }, 8000); // 8秒超时（略小于后端超时时间）
+        
+        this.addToLog('发送请求到后端接口: ' + API_ENDPOINTS.WECHAT_SCHOOL_USER_DETAIL);
+        
+        const response = await axios.get(`${API_ENDPOINTS.WECHAT_SCHOOL_USER_DETAIL}?userid=${encodeURIComponent(userid)}`, {
+          cancelToken: source.token
+        });
+        
+        clearTimeout(timeout);
+        
+        this.addToLog('收到后端响应，状态码: ' + response.status);
+        
+        if (response.data.code === 200) {
+          this.addToLog('成功获取家校用户详细信息');
+          this.currentUserInfo = response.data.data;
+          this.userInfoLoading = false;
+          this.currentLogMessage = '';
+        } else {
+          this.userInfoLoading = false;
+          this.userInfoError = response.data.msg;
+          this.currentLogMessage = '';
+          this.addToLog(`获取家校用户详细信息失败: ${response.data.msg}`);
+        }
+      } catch (error) {
+        this.userInfoLoading = false;
+        this.currentLogMessage = '';
+        if (axios.isCancel(error)) {
+          this.userInfoError = '请求超时，请稍后重试';
+          this.addToLog('请求超时');
+        } else {
+          this.userInfoError = error.message || '获取家校用户详细信息失败';
+          this.addToLog(`获取家校用户详细信息失败: ${error.message}`);
+        }
       }
     },
     
@@ -397,6 +490,11 @@ export default {
   color: white;
 }
 
+.info-button {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%);
+  color: white;
+}
+
 /* 模态框样式 */
 .modal-overlay {
   position: fixed;
@@ -430,6 +528,12 @@ export default {
   margin-top: 15px;
   margin-bottom: 10px;
   color: #303133;
+}
+
+.modal-content h5 {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  color: #606266;
 }
 
 .user-info p {
