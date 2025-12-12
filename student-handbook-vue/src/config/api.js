@@ -2,11 +2,7 @@
 
 // 定义通用的API端点路径
 const apiEndpoints = {
-  STUDENT_HANDBOOK_LIST: '/system/handbook/list',
-  CHECK_USER_TYPE: '/user/type/check',
-  WECHAT_JS_CONFIG: '/wechat/jsconfig/getConfig',
-  WECHAT_USER_INFO: '/wechat/user/getUserInfoByCode',
-  WECHAT_SCHOOL_USER_DETAIL: '/wechat/user/getSchoolUserDetail'
+  STUDENT_HANDBOOK_LIST: '/system/handbook/list'
 };
 
 // 获取基础URL - 从环境变量读取或者使用默认值

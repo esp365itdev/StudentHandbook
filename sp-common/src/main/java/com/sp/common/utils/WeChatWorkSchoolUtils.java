@@ -61,35 +61,7 @@ public class WeChatWorkSchoolUtils {
             throw new Exception(errorMsg);
         }
     }
-    
-    /**
-     * 根据code获取家校用户信息（家长或学生）
-     * @param code 通过成员授权获取的code
-     * @return 用户信息
-     * @throws Exception 获取失败时抛出异常
-     */
-    public JSONObject getSchoolUserInfo(String code) throws Exception {
-        String accessToken = getAccessToken();
-        
-        StringBuilder urlBuilder = new StringBuilder(SCHOOL_USER_INFO_URL);
-        urlBuilder.append("?access_token=").append(accessToken);
-        urlBuilder.append("&code=").append(code);
-        
-        logger.info("准备获取家校用户信息，URL: {}", urlBuilder.toString());
-        
-        String response = HttpUtils.sendGet(urlBuilder.toString());
-        logger.info("获取家校用户信息响应长度: {}", response != null ? response.length() : 0);
-        
-        if (response == null || response.isEmpty()) {
-            logger.error("获取家校用户信息失败，响应为空");
-            throw new Exception("获取家校用户信息失败，响应为空");
-        }
-        
-        JSONObject jsonObject = JSONObject.parseObject(response);
-        logger.info("获取家校用户信息结果: {}", jsonObject.toJSONString());
-        return jsonObject;
-    }
-    
+
     /**
      * 根据userid获取家校用户详细信息（家长或学生）
      * @param userid 家校通讯录的userid
