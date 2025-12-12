@@ -64,8 +64,8 @@ spring:
 wechat:
   work:
     corpId: ww04fad852e91fd490
-    agentId: 1000032
-    secret: CqFIJ9HcirbRTxGUkLmsGzu1aLPJZarRtxgmziVzrfQ
+    agentId: 1000033
+    secret: I31-B5clKayPf4vNl2bibhL1ia8x4cwIc884xK888Fc
     redirectUri: https://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback
     # 回调配置
     callback:

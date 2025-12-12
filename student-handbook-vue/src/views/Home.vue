@@ -222,7 +222,7 @@ export default {
         const redirectUri = encodeURIComponent('https://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback');
         // 根据用户提供的信息，使用新的corpid
         const corpId = 'ww04fad852e91fd490'; // 企业微信应用ID
-        const agentId = '1000032'; // 企业微信应用agentId
+        const agentId = '1000033'; // 企业微信应用agentId
         
         // 构造适合手机端的企业微信OAuth2授权链接
         const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=wechat_test#wechat_redirect`;
