@@ -5,6 +5,7 @@ import com.sp.common.annotation.Anonymous;
 import com.sp.common.core.controller.BaseController;
 import com.sp.common.core.domain.AjaxResult;
 import com.sp.common.utils.WeChatWorkOAuth2Utils;
+import com.sp.common.utils.WeChatWorkSchoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,9 @@ public class WeChatWorkOAuthController extends BaseController {
     @Autowired
     private WeChatWorkOAuth2Utils weChatWorkOAuth2Utils;
     
+    @Autowired
+    private WeChatWorkSchoolUtils weChatWorkSchoolUtils;
+    
     /**
      * 发起企业微信授权请求
      * @param redirect 授权后重定向地址
@@ -44,16 +48,16 @@ public class WeChatWorkOAuthController extends BaseController {
             @RequestParam(required = false) String redirect,
             HttpSession session,
             HttpServletResponse response) throws IOException {
-        
+
         logger.info("发起企业微信授权请求，重定向地址: {}", redirect);
-        
+
         // 生成state参数，用于防止CSRF攻击
         String state = UUID.randomUUID().toString();
-        
+
         // 将重定向地址和state存入session
         session.setAttribute("wechat_oauth_redirect", redirect);
         session.setAttribute("wechat_oauth_state", state);
-        
+
         // 构造授权链接并重定向
         String authorizeUrl = weChatWorkOAuth2Utils.getAuthorizeUrl(state);
         logger.info("重定向到企业微信授权页面: {}", authorizeUrl);
@@ -73,7 +77,7 @@ public class WeChatWorkOAuthController extends BaseController {
     public AjaxResult callback(
             @RequestParam String code,
             @RequestParam String state,
-            HttpSession session) throws IOException {
+            HttpSession session) throws IOException{
         
         logger.info("接收到企业微信授权回调，code: {}, state: {}", code, state);
         
@@ -91,15 +95,17 @@ public class WeChatWorkOAuthController extends BaseController {
                 }
             }
             
-            // 根据code获取用户信息
-            JSONObject userInfo = weChatWorkOAuth2Utils.getUserInfo(code);
+            // 根据code获取家校用户信息（家长或学生）
+            JSONObject userInfo = weChatWorkSchoolUtils.getSchoolUserInfo(code);
 
-            logger.info("企业微信授权成功，用户userInfo: {}", userInfo);
+            logger.info("企业微信家校授权成功，用户userInfo: {}", userInfo);
             
-            if (userInfo.containsKey("UserId")) {
+            // 检查是否包含家长(parent_userid)或学生(student_userid)信息
+            if (userInfo.containsKey("parent_userid") || userInfo.containsKey("student_userid")) {
                 // 获取用户信息成功
-                String userId = userInfo.getString("UserId");
-                logger.info("企业微信授权成功，用户ID: {}", userId);
+                String userId = userInfo.containsKey("parent_userid") ? 
+                    userInfo.getString("parent_userid") : userInfo.getString("student_userid");
+                logger.info("企业微信家校授权成功，用户ID: {}", userId);
                 
                 // 可以在这里处理用户登录逻辑
                 // 例如：创建或更新本地用户信息，设置登录状态等
@@ -117,11 +123,11 @@ public class WeChatWorkOAuthController extends BaseController {
                 // 由于是API接口，返回JSON结果而不是重定向
                 return AjaxResult.success("授权成功", result);
             } else {
-                logger.error("获取企业微信用户信息失败: {}", userInfo.getString("errmsg"));
+                logger.error("获取企业微信家校用户信息失败: {}", userInfo.getString("errmsg"));
                 return AjaxResult.error("获取用户信息失败: " + userInfo.getString("errmsg"));
             }
         } catch (Exception e) {
-            logger.error("处理企业微信授权回调时发生错误", e);
+            logger.error("处理企业微信家校授权回调时发生错误", e);
             return AjaxResult.error("处理授权回调时发生错误: " + e.getMessage());
         }
     }
