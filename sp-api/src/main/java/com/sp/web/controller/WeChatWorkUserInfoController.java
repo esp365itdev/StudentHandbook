@@ -174,4 +174,76 @@ public class WeChatWorkUserInfoController extends BaseController {
             return AjaxResult.error("获取家校用户详细信息失败: " + e.getMessage());
         }
     }
+    
+    /**
+     * 合并接口：先通过code获取用户基本信息获取用户ID，再通过用户ID获取家校用户详细信息
+     * 
+     * @param code 企业微信授权code
+     * @return 家校用户详细信息
+     */
+    @Anonymous
+    @GetMapping("/getSchoolUserInfoByCode")
+    public AjaxResult getSchoolUserInfoByCode(@RequestParam String code) {
+        logger.info("根据code获取家校用户详细信息，code: {}", code);
+        
+        try {
+            // 1. 获取access_token
+            logger.info("开始获取access_token");
+            String accessToken = weChatWorkOAuth2Utils.getAccessToken();
+            logger.info("获取access_token成功: {}", accessToken != null ? "access_token已获取" : "null");
+            
+            // 添加检查
+            if (accessToken == null || accessToken.isEmpty()) {
+                logger.error("获取access_token失败，返回空值");
+                return AjaxResult.error("获取access_token失败");
+            }
+            
+            // 2. 根据code获取用户基本信息
+            String getUserInfoUrl = "https://qyapi.weixin.qq.com/cgi-bin/auth/getuserinfo?access_token=" + accessToken + "&code=" + code;
+            logger.info("准备请求用户基本信息，URL: {}", getUserInfoUrl);
+            
+            String userResponse = HttpUtils.sendGet(getUserInfoUrl);
+            logger.info("获取用户基本信息响应长度: {}", userResponse != null ? userResponse.length() : 0);
+            
+            if (userResponse == null || userResponse.isEmpty()) {
+                logger.error("获取用户基本信息失败，响应为空");
+                return AjaxResult.error("获取用户基本信息失败，响应为空");
+            }
+            
+            JSONObject userResult = JSONObject.parseObject(userResponse);
+            logger.info("解析用户基本信息结果: {}", userResult.toJSONString());
+            
+            if (!userResult.containsKey("errcode") || userResult.getIntValue("errcode") == 0) {
+                // 3. 从用户基本信息中提取用户ID
+                String userId = null;
+                if (userResult.containsKey("UserId")) {
+                    userId = userResult.getString("UserId");
+                    logger.info("发现UserId: {}", userId);
+                } else {
+                    logger.warn("未找到UserId字段");
+                    return AjaxResult.error("未能从用户基本信息中提取到用户ID");
+                }
+                
+                // 4. 使用用户ID获取家校用户详细信息
+                logger.info("使用用户ID获取家校用户详细信息，用户ID: {}", userId);
+                JSONObject schoolUserDetail = weChatWorkSchoolUtils.getSchoolUserDetail(userId);
+                
+                if (!schoolUserDetail.containsKey("errcode") || schoolUserDetail.getIntValue("errcode") == 0) {
+                    logger.info("成功获取家校用户详细信息");
+                    return AjaxResult.success("获取家校用户详细信息成功", schoolUserDetail);
+                } else {
+                    String errorMsg = "获取家校用户详细信息失败: " + schoolUserDetail.getString("errmsg");
+                    logger.error(errorMsg);
+                    return AjaxResult.error(errorMsg);
+                }
+            } else {
+                String errorMsg = "获取用户基本信息失败: " + userResult.getString("errmsg");
+                logger.error(errorMsg);
+                return AjaxResult.error(errorMsg);
+            }
+        } catch (Exception e) {
+            logger.error("获取家校用户详细信息失败", e);
+            return AjaxResult.error("获取家校用户详细信息失败: " + e.getMessage());
+        }
+    }
 }

@@ -40,7 +40,7 @@
         </div>
       </button>
       
-      <!-- 合并后的家校用户信息获取按钮 -->
+      <!-- 获取家校用户详情按钮 -->
       <button 
         class="feature-button info-button"
         @click="testWeChatSchoolUserInfo"
@@ -61,40 +61,6 @@
           <p>{{ currentLogMessage || '正在获取用户信息...' }}</p>
         </div>
         <div v-else-if="userInfoError" class="error">获取用户信息失败: {{ userInfoError }}</div>
-        <div v-else class="user-info">
-          <h4>用户信息</h4>
-          <p><strong>用户ID:</strong> {{ currentUserInfo.userid || currentUserInfo.UserId || currentUserInfo.parent_userid || currentUserInfo.student_userid || 'N/A' }}</p>
-          <p><strong>用户名:</strong> {{ currentUserInfo.name || currentUserInfo.Name || 'N/A' }}</p>
-          <p><strong>部门:</strong> {{ currentUserInfo.department || currentUserInfo.Department || 'N/A' }}</p>
-          <p><strong>职位:</strong> {{ currentUserInfo.position || currentUserInfo.Position || 'N/A' }}</p>
-          <p><strong>手机号:</strong> {{ currentUserInfo.mobile || currentUserInfo.Mobile || 'N/A' }}</p>
-          <p><strong>邮箱:</strong> {{ currentUserInfo.email || currentUserInfo.Email || 'N/A' }}</p>
-          <div v-if="currentUserInfo.user_type">
-            <p><strong>用户类型:</strong> {{ currentUserInfo.user_type == 1 ? '学生' : '家长' }}</p>
-          </div>
-          <div v-if="currentUserInfo.student">
-            <h5>学生信息</h5>
-            <p><strong>学生姓名:</strong> {{ currentUserInfo.student.name }}</p>
-            <p><strong>班级ID:</strong> {{ currentUserInfo.student.department ? currentUserInfo.student.department.join(', ') : 'N/A' }}</p>
-            <div v-if="currentUserInfo.student.parents && currentUserInfo.student.parents.length > 0">
-              <h6>家长列表</h6>
-              <div v-for="(parent, index) in currentUserInfo.student.parents" :key="index">
-                <p><strong>关系:</strong> {{ parent.relation }} | <strong>手机号:</strong> {{ parent.mobile || 'N/A' }}</p>
-              </div>
-            </div>
-          </div>
-          <div v-if="currentUserInfo.parent">
-            <h5>家长信息</h5>
-            <p><strong>手机号:</strong> {{ currentUserInfo.parent.mobile || 'N/A' }}</p>
-            <div v-if="currentUserInfo.parent.children && currentUserInfo.parent.children.length > 0">
-              <h6>子女列表</h6>
-              <div v-for="(child, index) in currentUserInfo.parent.children" :key="index">
-                <p><strong>学生ID:</strong> {{ child.student_userid }} | <strong>关系:</strong> {{ child.relation }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
         <!-- 日志显示区域 -->
         <div class="log-section">
           <h4>操作日志</h4>
@@ -124,9 +90,7 @@ export default {
       userInfoLoading: false,
       userInfoError: null,
       currentLogMessage: '',
-      logs: [], // 存储操作日志
-      // 添加一个变量来跟踪当前测试类型
-      currentTestType: ''
+      logs: []
     }
   },
   mounted() {
@@ -180,10 +144,10 @@ export default {
           }, 8000); // 8秒超时（略小于后端超时时间）
           
           this.currentLogMessage = '正在请求后端获取用户信息...';
-          this.addToLog('发送请求到后端接口: /sp-api/wechat/oauth/callback');
+          this.addToLog('发送请求到后端接口: /sp-api/wechat/user/getSchoolUserInfoByCode');
           
-          // 直接调用后端的OAuth回调接口获取用户基本信息
-          const response = await axios.get(`/sp-api/wechat/oauth/callback?code=${code}&state=wechat_test`, {
+          // 直接调用新的合并接口获取家校用户详细信息
+          const response = await axios.get(`/sp-api/wechat/user/getSchoolUserInfoByCode?code=${code}`, {
             cancelToken: source.token
           });
           
@@ -192,64 +156,15 @@ export default {
           this.addToLog('收到后端响应，状态码: ' + response.status);
           
           if (response.data.code === 200) {
-            this.addToLog('成功获取用户基本信息');
-            const userInfo = response.data.data.userInfo;
-            
-            // 获取用户ID
-            let userId = null;
-            if (userInfo.parent_userid) {
-              userId = userInfo.parent_userid;
-            } else if (userInfo.student_userid) {
-              userId = userInfo.student_userid;
-            } else if (userInfo.UserId) {
-              userId = userInfo.UserId;
-            } else if (userInfo.userid) {
-              userId = userInfo.userid;
-            }
-            
-            if (userId) {
-              this.currentLogMessage = '正在获取家校用户详细信息...';
-              this.addToLog(`获取到用户ID: ${userId}，准备获取详细信息`);
-              
-              // 继续获取家校用户详细信息
-              try {
-                const detailResponse = await axios.get(`${API_ENDPOINTS.WECHAT_SCHOOL_USER_DETAIL}?userid=${encodeURIComponent(userId)}`, {
-                  cancelToken: source.token
-                });
-                
-                this.addToLog('收到家校用户详细信息响应，状态码: ' + detailResponse.status);
-                
-                if (detailResponse.data.code === 200) {
-                  this.addToLog('成功获取家校用户详细信息');
-                  this.currentUserInfo = detailResponse.data.data;
-                  this.userInfoLoading = false;
-                  this.currentLogMessage = '';
-                } else {
-                  // 如果获取详细信息失败，至少显示基本信息
-                  this.addToLog(`获取家校用户详细信息失败: ${detailResponse.data.msg}，显示基本信息`);
-                  this.currentUserInfo = userInfo;
-                  this.userInfoLoading = false;
-                  this.currentLogMessage = '';
-                }
-              } catch (detailError) {
-                // 如果获取详细信息失败，至少显示基本信息
-                this.addToLog(`获取家校用户详细信息异常: ${detailError.message}，显示基本信息`);
-                this.currentUserInfo = userInfo;
-                this.userInfoLoading = false;
-                this.currentLogMessage = '';
-              }
-            } else {
-              // 没有找到用户ID，只显示基本信息
-              this.addToLog('未找到有效的用户ID，仅显示基本信息');
-              this.currentUserInfo = userInfo;
-              this.userInfoLoading = false;
-              this.currentLogMessage = '';
-            }
+            this.addToLog('成功获取家校用户详细信息');
+            this.currentUserInfo = response.data.data;
+            this.userInfoLoading = false;
+            this.currentLogMessage = '';
           } else {
             this.userInfoLoading = false;
             this.userInfoError = response.data.msg;
             this.currentLogMessage = '';
-            this.addToLog(`获取用户信息失败: ${response.data.msg}`);
+            this.addToLog(`获取家校用户详细信息失败: ${response.data.msg}`);
           }
         } catch (error) {
           this.userInfoLoading = false;
@@ -258,8 +173,8 @@ export default {
             this.userInfoError = '请求超时，请稍后重试';
             this.addToLog('请求超时');
           } else {
-            this.userInfoError = error.message || '获取用户信息失败';
-            this.addToLog(`获取用户信息失败: ${error.message}`);
+            this.userInfoError = error.message || '获取家校用户详细信息失败';
+            this.addToLog(`获取家校用户详细信息失败: ${error.message}`);
           }
         }
       }
@@ -267,7 +182,6 @@ export default {
     
     // 测试微信用户信息获取
     async testWeChatUserInfo() {
-      this.currentTestType = 'normal';
       this.logs = []; // 清空之前的日志
       this.addToLog('开始微信用户信息测试');
       
@@ -302,9 +216,8 @@ export default {
       }
     },
     
-    // 测试家校用户详细信息获取（合并操作）
+    // 测试家校用户详细信息获取
     async testWeChatSchoolUserInfo() {
-      this.currentTestType = 'school';
       this.logs = []; // 清空之前的日志
       this.addToLog('开始获取家校用户详细信息测试');
       
@@ -323,7 +236,7 @@ export default {
           this.currentLogMessage = '正在跳转到微信授权页面...';
           this.addToLog('环境检查通过，准备跳转到微信授权页面');
           // 尝试通过OAuth2方式获取用户信息
-          await this.getWeChatUserInfoByOAuth();
+          await this.getWeChatSchoolUserInfoByOAuth();
         } else {
           // 如果没有在微信环境中，显示提示信息
           this.userInfoLoading = false;
@@ -350,6 +263,30 @@ export default {
         const agentId = '1000033'; // 企业微信应用agentId
         
         // 构造适合手机端的企业微信OAuth2授权链接
+        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=wechat_test#wechat_redirect`;
+        
+        this.addToLog('跳转到微信授权页面: ' + authUrl);
+        // 重定向到授权页面
+        window.location.href = authUrl;
+      } catch (error) {
+        this.userInfoLoading = false;
+        this.currentLogMessage = '';
+        this.userInfoError = error.message || '发起微信授权失败';
+        this.addToLog(`发起微信授权失败: ${error.message}`);
+      }
+    },
+    
+    // 通过OAuth2方式获取家校用户详细信息
+    async getWeChatSchoolUserInfoByOAuth() {
+      try {
+        this.addToLog('构建微信授权链接');
+        // 使用企业微信可信域名作为回调地址
+        const redirectUri = encodeURIComponent('https://mo-stu-sys.org-assistant.com/sp-api/wechat/user/getSchoolUserInfoByCode');
+        // 根据用户提供的信息，使用新的corpid
+        const corpId = 'ww04fad852e91fd490'; // 企业微信应用ID
+        const agentId = '1000033'; // 企业微信应用agentId
+        
+        // 构造适合手机端的企业微信OAuth2授权链接，直接指向新的合并接口
         const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=wechat_test#wechat_redirect`;
         
         this.addToLog('跳转到微信授权页面: ' + authUrl);
@@ -398,7 +335,7 @@ export default {
 
 .welcome-section {
   text-align: center;
-  margin: 20px 0 15px 0; /* 减少下方边距 */
+  margin: 20px 0 15px 0;
   animation: fadeInDown 1s ease;
   position: relative;
   z-index: 1;
@@ -435,7 +372,7 @@ export default {
 .buttons-container {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* 减少按钮之间的间距 */
+  gap: 15px;
   width: 100%;
   max-width: 320px;
   animation: fadeInUp 1s ease;
@@ -648,12 +585,12 @@ export default {
 /* 手機屏幕適配 - 調整間距 */
 @media (max-width: 768px) {
   .buttons-container {
-    gap: 12px; /* 在手机上进一步减少间距 */
+    gap: 12px;
     max-width: 280px;
   }
 
   .welcome-section {
-    margin: 20px 0 10px 0; /* 在手机上减少间距 */
+    margin: 20px 0 10px 0;
   }
   
   .welcome-title {

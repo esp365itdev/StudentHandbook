@@ -107,21 +107,33 @@ public class WeChatWorkOAuthController extends BaseController {
                     userInfo.getString("parent_userid") : userInfo.getString("student_userid");
                 logger.info("企业微信家校授权成功，用户ID: {}", userId);
                 
-                // 可以在这里处理用户登录逻辑
-                // 例如：创建或更新本地用户信息，设置登录状态等
+                // 使用获取到的用户ID，调用接口获取详细的家校用户信息
+                JSONObject schoolUserInfo = weChatWorkSchoolUtils.getSchoolUserDetail(userId);
                 
-                // 清除临时session数据（如果不是测试情况）
-                if (!isWechatTest) {
-                    session.removeAttribute("wechat_oauth_state");
+                // 检查获取详细信息是否成功
+                if (!schoolUserInfo.containsKey("errcode") || schoolUserInfo.getIntValue("errcode") == 0) {
+                    logger.info("成功获取家校用户详细信息");
+                    
+                    // 清除临时session数据（如果不是测试情况）
+                    if (!isWechatTest) {
+                        session.removeAttribute("wechat_oauth_state");
+                    }
+                    
+                    // 返回详细信息
+                    JSONObject result = new JSONObject();
+                    result.put("userId", userId);
+                    result.put("userInfo", schoolUserInfo);
+                    
+                    // 由于是API接口，返回JSON结果而不是重定向
+                    return AjaxResult.success("授权成功", result);
+                } else {
+                    logger.error("获取家校用户详细信息失败: {}", schoolUserInfo.getString("errmsg"));
+                    // 即使无法获取详细信息，也返回基本的用户信息
+                    JSONObject result = new JSONObject();
+                    result.put("userId", userId);
+                    result.put("userInfo", userInfo);
+                    return AjaxResult.success("授权成功", result);
                 }
-                
-                // 重定向到首页并携带用户信息
-                JSONObject result = new JSONObject();
-                result.put("userId", userId);
-                result.put("userInfo", userInfo);
-                
-                // 由于是API接口，返回JSON结果而不是重定向
-                return AjaxResult.success("授权成功", result);
             } else {
                 logger.error("获取企业微信家校用户信息失败: {}", userInfo.getString("errmsg"));
                 return AjaxResult.error("获取用户信息失败: " + userInfo.getString("errmsg"));
