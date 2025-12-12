@@ -25,6 +25,7 @@ public class WeChatWorkSchoolUtils {
     // 家校获取用户信息接口
     private static final String TOKEN_URL = "https://qyapi.weixin.qq.com/cgi-bin/gettoken";
     private static final String SCHOOL_USER_INFO_URL = "https://qyapi.weixin.qq.com/cgi-bin/school/getuserinfo";
+    private static final String SCHOOL_USER_DETAIL_URL = "https://qyapi.weixin.qq.com/cgi-bin/school/user/get";
     
     /**
      * 获取Access Token
@@ -86,6 +87,34 @@ public class WeChatWorkSchoolUtils {
         
         JSONObject jsonObject = JSONObject.parseObject(response);
         logger.info("获取家校用户信息结果: {}", jsonObject.toJSONString());
+        return jsonObject;
+    }
+    
+    /**
+     * 根据userid获取家校用户详细信息（家长或学生）
+     * @param userid 家校通讯录的userid
+     * @return 用户详细信息
+     * @throws Exception 获取失败时抛出异常
+     */
+    public JSONObject getSchoolUserDetail(String userid) throws Exception {
+        String accessToken = getAccessToken();
+        
+        StringBuilder urlBuilder = new StringBuilder(SCHOOL_USER_DETAIL_URL);
+        urlBuilder.append("?access_token=").append(accessToken);
+        urlBuilder.append("&userid=").append(userid);
+        
+        logger.info("准备获取家校用户详细信息，URL: {}", urlBuilder.toString());
+        
+        String response = HttpUtils.sendGet(urlBuilder.toString());
+        logger.info("获取家校用户详细信息响应长度: {}", response != null ? response.length() : 0);
+        
+        if (response == null || response.isEmpty()) {
+            logger.error("获取家校用户详细信息失败，响应为空");
+            throw new Exception("获取家校用户详细信息失败，响应为空");
+        }
+        
+        JSONObject jsonObject = JSONObject.parseObject(response);
+        logger.info("获取家校用户详细信息结果: {}", jsonObject.toJSONString());
         return jsonObject;
     }
 }
