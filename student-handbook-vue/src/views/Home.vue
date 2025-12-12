@@ -40,7 +40,7 @@
         </div>
       </button>
       
-      <!-- 添加获取家校用户详细信息按钮 -->
+      <!-- 合并后的家校用户信息获取按钮 -->
       <button 
         class="feature-button info-button"
         @click="testWeChatSchoolUserInfo"
@@ -180,9 +180,10 @@ export default {
           }, 8000); // 8秒超时（略小于后端超时时间）
           
           this.currentLogMessage = '正在请求后端获取用户信息...';
-          this.addToLog('发送请求到后端接口: ' + API_ENDPOINTS.WECHAT_USER_INFO);
+          this.addToLog('发送请求到后端接口: /sp-api/wechat/oauth/callback');
           
-          const response = await axios.get(`${API_ENDPOINTS.WECHAT_USER_INFO}?code=${code}`, {
+          // 直接调用后端的OAuth回调接口获取用户基本信息
+          const response = await axios.get(`/sp-api/wechat/oauth/callback?code=${code}&state=wechat_test`, {
             cancelToken: source.token
           });
           
@@ -191,10 +192,59 @@ export default {
           this.addToLog('收到后端响应，状态码: ' + response.status);
           
           if (response.data.code === 200) {
-            this.addToLog('成功获取用户信息');
-            this.currentUserInfo = response.data.data;
-            this.userInfoLoading = false;
-            this.currentLogMessage = '';
+            this.addToLog('成功获取用户基本信息');
+            const userInfo = response.data.data.userInfo;
+            
+            // 获取用户ID
+            let userId = null;
+            if (userInfo.parent_userid) {
+              userId = userInfo.parent_userid;
+            } else if (userInfo.student_userid) {
+              userId = userInfo.student_userid;
+            } else if (userInfo.UserId) {
+              userId = userInfo.UserId;
+            } else if (userInfo.userid) {
+              userId = userInfo.userid;
+            }
+            
+            if (userId) {
+              this.currentLogMessage = '正在获取家校用户详细信息...';
+              this.addToLog(`获取到用户ID: ${userId}，准备获取详细信息`);
+              
+              // 继续获取家校用户详细信息
+              try {
+                const detailResponse = await axios.get(`${API_ENDPOINTS.WECHAT_SCHOOL_USER_DETAIL}?userid=${encodeURIComponent(userId)}`, {
+                  cancelToken: source.token
+                });
+                
+                this.addToLog('收到家校用户详细信息响应，状态码: ' + detailResponse.status);
+                
+                if (detailResponse.data.code === 200) {
+                  this.addToLog('成功获取家校用户详细信息');
+                  this.currentUserInfo = detailResponse.data.data;
+                  this.userInfoLoading = false;
+                  this.currentLogMessage = '';
+                } else {
+                  // 如果获取详细信息失败，至少显示基本信息
+                  this.addToLog(`获取家校用户详细信息失败: ${detailResponse.data.msg}，显示基本信息`);
+                  this.currentUserInfo = userInfo;
+                  this.userInfoLoading = false;
+                  this.currentLogMessage = '';
+                }
+              } catch (detailError) {
+                // 如果获取详细信息失败，至少显示基本信息
+                this.addToLog(`获取家校用户详细信息异常: ${detailError.message}，显示基本信息`);
+                this.currentUserInfo = userInfo;
+                this.userInfoLoading = false;
+                this.currentLogMessage = '';
+              }
+            } else {
+              // 没有找到用户ID，只显示基本信息
+              this.addToLog('未找到有效的用户ID，仅显示基本信息');
+              this.currentUserInfo = userInfo;
+              this.userInfoLoading = false;
+              this.currentLogMessage = '';
+            }
           } else {
             this.userInfoLoading = false;
             this.userInfoError = response.data.msg;
@@ -210,58 +260,6 @@ export default {
           } else {
             this.userInfoError = error.message || '获取用户信息失败';
             this.addToLog(`获取用户信息失败: ${error.message}`);
-          }
-        }
-      }
-      
-      // 检查是否有家校授权code
-      if (code && state === 'wechat_school_test') {
-        this.addToLog('检测到家校授权code，开始获取用户信息');
-        // 如果有code，尝试获取用户信息
-        this.showUserInfoModal = true;
-        this.userInfoLoading = true;
-        this.userInfoError = null;
-        this.logs = []; // 清空之前的日志
-        this.addToLog(`接收到的code: ${code.substring(0, 10)}...`); // 只显示前10位
-        
-        try {
-          // 添加超时设置
-          const source = axios.CancelToken.source();
-          const timeout = setTimeout(() => {
-            source.cancel('请求超时');
-          }, 8000); // 8秒超时（略小于后端超时时间）
-          
-          this.currentLogMessage = '正在请求后端获取家校用户信息...';
-          this.addToLog('发送请求到后端接口: /sp-api/wechat/oauth/callback');
-          
-          const response = await axios.get(`/sp-api/wechat/oauth/callback?code=${code}&state=wechat_school_test`, {
-            cancelToken: source.token
-          });
-          
-          clearTimeout(timeout);
-          
-          this.addToLog('收到后端响应，状态码: ' + response.status);
-          
-          if (response.data.code === 200) {
-            this.addToLog('成功获取家校用户信息');
-            this.currentUserInfo = response.data.data.userInfo;
-            this.userInfoLoading = false;
-            this.currentLogMessage = '';
-          } else {
-            this.userInfoLoading = false;
-            this.userInfoError = response.data.msg;
-            this.currentLogMessage = '';
-            this.addToLog(`获取家校用户信息失败: ${response.data.msg}`);
-          }
-        } catch (error) {
-          this.userInfoLoading = false;
-          this.currentLogMessage = '';
-          if (axios.isCancel(error)) {
-            this.userInfoError = '请求超时，请稍后重试';
-            this.addToLog('请求超时');
-          } else {
-            this.userInfoError = error.message || '获取家校用户信息失败';
-            this.addToLog(`获取家校用户信息失败: ${error.message}`);
           }
         }
       }
@@ -304,7 +302,7 @@ export default {
       }
     },
     
-    // 测试家校用户详细信息获取
+    // 测试家校用户详细信息获取（合并操作）
     async testWeChatSchoolUserInfo() {
       this.currentTestType = 'school';
       this.logs = []; // 清空之前的日志
@@ -325,7 +323,7 @@ export default {
           this.currentLogMessage = '正在跳转到微信授权页面...';
           this.addToLog('环境检查通过，准备跳转到微信授权页面');
           // 尝试通过OAuth2方式获取用户信息
-          await this.getWeChatSchoolUserInfoByOAuth();
+          await this.getWeChatUserInfoByOAuth();
         } else {
           // 如果没有在微信环境中，显示提示信息
           this.userInfoLoading = false;
@@ -353,30 +351,6 @@ export default {
         
         // 构造适合手机端的企业微信OAuth2授权链接
         const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=wechat_test#wechat_redirect`;
-        
-        this.addToLog('跳转到微信授权页面: ' + authUrl);
-        // 重定向到授权页面
-        window.location.href = authUrl;
-      } catch (error) {
-        this.userInfoLoading = false;
-        this.currentLogMessage = '';
-        this.userInfoError = error.message || '发起微信授权失败';
-        this.addToLog(`发起微信授权失败: ${error.message}`);
-      }
-    },
-    
-    // 通过OAuth2方式获取家校用户信息
-    async getWeChatSchoolUserInfoByOAuth() {
-      try {
-        this.addToLog('构建家校微信授权链接');
-        // 使用企业微信可信域名作为回调地址
-        const redirectUri = encodeURIComponent('https://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback');
-        // 根据用户提供的信息，使用新的corpid
-        const corpId = 'ww04fad852e91fd490'; // 企业微信应用ID
-        const agentId = '1000033'; // 企业微信应用agentId
-        
-        // 构造适合手机端的企业微信OAuth2授权链接
-        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=wechat_school_test#wechat_redirect`;
         
         this.addToLog('跳转到微信授权页面: ' + authUrl);
         // 重定向到授权页面
