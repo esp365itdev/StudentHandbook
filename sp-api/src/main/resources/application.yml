@@ -1,4 +1,4 @@
-# 项目相关配置
+#项目相关配置
 sp:
   # 名称
   name: sp
@@ -8,7 +8,7 @@ sp:
   copyrightYear: 2025
   # 实例演示开关
   demoEnabled: true
-  # 文件路径 示例（ Windows配置D:/uploadPath，Linux配置 /home/uploadPath）
+  #文件路径 示例（ Windows配置D:/uploadPath，Linux配置 /home/uploadPath）
   profile: D:/uploadPath
   # 获取ip地址开关
   addressEnabled: false
@@ -33,10 +33,10 @@ server:
 
 # 企业微信配置
 wechat:
-  work:
+work:
     corpId: ww04fad852e91fd490
-    agentId: 1000032
-    secret: CqFIJ9HcirbRTxGUkLmsGzu1aLPJZarRtxgmziVzrfQ
+    agentId: 1000033
+    secret: I31-B5clKayPf4vNl2bibhL1ia8x4cwIc884xK888Fc
     redirectUri: https://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback
     # 回调配置
     callback:
@@ -55,7 +55,7 @@ logging:
 user:
   password:
     # 密码错误{maxRetryCount}次锁定10分钟
-    maxRetryCount: 5
+   maxRetryCount: 5
 
 # Spring配置
 spring:
@@ -67,7 +67,7 @@ spring:
     cache: false
   # 资源信息
   messages:
-    # 国际化资源文件路径
+    #国际化资源文件路径
     basename: static/i18n/messages
   jackson:
     time-zone: GMT+8
@@ -76,7 +76,7 @@ spring:
     active: dev
   # 文件上传
   servlet:
-    multipart:
+   multipart:
       # 单个文件大小
       max-file-size: 10MB
       # 设置总上传的文件大小
@@ -86,8 +86,8 @@ spring:
     restart:
       # 热部署开关
       enabled: true
-  # 静态资源配置
-  web:
+# 静态资源配置
+web:
     resources:
       static-locations: classpath:/dist/,classpath:/static/
   mvc:
@@ -95,7 +95,7 @@ spring:
   autoconfigure:
     exclude: |
       org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration,
-      org.springframework.boot.autoconfigure.web.ErrorPageRegistrarAutoConfiguration
+     org.springframework.boot.autoconfigure.web.ErrorPageRegistrarAutoConfiguration
 
 # MyBatis
 mybatis:
@@ -123,7 +123,7 @@ shiro:
     indexUrl: /index
     # 验证码开关
     captchaEnabled: true
-    # 验证码类型 math 数字计算 char 字符验证
+   # 验证码类型 math 数字计算 char 字符验证
     captchaType: math
   cookie:
     # 设置Cookie的域名 默认空，即当前访问的域名
@@ -138,8 +138,7 @@ shiro:
     cipherKey:
   session:
     # Session超时时间，-1代表永不过期（默认30分钟）
-    expireTime: 30
-    # 同步session到数据库的周期（默认1分钟）
+    expireTime: 30# 同步session到数据库的周期（默认1分钟）
     dbSyncPeriod: 1
     # 相隔多久检查一次session的有效性，默认就是10分钟
     validationInterval: 10
