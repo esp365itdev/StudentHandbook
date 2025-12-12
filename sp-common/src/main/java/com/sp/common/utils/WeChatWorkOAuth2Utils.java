@@ -34,7 +34,7 @@ public class WeChatWorkOAuth2Utils {
     // 修改为OAuth2授权链接
     private static final String AUTHORIZE_URL = "https://open.weixin.qq.com/connect/oauth2/authorize";
     private static final String TOKEN_URL = "https://qyapi.weixin.qq.com/cgi-bin/gettoken";
-    private static final String USER_INFO_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo";
+    private static final String USER_INFO_URL = "https://qyapi.weixin.qq.com/cgi-bin/school/getuserinfo";
     
     /**
      * 构造授权链接
@@ -95,31 +95,30 @@ public class WeChatWorkOAuth2Utils {
     }
     
     /**
-     * 根据code获取用户信息
+     * 根据code获取家校用户信息（家长或学生）
      * @param code 通过成员授权获取的code
-     * @return 用户信息
+     * @return 用户信息（包含parent_userid或student_userid）
      * @throws Exception 获取失败时抛出异常
      */
-    public JSONObject getUserInfo(String code) throws Exception {
+    public JSONObject getSchoolUserInfo(String code) throws Exception {
         String accessToken = getAccessToken();
         
         StringBuilder urlBuilder = new StringBuilder(USER_INFO_URL);
         urlBuilder.append("?access_token=").append(accessToken);
         urlBuilder.append("&code=").append(code);
-        urlBuilder.append("&agentid=").append(agentId); // 添加agentid参数
         
-        logger.info("准备获取用户信息，URL: {}", urlBuilder.toString());
+        logger.info("准备获取家校用户信息，URL: {}", urlBuilder.toString());
         
         String response = HttpUtils.sendGet(urlBuilder.toString());
-        logger.info("获取用户信息响应长度: {}", response != null ? response.length() : 0);
+        logger.info("获取家校用户信息响应长度: {}", response != null ? response.length() : 0);
         
         if (response == null || response.isEmpty()) {
-            logger.error("获取用户信息失败，响应为空");
-            throw new Exception("获取用户信息失败，响应为空");
+            logger.error("获取家校用户信息失败，响应为空");
+            throw new Exception("获取家校用户信息失败，响应为空");
         }
         
         JSONObject jsonObject = JSONObject.parseObject(response);
-        logger.info("获取企业微信用户信息结果: {}", jsonObject.toJSONString());
+        logger.info("获取家校用户信息结果: {}", jsonObject.toJSONString());
         return jsonObject;
     }
     

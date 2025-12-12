@@ -39,17 +39,6 @@
           <span class="button-text">微信用户测试</span>
         </div>
       </button>
-      
-      <!-- 获取家校用户详情按钮 -->
-      <button 
-        class="feature-button info-button"
-        @click="testWeChatSchoolUserInfo"
-      >
-        <div class="button-content">
-          <span class="button-icon">👨‍👩‍👧‍👦</span>
-          <span class="button-text">获取家校用户详情</span>
-        </div>
-      </button>
     </div>
     
     <!-- 显示用户信息的模态框 -->
@@ -61,6 +50,10 @@
           <p>{{ currentLogMessage || '正在获取用户信息...' }}</p>
         </div>
         <div v-else-if="userInfoError" class="error">获取用户信息失败: {{ userInfoError }}</div>
+        <div v-else class="success-message">
+          成功获取家校用户详细信息
+        </div>
+        
         <!-- 日志显示区域 -->
         <div class="log-section">
           <h4>操作日志</h4>
@@ -79,14 +72,12 @@
 
 <script>
 import axios from 'axios'
-import { API_ENDPOINTS } from '@/config/api.js'
 
 export default {
   name: 'Home',
   data() {
     return {
       showUserInfoModal: false,
-      currentUserInfo: {},
       userInfoLoading: false,
       userInfoError: null,
       currentLogMessage: '',
@@ -144,10 +135,9 @@ export default {
           }, 8000); // 8秒超时（略小于后端超时时间）
           
           this.currentLogMessage = '正在请求后端获取用户信息...';
-          this.addToLog('发送请求到后端接口: /sp-api/wechat/user/getSchoolUserInfoByCode');
+          this.addToLog('发送请求到后端接口: /sp-api/wechat/oauth/callback');
           
-          // 直接调用新的合并接口获取家校用户详细信息
-          const response = await axios.get(`/sp-api/wechat/user/getSchoolUserInfoByCode?code=${code}`, {
+          const response = await axios.get(`/sp-api/wechat/oauth/callback?code=${code}&state=wechat_test`, {
             cancelToken: source.token
           });
           
@@ -157,14 +147,13 @@ export default {
           
           if (response.data.code === 200) {
             this.addToLog('成功获取家校用户详细信息');
-            this.currentUserInfo = response.data.data;
             this.userInfoLoading = false;
             this.currentLogMessage = '';
           } else {
             this.userInfoLoading = false;
             this.userInfoError = response.data.msg;
             this.currentLogMessage = '';
-            this.addToLog(`获取家校用户详细信息失败: ${response.data.msg}`);
+            this.addToLog(`获取用户信息失败: ${response.data.msg}`);
           }
         } catch (error) {
           this.userInfoLoading = false;
@@ -173,8 +162,8 @@ export default {
             this.userInfoError = '请求超时，请稍后重试';
             this.addToLog('请求超时');
           } else {
-            this.userInfoError = error.message || '获取家校用户详细信息失败';
-            this.addToLog(`获取家校用户详细信息失败: ${error.message}`);
+            this.userInfoError = error.message || '获取用户信息失败';
+            this.addToLog(`获取用户信息失败: ${error.message}`);
           }
         }
       }
@@ -216,42 +205,6 @@ export default {
       }
     },
     
-    // 测试家校用户详细信息获取
-    async testWeChatSchoolUserInfo() {
-      this.logs = []; // 清空之前的日志
-      this.addToLog('开始获取家校用户详细信息测试');
-      
-      // 显示模态框
-      this.showUserInfoModal = true;
-      this.userInfoLoading = true;
-      this.userInfoError = null;
-      this.currentLogMessage = '正在检查环境...';
-      
-      try {
-        // 检查是否在微信环境中
-        const isWeChat = navigator.userAgent.includes('MicroMessenger');
-        this.addToLog(`当前环境检查: ${isWeChat ? '微信环境' : '非微信环境'}`);
-        
-        if (isWeChat) {
-          this.currentLogMessage = '正在跳转到微信授权页面...';
-          this.addToLog('环境检查通过，准备跳转到微信授权页面');
-          // 尝试通过OAuth2方式获取用户信息
-          await this.getWeChatSchoolUserInfoByOAuth();
-        } else {
-          // 如果没有在微信环境中，显示提示信息
-          this.userInfoLoading = false;
-          this.userInfoError = '请在微信或企业微信环境中打开应用';
-          this.currentLogMessage = '';
-          this.addToLog('环境检查失败：请在微信或企业微信环境中打开应用');
-        }
-      } catch (error) {
-        this.userInfoLoading = false;
-        this.currentLogMessage = '';
-        this.userInfoError = error.message || '获取用户信息时发生错误';
-        this.addToLog(`发生错误: ${error.message}`);
-      }
-    },
-    
     // 通过OAuth2方式获取微信用户信息
     async getWeChatUserInfoByOAuth() {
       try {
@@ -263,30 +216,6 @@ export default {
         const agentId = '1000033'; // 企业微信应用agentId
         
         // 构造适合手机端的企业微信OAuth2授权链接
-        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=wechat_test#wechat_redirect`;
-        
-        this.addToLog('跳转到微信授权页面: ' + authUrl);
-        // 重定向到授权页面
-        window.location.href = authUrl;
-      } catch (error) {
-        this.userInfoLoading = false;
-        this.currentLogMessage = '';
-        this.userInfoError = error.message || '发起微信授权失败';
-        this.addToLog(`发起微信授权失败: ${error.message}`);
-      }
-    },
-    
-    // 通过OAuth2方式获取家校用户详细信息
-    async getWeChatSchoolUserInfoByOAuth() {
-      try {
-        this.addToLog('构建微信授权链接');
-        // 使用企业微信可信域名作为回调地址
-        const redirectUri = encodeURIComponent('https://mo-stu-sys.org-assistant.com/sp-api/wechat/user/getSchoolUserInfoByCode');
-        // 根据用户提供的信息，使用新的corpid
-        const corpId = 'ww04fad852e91fd490'; // 企业微信应用ID
-        const agentId = '1000033'; // 企业微信应用agentId
-        
-        // 构造适合手机端的企业微信OAuth2授权链接，直接指向新的合并接口
         const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=wechat_test#wechat_redirect`;
         
         this.addToLog('跳转到微信授权页面: ' + authUrl);
@@ -499,23 +428,12 @@ export default {
   color: #303133;
 }
 
-.modal-content h5 {
-  margin-top: 10px;
-  margin-bottom: 5px;
-  color: #606266;
-}
-
-.modal-content h6 {
-  margin-top: 8px;
-  margin-bottom: 3px;
-  color: #909399;
-  font-size: 0.9em;
-}
-
-.user-info p {
-  margin: 8px 0;
-  padding: 4px 0;
-  border-bottom: 1px solid #eee;
+.success-message {
+  text-align: center;
+  padding: 20px;
+  color: #67c23a;
+  font-size: 18px;
+  font-weight: bold;
 }
 
 .loading {

@@ -14,10 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.UUID;
 
 /**
  * 企业微信OAuth2.0网页授权控制器
@@ -36,35 +34,6 @@ public class WeChatWorkOAuthController extends BaseController {
     private WeChatWorkSchoolUtils weChatWorkSchoolUtils;
     
     /**
-     * 发起企业微信授权请求
-     * @param redirect 授权后重定向地址
-     * @param session HttpSession
-     * @param response HttpServletResponse
-     * @throws IOException IO异常
-     */
-    @Anonymous
-    @GetMapping("/authorize")
-    public void authorize(
-            @RequestParam(required = false) String redirect,
-            HttpSession session,
-            HttpServletResponse response) throws IOException {
-
-        logger.info("发起企业微信授权请求，重定向地址: {}", redirect);
-
-        // 生成state参数，用于防止CSRF攻击
-        String state = UUID.randomUUID().toString();
-
-        // 将重定向地址和state存入session
-        session.setAttribute("wechat_oauth_redirect", redirect);
-        session.setAttribute("wechat_oauth_state", state);
-
-        // 构造授权链接并重定向
-        String authorizeUrl = weChatWorkOAuth2Utils.getAuthorizeUrl(state);
-        logger.info("重定向到企业微信授权页面: {}", authorizeUrl);
-        response.sendRedirect(authorizeUrl);
-    }
-    
-    /**
      * 企业微信授权回调处理
      * 此接口专门用于处理企业微信应用的网页授权回调
      * @param code 企业微信授权code
@@ -77,7 +46,7 @@ public class WeChatWorkOAuthController extends BaseController {
     public AjaxResult callback(
             @RequestParam String code,
             @RequestParam String state,
-            HttpSession session) throws IOException{
+            HttpSession session) {
         
         logger.info("接收到企业微信授权回调，code: {}, state: {}", code, state);
         
@@ -96,7 +65,7 @@ public class WeChatWorkOAuthController extends BaseController {
             }
             
             // 根据code获取家校用户信息（家长或学生）
-            JSONObject userInfo = weChatWorkSchoolUtils.getSchoolUserInfo(code);
+            JSONObject userInfo = weChatWorkOAuth2Utils.getSchoolUserInfo(code);
 
             logger.info("企业微信家校授权成功，用户userInfo: {}", userInfo);
             
@@ -119,20 +88,16 @@ public class WeChatWorkOAuthController extends BaseController {
                         session.removeAttribute("wechat_oauth_state");
                     }
                     
-                    // 返回详细信息
+                    // 只返回成功信息，不返回详细数据
                     JSONObject result = new JSONObject();
                     result.put("userId", userId);
-                    result.put("userInfo", schoolUserInfo);
+                    result.put("message", "成功获取家校用户详细信息");
                     
                     // 由于是API接口，返回JSON结果而不是重定向
                     return AjaxResult.success("授权成功", result);
                 } else {
                     logger.error("获取家校用户详细信息失败: {}", schoolUserInfo.getString("errmsg"));
-                    // 即使无法获取详细信息，也返回基本的用户信息
-                    JSONObject result = new JSONObject();
-                    result.put("userId", userId);
-                    result.put("userInfo", userInfo);
-                    return AjaxResult.success("授权成功", result);
+                    return AjaxResult.error("获取家校用户详细信息失败: " + schoolUserInfo.getString("errmsg"));
                 }
             } else {
                 logger.error("获取企业微信家校用户信息失败: {}", userInfo.getString("errmsg"));
