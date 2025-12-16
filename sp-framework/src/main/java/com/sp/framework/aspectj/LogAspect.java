@@ -19,15 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.support.spring.PropertyPreFilters;
 import com.sp.common.annotation.Log;
-import com.sp.common.core.domain.entity.SysUser;
-import com.sp.common.core.text.Convert;
-import com.sp.common.enums.BusinessStatus;
-import com.sp.common.utils.ExceptionUtil;
-import com.sp.common.utils.ServletUtils;
-import com.sp.common.utils.ShiroUtils;
 import com.sp.common.utils.StringUtils;
-import com.sp.framework.manager.AsyncManager;
-import com.sp.framework.manager.factory.AsyncFactory;
 
 /**
  * 操作日志记录处理

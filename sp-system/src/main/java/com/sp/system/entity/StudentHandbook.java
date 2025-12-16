@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.sp.common.core.domain.BaseEntity;
 
+import java.time.LocalDateTime;
+
 /**
  * 学生手册实体类
  *

@@ -4,8 +4,7 @@ import { resolve } from 'path'
 
 export default defineConfig(({ mode }) => {
   // 根据模式设置基础路径
-  const isTest = mode === 'test';
-  const base = isTest ? '/' : '/sp-api/';
+  const base = '/sp-api/';
 
   return {
     plugins: [vue()],

@@ -11,11 +11,7 @@ const getBaseURL = () => {
   if (envBaseUrl !== undefined && envBaseUrl !== null && envBaseUrl !== '') {
     return envBaseUrl;
   }
-  // 默认值 - 在test环境下为空，在其他环境下为/api
-  const nodeEnv = import.meta.env.NODE_ENV;
-  if (nodeEnv === 'test') {
-    return '';
-  }
+  // 默认值 - 使用/api前缀
   return '/api';
 };
 

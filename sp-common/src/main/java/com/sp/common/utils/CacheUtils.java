@@ -1,196 +1,138 @@
 package com.sp.common.utils;
 
-import java.util.Iterator;
-import java.util.Set;
-import org.apache.shiro.cache.Cache;
-import org.apache.shiro.cache.CacheManager;
-import org.apache.shiro.cache.ehcache.EhCacheManager;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.sp.common.utils.spring.SpringUtils;
 
 /**
- * Cache工具类
+ * Cache工具类（基于内存缓存实现）
  *
+ * @author spring framework
  */
-public class CacheUtils
-{
+public class CacheUtils {
     private static Logger logger = LoggerFactory.getLogger(CacheUtils.class);
 
-    private static CacheManager cacheManager = SpringUtils.getBean(CacheManager.class);
+    /**
+     * 缓存容器
+     */
+    private static ConcurrentMap<String, Object> cacheMap = new ConcurrentHashMap<>();
 
     private static final String SYS_CACHE = "sys-cache";
 
     /**
      * 获取SYS_CACHE缓存
-     * 
-     * @param key
-     * @return
+     *
+     * @param key 键
+     * @return 值
      */
-    public static Object get(String key)
-    {
+    public static Object get(String key) {
         return get(SYS_CACHE, key);
     }
 
     /**
      * 获取SYS_CACHE缓存
-     * 
-     * @param key
-     * @param defaultValue
-     * @return
+     *
+     * @param key          键
+     * @param defaultValue 默认值
+     * @return 值
      */
-    public static Object get(String key, Object defaultValue)
-    {
+    public static Object get(String key, Object defaultValue) {
         Object value = get(key);
         return value != null ? value : defaultValue;
     }
 
     /**
      * 写入SYS_CACHE缓存
-     * 
-     * @param key
-     * @return
+     *
+     * @param key   键
+     * @param value 值
      */
-    public static void put(String key, Object value)
-    {
+    public static void put(String key, Object value) {
         put(SYS_CACHE, key, value);
     }
 
     /**
      * 从SYS_CACHE缓存中移除
-     * 
-     * @param key
-     * @return
+     *
+     * @param key 键
      */
-    public static void remove(String key)
-    {
+    public static void remove(String key) {
         remove(SYS_CACHE, key);
     }
 
     /**
      * 获取缓存
-     * 
-     * @param cacheName
-     * @param key
-     * @return
+     *
+     * @param cacheName 缓存名
+     * @param key       键
+     * @return 值
      */
-    public static Object get(String cacheName, String key)
-    {
-        return getCache(cacheName).get(getKey(key));
+    public static Object get(String cacheName, String key) {
+        return cacheMap.get(getKey(cacheName, key));
     }
 
     /**
      * 获取缓存
-     * 
-     * @param cacheName
-     * @param key
-     * @param defaultValue
-     * @return
+     *
+     * @param cacheName    缓存名
+     * @param key          键
+     * @param defaultValue 默认值
+     * @return 值
      */
-    public static Object get(String cacheName, String key, Object defaultValue)
-    {
-        Object value = get(cacheName, getKey(key));
+    public static Object get(String cacheName, String key, Object defaultValue) {
+        Object value = get(cacheName, key);
         return value != null ? value : defaultValue;
     }
 
     /**
      * 写入缓存
-     * 
-     * @param cacheName
-     * @param key
-     * @param value
+     *
+     * @param cacheName 缓存名
+     * @param key       键
+     * @param value     值
      */
-    public static void put(String cacheName, String key, Object value)
-    {
-        getCache(cacheName).put(getKey(key), value);
+    public static void put(String cacheName, String key, Object value) {
+        cacheMap.put(getKey(cacheName, key), value);
     }
 
     /**
      * 从缓存中移除
-     * 
-     * @param cacheName
-     * @param key
+     *
+     * @param cacheName 缓存名
+     * @param key       键
      */
-    public static void remove(String cacheName, String key)
-    {
-        getCache(cacheName).remove(getKey(key));
+    public static void remove(String cacheName, String key) {
+        cacheMap.remove(getKey(cacheName, key));
     }
 
     /**
      * 从缓存中移除所有
-     * 
-     * @param cacheName
+     *
+     * @param cacheName 缓存名
      */
-    public static void removeAll(String cacheName)
-    {
-        Cache<String, Object> cache = getCache(cacheName);
-        Set<String> keys = cache.keys();
-        for (Iterator<String> it = keys.iterator(); it.hasNext();)
-        {
-            cache.remove(it.next());
-        }
-        logger.info("清理缓存： {} => {}", cacheName, keys);
-    }
-
-    /**
-     * 从缓存中移除指定key
-     * 
-     * @param keys
-     */
-    public static void removeByKeys(Set<String> keys)
-    {
-        removeByKeys(SYS_CACHE, keys);
-    }
-
-    /**
-     * 从缓存中移除指定key
-     * 
-     * @param cacheName
-     * @param keys
-     */
-    public static void removeByKeys(String cacheName, Set<String> keys)
-    {
-        for (Iterator<String> it = keys.iterator(); it.hasNext();)
-        {
-            remove(it.next());
-        }
-        logger.info("清理缓存： {} => {}", cacheName, keys);
+    public static void removeAll(String cacheName) {
+        cacheMap.clear();
+        logger.info("清理缓存： {}", cacheName);
     }
 
     /**
      * 获取缓存键名
-     * 
-     * @param key
-     * @return
+     *
+     * @param cacheName 缓存名
+     * @param key 键
+     * @return 完整键名
      */
-    private static String getKey(String key)
-    {
-        return key;
+    private static String getKey(String cacheName, String key) {
+        return cacheName + ":" + key;
     }
 
     /**
-     * 获得一个Cache，没有则显示日志。
-     * 
-     * @param cacheName
-     * @return
+     * 获得缓存组中所有键名
+     *
+     * @return 键名数组
      */
-    public static Cache<String, Object> getCache(String cacheName)
-    {
-        Cache<String, Object> cache = cacheManager.getCache(cacheName);
-        if (cache == null)
-        {
-            throw new RuntimeException("当前系统中没有定义“" + cacheName + "”这个缓存。");
-        }
-        return cache;
-    }
-
-    /**
-     * 获取所有缓存
-     * 
-     * @return 缓存组
-     */
-    public static String[] getCacheNames()
-    {
-        return ((EhCacheManager) cacheManager).getCacheManager().getCacheNames();
+    public static String[] getCacheNames() {
+        return cacheMap.keySet().toArray(new String[0]);
     }
 }
