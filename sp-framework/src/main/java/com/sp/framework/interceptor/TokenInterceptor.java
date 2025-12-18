@@ -28,6 +28,22 @@ public class TokenInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        String requestURI = request.getRequestURI();
+        
+        // 明确放行静态资源路径
+        if (requestURI.startsWith("/sp-api/assets/") || 
+            requestURI.startsWith("/sp-api/dist/") ||
+            requestURI.startsWith("/assets/") ||
+            requestURI.startsWith("/dist/")) {
+            return true;
+        }
+
+        // 如果是OPTIONS请求，直接通过
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            return true;
+        }
+        
         // 如果token验证未启用，直接通过
         if (!tokenEnabled) {
             return true;
@@ -35,11 +51,6 @@ public class TokenInterceptor implements HandlerInterceptor {
 
         // 如果不是映射到方法直接通过
         if (!(handler instanceof HandlerMethod)) {
-            // 特殊处理 /sp-api/ 路径
-            String requestURI = request.getRequestURI();
-            if ("/sp-api/".equals(requestURI) || "/sp-api".equals(requestURI)) {
-                return true;
-            }
             return true;
         }
 
@@ -62,7 +73,8 @@ public class TokenInterceptor implements HandlerInterceptor {
 
         // 验证token
         if (StringUtils.isEmpty(token) || !tokenService.validateToken(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("{\"code\":403,\"msg\":\"无效的token\"}");
             return false;
         }
 

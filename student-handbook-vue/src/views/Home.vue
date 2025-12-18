@@ -15,7 +15,7 @@
       >
         <div class="button-content">
           <span class="button-icon">📘</span>
-<span class="button-text">學生手冊</span>
+          <span class="button-text">學生手冊</span>
         </div>
       </button>
 
@@ -25,7 +25,7 @@
       >
         <div class="button-content">
           <span class="button-icon">📢</span>
-<span class="button-text">家校通知</span>
+          <span class="button-text">家校通知</span>
         </div>
       </button>
 
@@ -99,7 +99,7 @@
               <ul v-if="noticeResult.invalid_student_userid && noticeResult.invalid_student_userid.length > 0">
                 <li>无效的学生UserID: {{ noticeResult.invalid_student_userid.join(', ') }}</li>
               </ul>
-              <ul v-if="noticeResult.invalid_party &&noticeResult.invalid_party.length > 0">
+              <ul v-if="noticeResult.invalid_party && noticeResult.invalid_party.length > 0">
                 <li>无效的部门: {{ noticeResult.invalid_party.join(', ') }}</li>
               </ul>
             </div>
@@ -118,7 +118,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import service from '@/utils/request.js'
 
 export default {
   name: 'Home',
@@ -126,7 +126,7 @@ export default {
     return {
       showUserInfoModal: false,
       userInfoLoading: false,
-userInfoError: null,
+      userInfoError: null,
       currentLogMessage: '',
       logs: [],
       sendingNotice: false,
@@ -153,7 +153,7 @@ userInfoError: null,
     addToLog(message) {
       const timestamp = new Date().toLocaleTimeString();
       this.logs.push(`[${timestamp}] ${message}`);
-console.log(message);
+      console.log(message);
     },
 
     goToStudentHandbook() {
@@ -180,7 +180,7 @@ console.log(message);
       }
 
       if (code && state === 'wechat_test') {
-       this.addToLog('检测到微信授权code，开始获取用户信息');
+        this.addToLog('检测到微信授权code，开始获取用户信息');
         // 如果有code，尝试获取用户信息
         this.showUserInfoModal = true;
         this.userInfoLoading = true;
@@ -190,15 +190,15 @@ console.log(message);
 
         try {
           // 添加超时设置
-          const source = axios.CancelToken.source();
+          const source = service.CancelToken.source();
           const timeout = setTimeout(() => {
             source.cancel('请求超时');
-          },8000); // 8秒超时（略小于后端超时时间）
+          }, 8000); // 8秒超时（略小于后端超时时间）
 
           this.currentLogMessage = '正在请求后端获取用户信息...';
           this.addToLog('发送请求到后端接口: /sp-api/wechat/oauth/callback');
 
-          const response = await axios.get(`/sp-api/wechat/oauth/callback?code=${code}&state=wechat_test`, {
+          const response = await service.get(`/wechat/oauth/callback?code=${code}&state=wechat_test`, {
             cancelToken: source.token
           });
 
@@ -215,15 +215,15 @@ console.log(message);
             this.userInfoError = response.data.msg;
             this.currentLogMessage = '';
             this.addToLog(`获取用户信息失败: ${response.data.msg}`);
-}
+          }
         } catch (error) {
           this.userInfoLoading = false;
           this.currentLogMessage = '';
-          if (axios.isCancel(error)) {
+          if (service.isCancel(error)) {
             this.userInfoError = '请求超时，请稍后重试';
             this.addToLog('请求超时');
           } else {
-            this.userInfoError =error.message || '获取用户信息失败';
+            this.userInfoError = error.message || '获取用户信息失败';
             this.addToLog(`获取用户信息失败: ${error.message}`);
           }
         }
@@ -261,7 +261,7 @@ console.log(message);
       } catch (error) {
         this.userInfoLoading = false;
         this.currentLogMessage = '';
-        this.userInfoError = error.message|| '获取用户信息时发生错误';
+        this.userInfoError = error.message || '获取用户信息时发生错误';
         this.addToLog(`发生错误: ${error.message}`);
       }
     },
@@ -281,7 +281,7 @@ console.log(message);
 
         this.addToLog('跳转到微信授权页面: ' + authUrl);
         // 重定向到授权页面
-        window.location.href =authUrl;
+        window.location.href = authUrl;
       } catch (error) {
         this.userInfoLoading = false;
         this.currentLogMessage = '';
@@ -291,7 +291,7 @@ console.log(message);
     },
 
     closeModal() {
-      this.showUserInfoModal= false;
+      this.showUserInfoModal = false;
     },
 
     // 发送学校通知
@@ -300,14 +300,14 @@ console.log(message);
       this.noticeResultLoading = true;
       this.noticeResult = null;
       this.sendingNotice = true;
-try {
-        const response = await axios.post('/sp-api/wechat/school/notice/send');
+      try {
+        const response = await service.post('/wechat/school/notice/send');
         this.noticeResult = response.data;
       } catch (error) {
         console.error('发送学校通知失败:', error);
         this.noticeResult = null;
       } finally {
-        this.noticeResultLoading =false;
+        this.noticeResultLoading = false;
         this.sendingNotice = false;
       }
     },
@@ -336,12 +336,12 @@ try {
 .home-container::before {
   content: "";
   position: absolute;
- top: -50%;
+  top: -50%;
   left: -50%;
   width: 200%;
   height: 200%;
   background: radial-gradient(circle, rgba(64, 158, 255, 0.05) 0%, transparent 70%);
-z-index: 0;
+  z-index: 0;
   animation: rotate 20s linear infinite;
 }
 
@@ -393,7 +393,7 @@ z-index: 0;
 }
 
 .button-content {
-display: flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
@@ -493,7 +493,7 @@ display: flex;
 .modal-content {
   background-color: white;
   padding: 20px;
-  border-radius:8px;
+  border-radius: 8px;
   max-width: 90%;
   width: 400px;
   max-height: 90vh;
@@ -506,7 +506,7 @@ display: flex;
 }
 
 .modal-content h4 {
-  margin-top:15px;
+  margin-top: 15px;
   margin-bottom: 10px;
   color: #303133;
 }
@@ -528,7 +528,7 @@ display: flex;
   border: 4px solid #f3f3f3;
   border-top: 4px solid #409eff;
   border-radius: 50%;
-  width:30px;
+  width: 30px;
   height: 30px;
   animation: spin 1s linear infinite;
   margin: 0 auto 15px;
@@ -564,7 +564,7 @@ display: flex;
 
 /* 日志区域样式 */
 .log-section {
- margin-top: 20px;
+  margin-top: 20px;
   border-top: 1px solid #eee;
   padding-top: 15px;
 }
@@ -649,7 +649,7 @@ display: flex;
     font-size: 24px;
   }
 
-.logo-badge {
+  .logo-badge {
     width: 150px;
     height: 150px;
   }
@@ -662,7 +662,7 @@ display: flex;
     transform: translateY(-20px);
   }
   to {
-    opacity:1;
+    opacity: 1;
     transform: translateY(0);
   }
 }
@@ -679,7 +679,7 @@ display: flex;
 }
 
 @keyframes fadeIn {
-  from{
+  from {
     opacity: 0;
   }
   to {
@@ -692,13 +692,13 @@ display: flex;
     transform: scale(1);
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
   }
-50% {
+  50% {
     transform: scale(1.05);
     box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
   }
   100% {
     transform: scale(1);
-box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
   }
 }
 

@@ -10,7 +10,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Spring Security配置类
@@ -19,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Bean
+   @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
@@ -32,7 +31,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        // 在实际项目中，这里应该配置用户认证服务
+// 在实际项目中，这里应该配置用户认证服务
         // 由于缺少具体用户认证逻辑，暂时留空
         // auth.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder());
     }
@@ -46,9 +45,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 // 对于登录和匿名接口允许访问
                 .antMatchers("/login", "/captchaImage").anonymous()
-                // 静态资源，可匿名访问
-                .antMatchers("/profile/**", "/system/handbook/list").permitAll()
-                // 除上面外的所有请求全部需要鉴权认证
+                // 静态资源和公开接口，可匿名访问
+                .antMatchers(
+                    "/",
+                    "/profile/**", 
+                    "/system/handbook/list",
+                    "/wechat/callback/**",
+                    "/wechat/oauth/callback",
+                    "/tool/swagger/**",
+                    "/swagger-ui/**",
+                    "/dist/**",
+                    "/assets/**",
+                    "/sp-api/",
+                    "/sp-api/**").permitAll()
+               // 除上面外的所有请求全部需要鉴权认证
                 .anyRequest().authenticated();
         
         // 添加自定义过滤器（如果需要的话）

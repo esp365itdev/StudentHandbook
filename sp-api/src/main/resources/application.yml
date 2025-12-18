@@ -15,7 +15,7 @@ sp:
   # Token配置
   token:
     # 是否启用Token验证
-    enabled: false
+    enabled: true
     # Token过期时间（天），默认7天
     expireTime: 7
 

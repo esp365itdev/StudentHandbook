@@ -9,18 +9,20 @@ const apiEndpoints = {
 const getBaseURL = () => {
   const envBaseUrl = import.meta.env.VITE_API_BASE_URL;
   if (envBaseUrl !== undefined && envBaseUrl !== null && envBaseUrl !== '') {
-    return envBaseUrl;
+    // 确保URL末尾没有斜杠
+    return envBaseUrl.endsWith('/') ? envBaseUrl.slice(0, -1) : envBaseUrl;
   }
-  // 默认值 - 使用/api前缀
-  return '/api';
+  // 默认值 - 使用/api前缀用于开发环境，生产环境使用/sp-api前缀
+  return import.meta.env.MODE === 'production' ? '/sp-api' : '/api';
 };
 
 // 构建完整的API端点URL
 const API_ENDPOINTS = {};
 const baseURL = getBaseURL();
 for (const [key, value] of Object.entries(apiEndpoints)) {
-  // 如果baseURL为空，则直接使用value（相对路径）
-  API_ENDPOINTS[key] = baseURL ? baseURL + value : value;
+  // 确保value以/开头，baseURL不以/结尾
+  const path = value.startsWith('/') ? value : '/' + value;
+  API_ENDPOINTS[key] = baseURL + path;
 }
 
 export { API_ENDPOINTS };

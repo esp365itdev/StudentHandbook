@@ -2,10 +2,18 @@
 import axios from 'axios'
 
 // 创建axios实例
+const getBaseURL = () => {
+  // 在测试环境中，API请求的baseURL应该是空的，因为API_ENDPOINTS已经包含了完整的路径
+  if (import.meta.env.MODE === 'test') {
+    return '';
+  }
+  return import.meta.env.VITE_API_BASE_URL || '';
+};
+
 const service = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api', // api的base_url
+  baseURL: getBaseURL(), // api的base_url
   timeout: 30000 // 请求超时时间
-})
+});
 
 // request拦截器
 service.interceptors.request.use(
@@ -32,7 +40,7 @@ service.interceptors.response.use(
   },
   error => {
     console.log('err' + error)// for debug
-    if (error.response.status === 401) {
+    if (error.response && error.response.status === 401) {
       // token过期或无效
       localStorage.removeItem('token')
     }

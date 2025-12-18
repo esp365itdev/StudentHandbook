@@ -15,7 +15,7 @@
       <!-- 左右方向按钮 -->
       <div class="navigation-buttons">
         <el-button class="nav-arrow prev-button" type="primary" icon="ArrowLeft" @click="prevPage" :disabled="currentPage === 1"></el-button>
-        <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight"@click="nextPage" :disabled="currentPage >= totalPages"></el-button>
+        <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight" @click="nextPage" :disabled="currentPage >= totalPages"></el-button>
       </div>
     </div>
     
@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import service from '@/utils/request.js'
 import { API_ENDPOINTS } from '@/config/api.js'
 
 export default {
@@ -87,7 +87,7 @@ export default {
       loading: false,
       allGroupedHandbookList: [], // 存储所有分组后的数据
       currentPage: 1, // 当前页码
-      pageSize:7, //每页显示条数
+      pageSize: 7, //每页显示条数
       isMobile: false,
       showBackToTop: false,
       showNavigation: false, // 控制导航菜单的显示
@@ -135,7 +135,7 @@ export default {
       this.showNavigation = !this.showNavigation
     },
     
-    // 处理滚动事件，控制回到顶部按钮的显示
+    //处理滚动事件，控制回到顶部按钮的显示
     handleScroll() {
       // 当滚动超过300px时显示回到顶部按钮
       this.showBackToTop = window.pageYOffset > 300
@@ -152,7 +152,7 @@ export default {
     // 触摸开始事件
     handleTouchStart(event) {
       const touch = event.touches[0];
-      this.touchStartX= touch.clientX;
+      this.touchStartX = touch.clientX;
       this.touchStartY = touch.clientY;
     },
     
@@ -170,14 +170,14 @@ export default {
       this.handleSwipeGesture();
     },
     
-    // 处理滑动手势
+    //处理滑动手势
     handleSwipeGesture() {
       const deltaX = this.touchEndX - this.touchStartX;
-      const deltaY= this.touchEndY - this.touchStartY;
+      const deltaY = this.touchEndY - this.touchStartY;
       const absDeltaX = Math.abs(deltaX);
       const absDeltaY = Math.abs(deltaY);
       
-      // 判断是否为有效的向右滑动
+      //判断是否为有效的向右滑动
       // 条件：水平滑动距离大于垂直滑动距离，且水平滑动距离足够大（50px），且方向为向右
       if (absDeltaX > absDeltaY && absDeltaX > 50 && deltaX > 0) {
         // 回到首页
@@ -189,12 +189,12 @@ export default {
     async fetchHandbookList() {
       this.loading = true
       try {
-        // 使用配置文件中的API端点
-        const response = await axios.get(API_ENDPOINTS.STUDENT_HANDBOOK_LIST)
+        // 使用封装的service实例，确保携带token
+        const response = await service.get(API_ENDPOINTS.STUDENT_HANDBOOK_LIST)
         
         // 根据后端返回的数据结构处理数据
         let rawData = [];
-       if (response.data.rows) {
+        if (response.data.rows) {
           rawData = response.data.rows;
         } else if(Array.isArray(response.data)) {
           // 如果后端直接返回数组
@@ -217,7 +217,7 @@ export default {
       }
     },
     
-    // 按时间分组数据
+    //按时间分组数据
     groupDataByTime(data) {
       const grouped = {};
       
@@ -227,12 +227,12 @@ export default {
         if (!grouped[timeKey]) {
           grouped[timeKey] = {
             timeRange: item.startTime, // 卡片标题只显示开始时间
-            entries:[],
+            entries: [],
             categories: {} // 用于存储类别分组
           };
         }
         
-        // 添加条目到总列表
+        //添加条目到总列表
         grouped[timeKey].entries.push({
           subject: item.subject,
           content: item.content,
@@ -240,7 +240,7 @@ export default {
         });
         
         //按类别分组
-       const category = item.category || '未分类';
+        const category = item.category || '未分类';
         if (!grouped[timeKey].categories[category]) {
           grouped[timeKey].categories[category] = {
             category: category,
@@ -248,13 +248,13 @@ export default {
           };
         }
         grouped[timeKey].categories[category].entries.push({
-          subject:item.subject,
+          subject: item.subject,
           content: item.content,
           category: item.category
         });
       });
       
-      // 转换为数组并按时间顺序排序（从早到晚）
+      //转换为数组并按时间顺序排序（从早到晚）
       this.allGroupedHandbookList = Object.values(grouped).sort((a, b) => {
         // 将日期字符串转换为实际日期对象进行比较
         const dateA = this.parseDate(a.timeRange);
@@ -262,8 +262,8 @@ export default {
         return dateA - dateB;
       });
       
-      // 对每个时间分组内的类别进行排序，并将类别对象转换为数组
-     this.allGroupedHandbookList.forEach(item => {
+      //对每个时间分组内的类别进行排序，并将类别对象转换为数组
+      this.allGroupedHandbookList.forEach(item => {
         // 转换类别对象为数组
         item.categoryGroups = Object.values(item.categories);
         
@@ -278,7 +278,7 @@ export default {
         // 对每个类别内的条目进行排序
         item.categoryGroups.forEach(categoryGroup => {
           categoryGroup.entries.sort((a, b) => {
-            // 先按科目排序
+            //先按科目排序
             const subjectComparison = a.subject.localeCompare(b.subject);
             if (subjectComparison !== 0) {
               return subjectComparison;
@@ -305,9 +305,9 @@ export default {
 
     // 获取卡片背景颜色
     getCardBackgroundColor(index) {
-      // 定义两组交替的浅色背景颜色，与整体背景协调
+      //定义两组交替的浅色背景颜色，与整体背景协调
       const colors = [
-        '#e3f2fd', // 柢和的浅蓝色 1
+        '#e3f2fd', // 柢和的浅蓝色1
         '#f3e5f5'  // 柢和的浅紫色
       ];
       // 使用索引循环选择颜色
@@ -373,11 +373,11 @@ export default {
 
 .handbook-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 15px;/* 减小卡片之间的间距 */
+  grid-template-columns: repeat(auto-fill, minmax(350px,1fr));
+  gap: 15px; /* 减小卡片之间的间距 */
   margin: 5px 0 !important; /* 统一上下边距为5px */
   padding: 0 15px;
-  background-color: #f5f9ff!important; /* 使用更柔和的浅蓝灰色背景 */
+  background-color: #f5f9ff !important; /* 使用更柔和的浅蓝灰色背景 */
 }
 
 .handbook-card {
@@ -411,7 +411,7 @@ export default {
   text-align: center;
 }
 
-.card-content{
+.card-content {
   padding: 10px; /* 减小卡片内容区内边距 */
   text-align: left;
 }
@@ -420,11 +420,11 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 4px 0; /*减小类别容器间距 */
-  gap:4px; /* 减小类别标签间距 */
+  margin: 4px 0; /* 减小类别容器间距 */
+  gap: 4px; /* 减小类别标签间距 */
 }
 
-.category-row{
+.category-row {
   display: flex;
   justify-content: center;
 }
@@ -500,7 +500,7 @@ export default {
   transform: translateY(-2px);
 }
 
-/*导航按钮样式 */
+/* 导航按钮样式 */
 .navigation-buttons {
   display: flex;
   margin-left: auto;
@@ -521,5 +521,5 @@ export default {
   border-color: #66b1ff;
 }
 
-/*手机端分页优化 */
+/* 手机端分页优化 */
 </style>

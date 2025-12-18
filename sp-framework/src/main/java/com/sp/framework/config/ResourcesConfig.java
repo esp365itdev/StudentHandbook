@@ -34,7 +34,7 @@ public class ResourcesConfig implements WebMvcConfigurer
     private TokenInterceptor tokenInterceptor;
 
     /**
-     * 默认首页的设置，当输入域名是可以自动跳转到默认指定的网页
+     *默认首页的设置，当输入域名是可以自动跳转到默认指定的网页
      */
     @Override
     public void addViewControllers(ViewControllerRegistry registry)
@@ -56,18 +56,16 @@ public class ResourcesConfig implements WebMvcConfigurer
         registry.addResourceHandler("/swagger-ui/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/");
         
-        /** 前端静态资源配置 */
+/** 前端静态资源配置 */
         registry.addResourceHandler("/dist/**").
                 addResourceLocations("classpath:/dist/");
         registry.addResourceHandler("/sp-api/dist/**")
                 .addResourceLocations("classpath:/dist/");
         registry.addResourceHandler("/sp-api/assets/**")
                 .addResourceLocations("classpath:/dist/assets/");
-        registry.addResourceHandler("/sp-api/**")
-                .addResourceLocations("classpath:/dist/");
     }
 
-    /**
+/**
      * 自定义拦截规则
      */
     @Override
@@ -82,10 +80,19 @@ public class ResourcesConfig implements WebMvcConfigurer
                         "/captchaImage",
                         "/profile/**",
                         "/system/handbook/list",
-                        "/sp-api/",
-                        "/sp-api",
-                        "/sp-api/**",
-                        "/dist/**"
+                        "/system/handbook/*",
+                        "/dist/**",
+                        "/assets/**",
+                        "/sp-api/assets/**",
+                        "/sp-api/dist/**",
+                        "/favicon.ico",
+                        "/wechat/callback",
+                        "/wechat/callback/",
+                        "/wechat/callback/*",
+                        "/wechat/oauth/callback",
+                        "/swagger-ui/**",
+                        "/tool/swagger",
+                        "/tool/swagger/**"
                 );
     }
 }
