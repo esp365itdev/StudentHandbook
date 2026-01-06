@@ -19,7 +19,7 @@
         </div>
       </button>
 
-      <button
+      <!-- <button
           class="feature-button success-button"
           @click="goToParentNotice"
       >
@@ -27,105 +27,10 @@
           <span class="button-icon">📢</span>
           <span class="button-text">家校通知</span>
         </div>
-      </button>
-
-      <!-- 添加微信测试按钮 -->
-      <button
-          class="feature-button warning-button"
-          @click="testWeChatUserInfo"
-      >
-        <div class="button-content">
-          <span class="button-icon">💬</span>
-          <span class="button-text">微信用户测试</span>
-        </div>
-      </button>
-
-      <!-- 添加发送学校通知按钮 -->
-      <button
-          class="feature-button info-button"
-          @click="sendSchoolNotice"
-          :disabled="sendingNotice"
-     >
-        <div class="button-content">
-          <span class="button-icon">✉️</span>
-          <span class="button-text">{{ sendingNotice ? '发送中...' : '发送学校通知' }}</span>
-        </div>
-      </button>
-      
-      <!-- 添加登出按钮 -->
-      <button
-          class="feature-button danger-button"
-          @click="logout"
-      >
-        <div class="button-content">
-          <span class="button-icon">🚪</span>
-          <span class="button-text">登出</span>
-        </div>
-      </button>
-    </div>
-
-    <!-- 显示用户信息的模态框 -->
-    <div v-if="showUserInfoModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <h3>微信用户信息测试</h3>
-        <div v-if="userInfoLoading" class="loading">
-          <div class="loading-spinner"></div>
-          <p>{{ currentLogMessage || '正在获取用户信息...' }}</p>
-        </div>
-        <div v-else-if="userInfoError" class="error">获取用户信息失败: {{ userInfoError }}</div>
-        <div v-else class="success-message">
-          成功获取家校用户详细信息
-        </div>
-
-        <!-- 日志显示区域 -->
-        <div class="log-section">
-          <h4>操作日志</h4>
-          <div class="log-content">
-            <div v-for="(log, index) in logs" :key="index" class="log-item">
-              {{ log }}
-            </div>
-          </div>
-        </div>
-
-        <button class="close-button" @click="closeModal">关闭</button>
-      </div>
-    </div>
-
-    <!-- 发送通知结果模态框 -->
-    <div v-if="showNoticeResultModal" class="modal-overlay" @click="closeNoticeResultModal">
-      <div class="modal-content" @click.stop>
-        <h3>发送学校通知结果</h3>
-        <div v-if="noticeResultLoading" class="loading">
-          <div class="loading-spinner"></div>
-          <p>正在发送通知...</p>
-        </div>
-        <div v-else>
-          <div v-if="noticeResult && noticeResult.errcode === 0" class="success-message">
-            <p>✅ 通知发送成功</p>
-            <div v-if="hasInvalidReceivers" class="warning-info">
-              <p>⚠️ 部分接收人无效：</p>
-              <ul v-if="noticeResult.invalid_parent_userid && noticeResult.invalid_parent_userid.length > 0">
-                <li>无效的家长UserID: {{ noticeResult.invalid_parent_userid.join(',') }}</li>
-              </ul>
-              <ul v-if="noticeResult.invalid_student_userid && noticeResult.invalid_student_userid.length > 0">
-                <li>无效的学生UserID: {{ noticeResult.invalid_student_userid.join(', ') }}</li>
-              </ul>
-              <ul v-if="noticeResult.invalid_party && noticeResult.invalid_party.length > 0">
-                <li>无效的部门: {{ noticeResult.invalid_party.join(', ') }}</li>
-              </ul>
-            </div>
-          </div>
-          <div v-else class="error">
-            <p>❌ 通知发送失败</p>
-            <p v-if="noticeResult">错误码: {{ noticeResult.errcode }}</p>
-            <p v-if="noticeResult">错误信息: {{ noticeResult.errmsg }}</p>
-            <p v-else>网络请求失败</p>
-          </div>
-        </div>
-        <button class="close-button" @click="closeNoticeResultModal">关闭</button>
-      </div>
+      </button> -->
     </div>
   </div>
+  
 </template>
 
 <script>
@@ -134,36 +39,16 @@ import service from '@/utils/request.js'
 export default {
   name: 'Home',
   data() {
-    return {
-      showUserInfoModal: false,
-      userInfoLoading: false,
-      userInfoError: null,
-      currentLogMessage: '',
-      logs: [],
-      sendingNotice: false,
-      showNoticeResultModal: false,
-      noticeResultLoading: false,
-      noticeResult: null
-    }
+    return {}
   },
   mounted() {
     // 检查是否存在token，如果没有则重定向到登录页面
     this.checkToken();
     // 检查URL参数中是否有token（来自微信授权回调）
     this.checkTokenFromUrl();
-    // 页面加载时检查URL参数中是否有code
-    this.checkWeChatAuthCode();
+
   },
-  computed: {
-    hasInvalidReceivers() {
-      if (!this.noticeResult) return false
-      return (
-          (this.noticeResult.invalid_parent_userid && this.noticeResult.invalid_parent_userid.length > 0) ||
-          (this.noticeResult.invalid_student_userid && this.noticeResult.invalid_student_userid.length > 0) ||
-          (this.noticeResult.invalid_party && this.noticeResult.invalid_party.length > 0)
-      )
-    }
-  },
+
   methods: {
     // 检查URL参数中的token
     checkTokenFromUrl() {
@@ -193,183 +78,14 @@ export default {
         this.$router.push('/login');
       }
     },
-    
-    addToLog(message) {
-      const timestamp = new Date().toLocaleTimeString();
-      this.logs.push(`[${timestamp}] ${message}`);
-      console.log(message);
-    },
-
     goToStudentHandbook() {
       // 跳轉到學生手冊頁面
       this.$router.push('/handbook');
     },
-
     goToParentNotice() {
       // 暫時不調整任何頁面，僅顯示提示信息
       this.$message.info('家校通知功能正在開發中');
     },
-
-    // 检查URL参数中是否有微信授权code
-    async checkWeChatAuthCode() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      const state = urlParams.get('state');
-
-      // 检查是否有错误参数
-      const errcode = urlParams.get('errcode');
-      if (errcode) {
-        this.addToLog(`微信授权错误，错误码: ${errcode}`);
-        return;
-      }
-
-      if (code && state === 'wechat_test') {
-        this.addToLog('检测到微信授权code，开始获取用户信息');
-        // 如果有code，尝试获取用户信息
-        this.showUserInfoModal = true;
-        this.userInfoLoading = true;
-        this.userInfoError = null;
-        this.logs = []; // 清空之前的日志
-        this.addToLog(`接收到的code: ${code.substring(0, 10)}...`); // 只显示前10位
-
-        try {
-          // 添加超时设置
-          const source = service.CancelToken.source();
-          const timeout = setTimeout(() => {
-            source.cancel('请求超时');
-          }, 8000); // 8秒超时（略小于后端超时时间）
-
-          this.currentLogMessage = '正在请求后端获取用户信息...';
-          this.addToLog('发送请求到后端接口: /sp-api/wechat/oauth/callback');
-
-          const response = await service.get(`/wechat/oauth/callback?code=${code}&state=wechat_test`, {
-            cancelToken: source.token
-          });
-
-          clearTimeout(timeout);
-
-          this.addToLog('收到后端响应，状态码: ' + response.status);
-
-          if (response.data.code === 200) {
-            // 由于request.js中的响应拦截器已经处理了token的保存
-            // 这里不再需要手动保存token
-            this.addToLog('成功获取家校用户详细信息');
-            this.userInfoLoading = false;
-            this.currentLogMessage = '';
-          } else {
-            this.userInfoLoading = false;
-            this.userInfoError = response.data.msg;
-            this.currentLogMessage = '';
-            this.addToLog(`获取用户信息失败: ${response.data.msg}`);
-          }
-        } catch (error) {
-          this.userInfoLoading = false;
-          this.currentLogMessage = '';
-          if (service.isCancel(error)) {
-            this.userInfoError = '请求超时，请稍后重试';
-            this.addToLog('请求超时');
-          } else {
-            this.userInfoError = error.message || '获取用户信息失败';
-            this.addToLog(`获取用户信息失败: ${error.message}`);
-          }
-        }
-      }
-    },
-
-    // 测试微信用户信息获取
-    async testWeChatUserInfo() {
-      this.logs = []; // 清空之前的日志
-      this.addToLog('开始微信用户信息测试');
-
-      // 显示模态框
-      this.showUserInfoModal = true;
-      this.userInfoLoading = true;
-      this.userInfoError = null;
-      this.currentLogMessage = '正在检查环境...';
-
-      try {
-        // 检查是否在微信环境中
-        const isWeChat = navigator.userAgent.includes('MicroMessenger');
-        this.addToLog(`当前环境检查: ${isWeChat ? '微信环境' : '非微信环境'}`);
-
-        if (isWeChat) {
-          this.currentLogMessage = '正在跳转到微信授权页面...';
-          this.addToLog('环境检查通过，准备跳转到微信授权页面');
-          // 尝试通过OAuth2方式获取用户信息
-          await this.getWeChatUserInfoByOAuth();
-        } else {
-          // 如果没有在微信环境中，显示提示信息
-          this.userInfoLoading = false;
-          this.userInfoError = '请在微信或企业微信环境中打开应用';
-          this.currentLogMessage = '';
-          this.addToLog('环境检查失败：请在微信或企业微信环境中打开应用');
-        }
-      } catch (error) {
-        this.userInfoLoading = false;
-        this.currentLogMessage = '';
-        this.userInfoError = error.message || '获取用户信息时发生错误';
-        this.addToLog(`发生错误: ${error.message}`);
-      }
-    },
-
-    // 通过OAuth2方式获取微信用户信息
-    async getWeChatUserInfoByOAuth() {
-      try {
-        this.addToLog('构建微信授权链接');
-        // 使用企业微信可信域名作为回调地址
-        const redirectUri = encodeURIComponent('https://mo-stu-sys.org-assistant.com/sp-api/wechat/oauth/callback');
-        // 根据用户提供的信息，使用新的corpid
-        const corpId = 'ww04fad852e91fd490'; // 企业微信应用ID
-        const agentId = '1000033'; // 企业微信应用agentId
-
-        // 构造适合手机端的企业微信OAuth2授权链接
-        const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${corpId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_base&agentid=${agentId}&state=wechat_test#wechat_redirect`;
-
-        this.addToLog('跳转到微信授权页面: ' + authUrl);
-        // 重定向到授权页面
-        window.location.href = authUrl;
-      } catch (error) {
-        this.userInfoLoading = false;
-        this.currentLogMessage = '';
-        this.userInfoError = error.message || '发起微信授权失败';
-        this.addToLog(`发起微信授权失败: ${error.message}`);
-      }
-    },
-
-    closeModal() {
-      this.showUserInfoModal = false;
-    },
-
-    // 发送学校通知
-    async sendSchoolNotice() {
-      this.showNoticeResultModal = true;
-      this.noticeResultLoading = true;
-      this.noticeResult = null;
-      this.sendingNotice = true;
-      try {
-        const response = await service.post('/wechat/school/notice/send');
-        this.noticeResult = response.data;
-      } catch (error) {
-        console.error('发送学校通知失败:', error);
-        this.noticeResult = null;
-      } finally {
-        this.noticeResultLoading = false;
-        this.sendingNotice = false;
-      }
-    },
-
-    closeNoticeResultModal() {
-      this.showNoticeResultModal = false;
-    },
-    
-    // 登出功能
-    logout() {
-      // 清除本地存储的token
-      localStorage.removeItem('token');
-      // 重定向到登录页面
-      this.$router.push('/login');
-      this.$message.success('已登出');
-    }
   }
 }
 </script>
@@ -536,129 +252,6 @@ export default {
   color: white;
 }
 
-/* 模态框样式 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 90%;
-  width: 400px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-content h3 {
-  margin-top: 0;
-  text-align: center;
-}
-
-.modal-content h4 {
-  margin-top: 15px;
-  margin-bottom: 10px;
-  color: #303133;
-}
-
-.success-message {
-  text-align: center;
-  padding: 20px;
-  color: #67c23a;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.loading {
-  text-align: center;
-  padding: 20px;
-}
-
-.loading-spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #409eff;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error {
-  color: #f56c6c;
-  text-align: center;
-  padding: 20px;
-}
-
-.warning-info {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #fdf6ec;
-  border-radius: 4px;
-  color: #e6a23c;
-}
-
-.warning-info ul {
-  margin: 10px 0;
-  padding-left: 20px;
-}
-
-.warning-info li {
-  margin-bottom: 5px;
-}
-
-/* 日志区域样式 */
-.log-section {
-  margin-top: 20px;
-  border-top: 1px solid #eee;
-  padding-top: 15px;
-}
-
-.log-content {
-  background-color: #f5f5f5;
-  border-radius: 4px;
-  padding: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-  font-family: monospace;
-  font-size: 12px;
-}
-
-.log-item {
-  margin: 5px 0;
-  line-height: 1.4;
-}
-
-.close-button {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin-top: 15px;
-  background-color: #409eff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.close-button:hover {
-  background-color: #66b1ff;
-}
 
 /* 手機屏幕適配 - 調整間距 */
 @media (max-width: 768px) {
@@ -682,11 +275,6 @@ export default {
   .logo-badge {
     width: 120px;
     height: 120px;
-  }
-
-  .modal-content {
-    width: 90%;
-    padding: 15px;
   }
 }
 

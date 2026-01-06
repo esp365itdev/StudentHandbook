@@ -3,13 +3,7 @@
     <div class="login-form">
       <div class="logo-section">
         <img src="../logo/sp.jpg" alt="School Logo" class="school-logo-img">
-        <h2 class="welcome-title">學生系統登錄</h2>
-      </div>
-
-      <div class="login-options">
-        <div class="wechat-login-section">
-          <p class="login-hint">正在自動檢測微信環境並進行登錄...</p>
-        </div>
+        <h4 class="welcome-title">請稍等，正在自動驗證！！</h4>
       </div>
 
       <div v-if="loginLoading" class="loading-overlay">
@@ -191,25 +185,10 @@ export default {
 }
 
 .welcome-title {
-  font-size: 24px;
+  font-size: 50px;
   font-weight: bold;
   color: #303133;
   margin: 0;
-}
-
-.login-options {
-  position: relative;
-  z-index: 1;
-}
-
-.wechat-login-section {
-  text-align: center;
-}
-
-.login-hint {
-  color: #909399;
-  font-size: 14px;
-  margin: 10px 0 0 0;
 }
 
 .loading-overlay {
@@ -265,11 +244,8 @@ export default {
   }
   
   .welcome-title {
-    font-size: 20px;
+    font-size: 30px;
   }
-  
-  .button-text {
-    font-size: 16px;
-  }
+
 }
 </style>
