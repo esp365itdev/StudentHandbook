@@ -51,6 +51,17 @@
           <span class="button-text">{{ sendingNotice ? '发送中...' : '发送学校通知' }}</span>
         </div>
       </button>
+      
+      <!-- 添加登出按钮 -->
+      <button
+          class="feature-button danger-button"
+          @click="logout"
+      >
+        <div class="button-content">
+          <span class="button-icon">🚪</span>
+          <span class="button-text">登出</span>
+        </div>
+      </button>
     </div>
 
     <!-- 显示用户信息的模态框 -->
@@ -136,6 +147,10 @@ export default {
     }
   },
   mounted() {
+    // 检查是否存在token，如果没有则重定向到登录页面
+    this.checkToken();
+    // 检查URL参数中是否有token（来自微信授权回调）
+    this.checkTokenFromUrl();
     // 页面加载时检查URL参数中是否有code
     this.checkWeChatAuthCode();
   },
@@ -150,6 +165,35 @@ export default {
     }
   },
   methods: {
+    // 检查URL参数中的token
+    checkTokenFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      
+      if (token) {
+        // 保存token到本地存储
+        localStorage.setItem('token', token);
+        
+        // 清除URL中的token参数，避免在地址栏显示敏感信息
+        urlParams.delete('token');
+        const newUrl = window.location.pathname + 
+          (urlParams.toString() ? '?' + urlParams.toString() : '') + 
+          window.location.hash;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        this.$message.success('登錄成功');
+      }
+    },
+    
+    // 检查是否存在token
+    checkToken() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        // 如果没有token，重定向到登录页面
+        this.$router.push('/login');
+      }
+    },
+    
     addToLog(message) {
       const timestamp = new Date().toLocaleTimeString();
       this.logs.push(`[${timestamp}] ${message}`);
@@ -207,6 +251,8 @@ export default {
           this.addToLog('收到后端响应，状态码: ' + response.status);
 
           if (response.data.code === 200) {
+            // 由于request.js中的响应拦截器已经处理了token的保存
+            // 这里不再需要手动保存token
             this.addToLog('成功获取家校用户详细信息');
             this.userInfoLoading = false;
             this.currentLogMessage = '';
@@ -314,6 +360,15 @@ export default {
 
     closeNoticeResultModal() {
       this.showNoticeResultModal = false;
+    },
+    
+    // 登出功能
+    logout() {
+      // 清除本地存储的token
+      localStorage.removeItem('token');
+      // 重定向到登录页面
+      this.$router.push('/login');
+      this.$message.success('已登出');
     }
   }
 }
@@ -340,7 +395,7 @@ export default {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(64, 158, 255, 0.05) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(64, 158, 255, 0.05) 0, transparent 70%);
   z-index: 0;
   animation: rotate 20s linear infinite;
 }
@@ -473,6 +528,11 @@ export default {
 
 .info-button {
   background: linear-gradient(135deg, #909399 0%, #606266 100%);
+  color: white;
+}
+
+.danger-button {
+  background: linear-gradient(135deg, #f56c6c 0%, #e74c3c 100%);
   color: white;
 }
 

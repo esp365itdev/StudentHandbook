@@ -13,18 +13,19 @@
         <result property="updateTime" column="update_time" />
     </resultMap>
 
-    <sql id="selectTokenVo">
+    <select id="selectByTokenValue" parameterType="string" resultMap="TokenResult">
         select id, user_id, token, expire_time, create_time, update_time
         from sys_token
-    </sql>
-
-    <select id="selectByTokenValue" parameterType="string" resultMap="TokenResult">
-        <include refid="selectTokenVo"/>
         where token = #{tokenValue}
     </select>
 
     <delete id="deleteByUserId" parameterType="long">
         delete from sys_token where user_id = #{userId}
     </delete>
+
+    <insert id="insertToken" parameterType="com.sp.system.entity.Token">
+        insert into sys_token (user_id, token, expire_time, create_time, update_time)
+        values (#{userId}, #{token}, #{expireTime}, #{createTime}, #{updateTime})
+    </insert>
 
 </mapper>

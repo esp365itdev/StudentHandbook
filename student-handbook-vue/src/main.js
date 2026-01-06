@@ -5,6 +5,28 @@ import router from './router'
 // 创建Vue应用实例
 const app = createApp(App)
 
+// 配置路由守卫，确保访问受保护页面时已登录
+router.beforeEach((to, from, next) => {
+  // 定义不需要验证token的页面
+  const publicPages = ['/login', '/register', '/']
+  const isPublicPage = publicPages.includes(to.path)
+  const token = localStorage.getItem('token')
+
+  // 如果是公共页面且已登录，直接访问
+  if (isPublicPage) {
+    next()
+  } else {
+    // 如果不是公共页面，需要验证token
+    if (token) {
+      // 有token，允许访问
+      next()
+    } else {
+      // 没有token，重定向到登录页面
+      next('/login')
+    }
+  }
+})
+
 // 配置路由
 app.use(router)
 

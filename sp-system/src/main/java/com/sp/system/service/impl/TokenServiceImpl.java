@@ -5,6 +5,7 @@ import com.sp.system.entity.Token;
 import com.sp.system.mapper.TokenMapper;
 import com.sp.system.service.TokenService;
 import com.sp.common.utils.uuid.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,9 @@ import java.time.LocalDateTime;
 @Service
 public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements TokenService {
 
+    @Autowired
+    private TokenMapper tokenMapper;
+    
     @Value("${sp.token.expireTime:7}")
     private int expireTimeInDays;
 
@@ -44,7 +48,7 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
     @Override
     public String createToken(Long userId) {
         // 先删除该用户之前的token
-        this.baseMapper.deleteByUserId(userId);
+        this.tokenMapper.deleteByUserId(userId);
 
         // 创建新token
         String tokenValue = UUID.randomUUID().toString();
@@ -56,13 +60,14 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
         token.setUpdateTime(LocalDateTime.now());
         token.setExpireTime(LocalDateTime.now().plusDays(expireTimeInDays));
 
-        this.baseMapper.insert(token);
+        // 使用自定义的insertToken方法
+        this.tokenMapper.insertToken(token);
 
         return tokenValue;
     }
 
     @Override
     public boolean removeTokenByUserId(Long userId) {
-        return this.baseMapper.deleteByUserId(userId) > 0;
+        return this.tokenMapper.deleteByUserId(userId) > 0;
     }
 }

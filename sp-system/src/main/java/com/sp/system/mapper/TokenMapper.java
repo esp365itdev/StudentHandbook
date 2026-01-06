@@ -24,4 +24,12 @@ public interface TokenMapper extends BaseMapper<Token> {
      * @return 删除记录数
      */
     int deleteByUserId(@Param("userId") Long userId);
+    
+    /**
+     * 插入Token信息
+     * 
+     * @param token Token信息
+     * @return 插入记录数
+     */
+    int insertToken(Token token);
 }

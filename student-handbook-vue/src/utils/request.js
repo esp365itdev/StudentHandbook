@@ -1,5 +1,6 @@
 // 封装axios的请求工具函数
 import axios from 'axios'
+import { ElMessage } from 'element-plus' // 导入Element Plus的消息组件
 
 // 创建axios实例
 const getBaseURL = () => {
@@ -36,13 +37,37 @@ service.interceptors.request.use(
 // response拦截器
 service.interceptors.response.use(
   response => {
-    return response
+    // 检查响应数据结构
+    const res = response.data;
+    
+    // 如果后端返回了token信息，保存到本地存储
+    if (res.code === 200 && res.data && res.data.token) {
+      // 将token保存到本地存储
+      localStorage.setItem('token', res.data.token);
+    }
+    
+    return response;
   },
   error => {
     console.log('err' + error)// for debug
     if (error.response && error.response.status === 401) {
       // token过期或无效
       localStorage.removeItem('token')
+      // 重定向到登录页面
+      window.location.href = '/login'
+      ElMessage.error('登录已过期，请重新登录')
+    } else if (error.response && error.response.status === 403) {
+      // 无权限访问
+      const token = localStorage.getItem('token')
+      if (!token) {
+        // 如果没有token，重定向到登录页面
+        window.location.href = '/login'
+      } else {
+        // 如果有token但无权限，可能是token无效，清除并跳转到登录
+        localStorage.removeItem('token')
+        window.location.href = '/login'
+        ElMessage.error('权限不足或登录已失效，请重新登录')
+      }
     }
     return Promise.reject(error)
   }
