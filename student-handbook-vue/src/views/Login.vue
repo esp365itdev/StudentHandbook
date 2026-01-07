@@ -3,12 +3,20 @@
     <div class="login-form">
       <div class="logo-section">
         <img src="../logo/sp.jpg" alt="School Logo" class="school-logo-img">
-        <h4 class="welcome-title">請稍等，正在自動驗證！！</h4>
+        <h4 v-if="!showError" class="welcome-title">請稍等，正在自動驗證！！</h4>
       </div>
 
       <div v-if="loginLoading" class="loading-overlay">
         <div class="loading-spinner"></div>
         <p>正在登錄中...</p>
+      </div>
+      
+      <div v-if="showError" class="error-overlay">
+        <div class="error-content">
+          <h3>⚠️ 授權失敗</h3>
+          <p>{{ errorMessage }}</p>
+          <button @click="retryLogin" class="retry-button">重新登錄</button>
+        </div>
       </div>
     </div>
   </div>
@@ -22,10 +30,20 @@ export default {
   name: 'Login',
   data() {
     return {
-      loginLoading: false
+      loginLoading: false,
+      showError: false,
+      errorMessage: '無法進入系統，請聯繫學校管理員！！'
     }
   },
   mounted() {
+    // 检查URL参数，看是否是错误状态
+    this.checkUrlError();
+    
+    // 如果是错误状态，不执行自动登录
+    if (this.showError) {
+      return;
+    }
+    
     // 检查URL参数中的token（来自微信授权回调）
     this.checkTokenFromUrl();
     // 检查URL参数中的授权code
@@ -94,6 +112,27 @@ export default {
           this.loginLoading = false;
         }
       }
+    },
+    
+    // 检查URL参数，确定是否显示错误
+    checkUrlError() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+      
+      if (error) {
+        this.showError = true;
+        this.errorMessage = '授權失敗無法進入系統，請聯繫學校管理員';
+      }
+      
+      return !!error;
+    },
+    
+    // 重试登录
+    retryLogin() {
+      this.showError = false;
+      this.errorMessage = '授權失敗無法進入系統，請聯繫學校管理員';
+      // 重新触发微信登录
+      this.autoWechatLogin();
     },
 
     // 自动微信登录
@@ -190,6 +229,55 @@ export default {
   font-weight: bold;
   color: #303133;
   margin: 0;
+}
+
+.error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 245, 245, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+  border-radius: 10px;
+}
+
+.error-content {
+  text-align: center;
+  padding: 30px;
+  max-width: 80%;
+}
+
+.error-content h3 {
+  color: #e74c3c;
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.error-content p {
+  color: #666;
+  margin: 5px 0;
+  font-size: 16px;
+}
+
+.retry-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.retry-button:hover {
+  background-color: #2980b9;
 }
 
 .loading-overlay {
