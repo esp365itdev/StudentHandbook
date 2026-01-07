@@ -43,6 +43,7 @@ public class ResourcesConfig implements WebMvcConfigurer
         // 添加对sp-api路径的支持
         registry.addViewController("/sp-api/").setViewName("forward:/dist/index.html");
         registry.addViewController("/sp-api").setViewName("forward:/dist/index.html");
+
     }
 
     @Override
@@ -79,8 +80,6 @@ public class ResourcesConfig implements WebMvcConfigurer
                         "/login",
                         "/captchaImage",
                         "/profile/**",
-                        "/system/handbook/list",
-                        "/system/handbook/*",
                         "/dist/**",
                         "/assets/**",
                         "/sp-api/assets/**",

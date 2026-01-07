@@ -22,14 +22,12 @@ public class StudentHandbookController extends BaseController {
     @Autowired
     private IStudentHandbookService studentHandbookService;
 
-    @Anonymous
     @Log(title = "查询学生手册列表", businessType = BusinessType.SELECT)
     @GetMapping("/list")
     public TableDataInfo list(StudentHandbook studentHandbook) {
         return studentHandbookService.selectStudentHandbookList(studentHandbook);
     }
     
-    @Anonymous
     @Log(title = "获取学生手册详细信息", businessType = BusinessType.SELECT)
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id) {

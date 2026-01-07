@@ -16,6 +16,7 @@
 
 <script>
 import service from '@/utils/request.js'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'Login',
@@ -50,7 +51,7 @@ export default {
           window.location.hash;
         window.history.replaceState({}, document.title, newUrl);
         
-        this.$message.success('登錄成功');
+        ElMessage.success('登錄成功');
         // 跳转到首页
         this.$router.push('/');
       }
@@ -66,7 +67,7 @@ export default {
       const errcode = urlParams.get('errcode');
       if (errcode) {
         console.error(`微信授权错误，错误码: ${errcode}`);
-        this.$message.error('微信授权失败');
+        ElMessage.error('微信授权失败');
         return;
       }
 
@@ -80,15 +81,15 @@ export default {
           if (response.data.code === 200) {
             // 由于request.js中的响应拦截器已经处理了token的保存
             // 这里不再需要手动保存token
-            this.$message.success('登錄成功');
+            ElMessage.success('登錄成功');
             // 跳转到首页
-            this.$router.push('/');
+            this.$router.push('/sp-api/');
           } else {
-            this.$message.error(response.data.msg || '登錄失敗');
+            ElMessage.error(response.data.msg || '登錄失敗');
           }
         } catch (error) {
           console.error('登录请求失败:', error);
-          this.$message.error('登錄請求失敗');
+          ElMessage.error('登錄請求失敗');
         } finally {
           this.loginLoading = false;
         }
@@ -107,7 +108,7 @@ export default {
         await this.getWeChatUserInfoByOAuth();
       } else {
         console.log('非微信环境，显示提示信息');
-        this.$message.warning('请在微信或企业微信环境中打开应用');
+        ElMessage.warning('请在微信或企业微信环境中打开应用');
       }
     },
 

@@ -77,6 +77,7 @@
 <script>
 import service from '@/utils/request.js'
 import { API_ENDPOINTS } from '@/config/api.js'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'StudentHandbook',
@@ -209,7 +210,7 @@ export default {
         console.log('获取到的数据:', response.data)
       } catch (error) {
         console.error('获取学生手册列表失败:', error)
-        this.$message.error('获取数据失败: ' + (error.message || '未知错误'))
+        ElMessage.error('获取数据失败: ' + (error.message || '未知错误'))
         // 使用空数组，不显示示例数据
         this.groupDataByTime([]);
       } finally {

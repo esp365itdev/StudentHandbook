@@ -54,18 +54,18 @@ service.interceptors.response.use(
       // token过期或无效
       localStorage.removeItem('token')
       // 重定向到登录页面
-      window.location.href = '/login'
+      window.location.href = '/sp-api/login'
       ElMessage.error('登录已过期，请重新登录')
     } else if (error.response && error.response.status === 403) {
       // 无权限访问
       const token = localStorage.getItem('token')
       if (!token) {
         // 如果没有token，重定向到登录页面
-        window.location.href = '/login'
+        window.location.href = '/sp-api/login'
       } else {
         // 如果有token但无权限，可能是token无效，清除并跳转到登录
         localStorage.removeItem('token')
-        window.location.href = '/login'
+        window.location.href = '/sp-api/login'
         ElMessage.error('权限不足或登录已失效，请重新登录')
       }
     }

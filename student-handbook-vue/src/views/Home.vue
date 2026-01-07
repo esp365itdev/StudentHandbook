@@ -35,6 +35,7 @@
 
 <script>
 import service from '@/utils/request.js'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'Home',
@@ -66,7 +67,7 @@ export default {
           window.location.hash;
         window.history.replaceState({}, document.title, newUrl);
         
-        this.$message.success('登錄成功');
+        ElMessage.success('登錄成功');
       }
     },
     
@@ -84,7 +85,7 @@ export default {
     },
     goToParentNotice() {
       // 暫時不調整任何頁面，僅顯示提示信息
-      this.$message.info('家校通知功能正在開發中');
+      ElMessage.info('家校通知功能正在開發中');
     },
   }
 }

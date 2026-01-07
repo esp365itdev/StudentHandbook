@@ -8,9 +8,27 @@ const app = createApp(App)
 // 配置路由守卫，确保访问受保护页面时已登录
 router.beforeEach((to, from, next) => {
   // 定义不需要验证token的页面
-  const publicPages = ['/login', '/register', '/']
+  const publicPages = ['/', '/login', '/register']
   const isPublicPage = publicPages.includes(to.path)
   const token = localStorage.getItem('token')
+
+  // 检查URL参数中的token（来自微信授权回调）
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('token');
+  
+  // 如果URL中有token，先保存到localStorage
+  if (tokenFromUrl) {
+    localStorage.setItem('token', tokenFromUrl);
+    // 更新URL，移除token参数
+    urlParams.delete('token');
+    const newUrl = window.location.pathname + 
+      (urlParams.toString() ? '?' + urlParams.toString() : '') + 
+      window.location.hash;
+    window.history.replaceState({}, document.title, newUrl);
+    // 有token，允许访问
+    next();
+    return;
+  }
 
   // 如果是公共页面且已登录，直接访问
   if (isPublicPage) {
