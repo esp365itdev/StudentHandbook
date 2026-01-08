@@ -4,39 +4,53 @@
        @touchmove="handleTouchMove"
        @touchend="handleTouchEnd">
     <div class="header-container">
-      <!-- 导航栏按钮 -->
-      <div class="nav-button-container" style="display: none;">
-        <el-button class="nav-button" type="primary" icon="Menu" @click="toggleNavigation"></el-button>
-      </div>
-      
-      <!-- 页面标题 -->
-      <h2 class="page-title">學生手冊</h2>
-      
-      <!-- 左右方向按钮 -->
-      <div class="navigation-buttons">
-        <el-button class="nav-arrow prev-button" type="primary" icon="ArrowLeft" @click="prevPage" :disabled="currentPage === 1"></el-button>
-        <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight" @click="nextPage" :disabled="currentPage >= totalPages"></el-button>
+      <!-- 頁面標題和按鈕容器 -->
+      <div class="title-and-buttons">
+        <!-- 返回首頁按鈕 -->
+        <el-button class="home-btn" type="primary" @click="goHome">
+          <template #icon>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5V14h3v1.5a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146ZM11.5 14v-6h-3v6h3Z"/>
+            </svg>
+          </template>
+          返回首頁
+        </el-button>
+        
+        <!-- 用戶切換按鈕 -->
+        <el-button class="user-switch-btn" type="info" @click="toggleUserMenu">
+          <template #icon>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zM10 9.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
+            </svg>
+          </template>
+          切換學生
+        </el-button>
+        
+        <!-- 左右方向按鈕 -->
+        <div class="navigation-buttons">
+          <el-button class="nav-arrow prev-button" type="primary" icon="ArrowLeft" @click="prevPage" :disabled="currentPage === 1">上一頁</el-button>
+          <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight" @click="nextPage" :disabled="currentPage >= totalPages">下一頁</el-button>
+        </div>
       </div>
     </div>
     
-    <!-- 卡片式数据展示 -->
+    <!-- 卡片式數據展示 -->
     <div class="handbook-container" v-loading="loading">
       <div 
         class="handbook-card"
         v-for="(item,index) in paginatedGroupedHandbookList" 
         :key="index"
-        :style="{ backgroundColor: getCardBackgroundColor(index) }"
       >
         <div class="card-header">
           <h3 class="card-title">{{ item.timeRange }}</h3>
         </div>
         
         <div class="card-content">
-          <!-- 按类别分组显示条目 -->
+          <!-- 按類別分組顯示條目 -->
           <div v-for="(categoryGroup, categoryIndex) in item.categoryGroups" 
                :key="categoryIndex"
                class="category-group">
-            <!-- 类别标签 -->
+            <!-- 類別標籤 -->
             <div class="category-container">
               <div class="category-row">
                 <span 
@@ -48,7 +62,7 @@
               </div>
             </div>
             
-            <!-- 该类别下的条目 -->
+            <!-- 該類別下的條目 -->
             <div 
               class="card-field" 
               v-for="(entry, entryIndex) in categoryGroup.entries" 
@@ -60,16 +74,14 @@
           </div>
         </div>
       </div>
-      <!-- 空状态 -->
+      <!-- 空狀態 -->
       <div v-if="paginatedGroupedHandbookList.length === 0 && !loading" class="empty-state">
         <el-empty description="暂无数据" />
       </div>
     </div>
-    <!-- 回到顶部按钮 -->
+    <!-- 回到頂部按鈕 -->
     <div class="back-to-top" v-show="showBackToTop" @click="scrollToTop">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 8L6 14L7.41 15.41L12 10.83L16.59 15.41L18 14L12 8Z" fill="currentColor"/>
-      </svg>
+      <span>回到頂部</span>
     </div>
   </div>
 </template>
@@ -86,14 +98,15 @@ export default {
   data() {
     return {
       loading: false,
-      allGroupedHandbookList: [], // 存储所有分组后的数据
-      currentPage: 1, // 当前页码
-      pageSize: 7, //每页显示条数
+      allGroupedHandbookList: [], // 存儲所有分組後的數據
+      currentPage: 1, // 當前頁碼
+      pageSize: 7, //每頁顯示條數
       isMobile: false,
       showBackToTop: false,
-      showNavigation: false, // 控制导航菜单的显示
+      showNavigation: false, // 控制導航菜單的顯示
+      showUserMenu: false, // 控制用戶菜單的顯示
       
-      // 滑动相关数据
+      // 滑動相關數據
       touchStartX: 0,
       touchStartY: 0,
       touchEndX: 0,
@@ -101,12 +114,12 @@ export default {
     }
   },
   computed: {
-    // 计算总页数
+    // 計算總頁數
     totalPages() {
       return Math.ceil(this.allGroupedHandbookList.length / this.pageSize);
     },
     
-    // 计算当前页需要显示的数据
+    // 計算當前頁需要顯示的數據
     paginatedGroupedHandbookList() {
       const startIndex = (this.currentPage - 1) * this.pageSize;
       const endIndex = startIndex + this.pageSize;
@@ -117,52 +130,67 @@ export default {
     this.checkIsMobile()
     this.fetchHandbookList()
     window.addEventListener('resize', this.checkIsMobile)
-    // 添加滚动事件监听器
+    // 添加滾動事件監聽器
     window.addEventListener('scroll', this.handleScroll)
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.checkIsMobile)
-    // 移除滚动事件监听器
+    // 移除滾動事件監聽器
     window.removeEventListener('scroll', this.handleScroll)
   },
   methods: {
-    //检查是否为移动设备
+    //檢查是否為移動設備
     checkIsMobile() {
       this.isMobile = window.innerWidth < 768
     },
     
-    // 切换导航菜单显示状态
+    // 切換導航菜單顯示狀態
     toggleNavigation() {
       this.showNavigation = !this.showNavigation
     },
     
-    //处理滚动事件，控制回到顶部按钮的显示
+    // 返回首頁
+    goHome() {
+      this.$router.push('/');
+    },
+    
+    // 切換用戶菜單顯示狀態
+    toggleUserMenu() {
+      this.showUserMenu = !this.showUserMenu;
+      // 這裡可以添加用戶切換的邏輯
+      if (this.showUserMenu) {
+        // 顯示用戶選擇菜單，可以添加彈窗或其他UI元素
+        alert('用戶切換菜單');
+      }
+    },
+    
+    //處理滾動事件，控制回到頂部按鈕的顯示
     handleScroll() {
-      // 当滚动超过300px时显示回到顶部按钮
+      // 當滾動超過300px時顯示回到頂部按鈕
       this.showBackToTop = window.pageYOffset > 300
     },
     
-    // 滚动到顶部
+    // 滾動到頂部
     scrollToTop() {
       window.scrollTo({
         top: 0,
-        behavior: 'smooth' // 平滑滚动
+        behavior: 'smooth' // 平滑滾動
       })
     },
     
-    // 触摸开始事件
+    // 觸摸開始事件
     handleTouchStart(event) {
       const touch = event.touches[0];
       this.touchStartX = touch.clientX;
       this.touchStartY = touch.clientY;
     },
     
-    // 触摸移动事件
+    // 觸摸移動事件
     handleTouchMove(event) {
-      // 可以在这里添加一些视觉反馈
+      // 可以在這裡添加一些視覺反饋
     },
     
-    // 触摸结束事件
+    // 觸摸結束事件
     handleTouchEnd(event) {
       const touch = event.changedTouches[0];
       this.touchEndX = touch.clientX;
@@ -171,77 +199,77 @@ export default {
       this.handleSwipeGesture();
     },
     
-    //处理滑动手势
+    //處理滑動手勢
     handleSwipeGesture() {
       const deltaX = this.touchEndX - this.touchStartX;
       const deltaY = this.touchEndY - this.touchStartY;
       const absDeltaX = Math.abs(deltaX);
       const absDeltaY = Math.abs(deltaY);
       
-      //判断是否为有效的向右滑动
-      // 条件：水平滑动距离大于垂直滑动距离，且水平滑动距离足够大（50px），且方向为向右
+      //判斷是否為有效的向右滑動
+      // 條件：水平滑動距離大於垂直滑動距離，且水平滑動距離足夠大（50px），且方向為向右
       if (absDeltaX > absDeltaY && absDeltaX > 50 && deltaX > 0) {
-        // 回到首页
+        // 回到首頁
         this.$router.push('/');
       }
     },
     
-    // 获取学生手册列表
+    // 獲取學生手冊列表
     async fetchHandbookList() {
       this.loading = true
       try {
-        // 使用封装的service实例，确保携带token
+        // 使用封裝的service實例，確保攜帶token
         const response = await service.get(API_ENDPOINTS.STUDENT_HANDBOOK_LIST)
         
-        // 根据后端返回的数据结构处理数据
+        // 根據後端返回的數據結構處理數據
         let rawData = [];
         if (response.data.rows) {
           rawData = response.data.rows;
         } else if(Array.isArray(response.data)) {
-          // 如果后端直接返回数组
+          // 如果後端直接返回數組
           rawData = response.data;
         } else {
-          // 如果是其他结构，尝试直接使用
+          // 如果是其他結構，嘗試直接使用
           rawData = response.data;
         }
         
-        //按时间分组数据
+        //按時間分組數據
         this.groupDataByTime(rawData);
-        console.log('获取到的数据:', response.data)
+        console.log('獲取到的數據:', response.data)
       } catch (error) {
-        console.error('获取学生手册列表失败:', error)
-        ElMessage.error('获取数据失败: ' + (error.message || '未知错误'))
-        // 使用空数组，不显示示例数据
+        console.error('獲取學生手冊列表失敗:', error)
+        ElMessage.error('獲取數據失敗: ' + (error.message || '未知錯誤'))
+        // 使用空數組，不顯示示例數據
         this.groupDataByTime([]);
       } finally {
         this.loading = false
       }
     },
     
-    //按时间分组数据
+    //按時間分組數據
     groupDataByTime(data) {
       const grouped = {};
       
-      //按时间分组
+      //按時間分組
       data.forEach(item => {
-        const timeKey = item.startTime; // 只使用开始时间作为分组键
+        const timeKey = item.startTime; // 只使用開始時間作為分組鍵
         if (!grouped[timeKey]) {
           grouped[timeKey] = {
-            timeRange: item.startTime, // 卡片标题只显示开始时间
+            timeRange: item.startTime, // 卡片標題只顯示開始時間
             entries: [],
-            categories: {} // 用于存储类别分组
+            categories: {} // 用於存儲類別分組
           };
         }
         
-        //添加条目到总列表
+        //添加條目到總列表
         grouped[timeKey].entries.push({
           subject: item.subject,
           content: item.content,
           category: item.category
         });
         
-        //按类别分组
-        const category = item.category || '未分类';
+        //按類別分組
+        const category = item.category || '未分類';
         if (!grouped[timeKey].categories[category]) {
           grouped[timeKey].categories[category] = {
             category: category,
@@ -255,28 +283,28 @@ export default {
         });
       });
       
-      //转换为数组并按时间顺序排序（从早到晚）
+      //轉換為數組並按時間順序排序（從早到晚）
       this.allGroupedHandbookList = Object.values(grouped).sort((a, b) => {
-        // 将日期字符串转换为实际日期对象进行比较
+        // 將日期字符串轉換為實際日期對象進行比較
         const dateA = this.parseDate(a.timeRange);
         const dateB = this.parseDate(b.timeRange);
         return dateA - dateB;
       });
       
-      //对每个时间分组内的类别进行排序，并将类别对象转换为数组
+      //對每個時間分組內的類別進行排序，並將類別對象轉換為數組
       this.allGroupedHandbookList.forEach(item => {
-        // 转换类别对象为数组
+        // 轉換類別對象為數組
         item.categoryGroups = Object.values(item.categories);
         
-        // 对类别进行排序
+        // 對類別進行排序
         item.categoryGroups.sort((a, b) => {
-          //确保"未分类"排在最后
-          if(a.category === '未分类') return 1;
-          if (b.category === '未分类') return -1;
+          //確保"未分類"排在最後
+          if(a.category === '未分類') return 1;
+          if (b.category === '未分類') return -1;
           return a.category.localeCompare(b.category);
         });
         
-        // 对每个类别内的条目进行排序
+        // 對每個類別內的條目進行排序
         item.categoryGroups.forEach(categoryGroup => {
           categoryGroup.entries.sort((a, b) => {
             //先按科目排序
@@ -284,53 +312,42 @@ export default {
             if (subjectComparison !== 0) {
               return subjectComparison;
             }
-            // 如果科目相同，按内容排序
+            // 如果科目相同，按內容排序
             return a.content.localeCompare(b.content);
           });
         });
       });
       
-      // 重置到第一页
+      // 重置到第一頁
       this.currentPage = 1;
     },
 
-    // 解析日期字符串为Date对象的辅助函数
+    // 解析日期字符串為Date對象的輔助函數
     parseDate(dateString) {
-      // 假设日期格式为 dd/mm/yyyy或 d/m/yyyy
+      // 假設日期格式為 dd/mm/yyyy或 d/m/yyyy
       const parts = dateString.split('/');
       const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1; // 月份从0开始
+      const month = parseInt(parts[1], 10) - 1; // 月份從0開始
       const year = parseInt(parts[2], 10);
       return new Date(year, month, day);
     },
-
-    // 获取卡片背景颜色
-    getCardBackgroundColor(index) {
-      //定义两组交替的浅色背景颜色，与整体背景协调
-      const colors = [
-        '#e3f2fd', // 柢和的浅蓝色1
-        '#f3e5f5'  // 柢和的浅紫色
-      ];
-      // 使用索引循环选择颜色
-      return colors[index % colors.length];
-    },
     
-    // 上一页
+    // 上一頁
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
-        // 滚动到顶部
+        // 滾動到頂部
         window.scrollTo({
           top: 0,
           behavior: 'smooth'
         });
       }
     },
-    // 下一页
+    // 下一頁
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
-        // 滚动到顶部
+        // 滾動到頂部
         window.scrollTo({
           top: 0,
           behavior: 'smooth'
@@ -347,180 +364,320 @@ export default {
   margin: 0 !important;
   position: relative;
   top: 0;
-  background-color: #f5f9ff !important; /* 使用更柔和的浅蓝灰色背景 */
+  background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%) !important; /* 更淺的藍色漸變背景 */
+  min-height: 100vh;
 }
 
 .header-container {
   display: flex;
   align-items: center;
-  background-color: #f5f9ff; /* 使用更柔和的浅蓝灰色背景 */
-  padding: 0 15px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, #7dd3fc 0%, #bae6fd 100%); /* 更淺的藍色漸變 */
+  padding: 15px 30px; /* 減少上方內邊距 */
+  box-shadow: 0 4px 6px rgba(125, 211, 252, 0.2);
   position: sticky;
   top: 0;
   z-index: 100;
+  justify-content: center; /* 讓內容居中 */
+}
+
+.title-and-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 內容居中對齊 */
+  width: 100%;
+  max-width: 800px; /* 限制最大寬度 */
+  gap: 15px; /* 組件間距 */
 }
 
 .page-title {
-  margin: 0 !important;
-  font-size: 32px;
-  font-weight: bold;
-  color: #303133;
-  padding: 10px 0 !important;
+  margin: 0 0 5px 0 !important; /* 按照項目規範設置與卡片內容間距為5px */
+  font-size: 32px; /* 按照規範增大字體 */
+  font-weight: 700;
+  color: #0284c7; /* 淺藍色文字 */
+  padding: 0 !important; /* 移除標題內邊距 */
   white-space: nowrap;
-  flex-grow: 1; /* 使标题占据剩余空间 */
-  text-align: center; /* 标题居中 */
+  flex-grow: 1; /* 擴展佔據空間，幫助居中 */
+  text-align: center; /* 文字居中 */
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5); /* 淺色陰影 */
+}
+
+.home-btn {
+  margin-right: 0; /* 移除固定間距，使用gap控制 */
+  padding: 12px 18px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); /* 橙色漸層 */
+  color: #92400e; /* 深橙色文字 */
+  border: none;
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.home-btn:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(245, 158, 11, 0.3);
+}
+
+.user-switch-btn {
+  margin-right: 0; /* 移除固定間距，使用gap控制 */
+  padding: 12px 18px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%); /* 按照項目規範的淺藍色漸變 */
+  color: #1e3a8a; /* 按照項目規範的深藍色文字 */
+  border: none;
+  box-shadow: 0 4px 6px rgba(147, 197, 253, 0.2);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.user-switch-btn:hover {
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(147, 197, 253, 0.3);
+}
+
+.navigation-buttons {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0; /* 防止按鈕容器收縮 */
 }
 
 .handbook-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px,1fr));
-  gap: 15px; /* 减小卡片之间的间距 */
-  margin: 5px 0 !important; /* 统一上下边距为5px */
-  padding: 0 15px;
-  background-color: #f5f9ff !important; /* 使用更柔和的浅蓝灰色背景 */
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 25px;
+  margin: 15px 0 50px 0 !important; /* 減少上方邊距 */
+  padding: 0 25px 0 25px; /* 移除底部內邊距，由按鈕提供空間 */
+  background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%) !important; /* 更淺的藍色漸變背景 */
 }
 
 .handbook-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* 更輕微的陰影 */
   transition: all 0.3s ease;
   transform: translateY(0);
+  background: white;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: none;
+  position: relative;
+  overflow: visible;
+}
+
+.handbook-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #7dd3fc, #bae6fd, #bae6fd); /* 更淺的藍色條 */
+  z-index: 1;
 }
 
 .handbook-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 20px rgba(125, 211, 252, 0.2); /* 淺藍色陰影 */
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  justify-content: center; /* 添加这行使日期水平居中 */
-  padding: 10px; /* 减小卡片头部内边距 */
-  border-bottom: 2px solid #606266;
+  justify-content: center; /* 按照項目規範設置居中對齊 */
+  padding: 20px;
+  border-bottom: 2px solid #606266; /* 按照項目規範設置分割線 */
+  background: linear-gradient(135deg, #7dd3fc 0%, #bae6fd 100%); /* 更淺的藍色漸變 */
+  color: #0284c7; /* 淺藍色文字 */
 }
 
 .card-title {
   margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-  color: #303133;
+  font-size: 24px; /* 按照規範增大字體 */
+  font-weight: 700;
+  color: #0284c7; /* 淺藍色文字 */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-align: center;
+  text-align: center; /* 按照項目規範設置居中對齊 */
 }
 
 .card-content {
-  padding: 10px; /* 减小卡片内容区内边距 */
-  text-align: left;
+  padding: 25px; /* 按照規範增加內邊距 */
+  text-align: left; /* 按照規範設置左對齊 */
+  flex-grow: 1;
 }
 
 .category-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin: 4px 0; /* 减小类别容器间距 */
-  gap: 4px; /* 减小类别标签间距 */
+  align-items: flex-start;
+  margin: 12px 0;
+  gap: 10px;
 }
 
 .category-row {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .category-badge {
-  background-color: #409eff;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #7dd3fc 0%, #bae6fd 100%); /* 更淺的藍色漸變 */
+  color: #0284c7; /* 淺藍色文字 */
+  padding: 8px 16px;
+  border-radius: 24px;
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 600;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(125, 211, 252, 0.2);
 }
 
-.handbook-card:hover .category-badge {
+.category-badge:hover {
   transform: scale(1.05);
 }
 
-/* 测验/考试类别的特殊样式 */
+/* 測驗/考試類別的特殊樣式 */
 .exam-badge {
-  background-color: #f44336 !important; /* 红色背景用于突出显示测验/考试类别 */
+  background: linear-gradient(135deg, #fda4af 0%, #f87171 100%) !important; /* 淺粉到淺紅色漸變 */
+  color: #b91c1c; /* 淺紅色文字 */
 }
 
 .card-field {
   display: flex;
-  margin-bottom: 15px; /* 减小条目间距 */
-  font-size: 18px;
+  margin-bottom: 16px;
+  font-size: 16px; /* 按照規範增大字體 */
   text-align: left;
-  line-height: 1.5;
+  line-height: 1.6;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0f2fe; /* 使用更協調的淺藍色分割線 */
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  background: #f8fafc;
+  padding-left: 15px;
 }
 
 .card-field:last-child {
   margin-bottom: 0;
+  border-bottom: none;
 }
 
 .field-value {
   flex: 1;
-  color: #606266;
+  color: #475569;
   transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .handbook-card:hover .field-value {
-  color: #333;
+  color: #0284c7; /* 懸停時文字變成淺藍色 */
+  transform: translateX(5px);
 }
 
 .empty-state {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 20px 0;
+  padding: 50px 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin: 20px;
 }
 
-/* 回到顶部按钮样式 */
+/* 回到頂部按鈕樣式 */
 .back-to-top {
   position: fixed;
-  bottom: 10px;
-  right: 10px;
-  width: 40px;
-  height: 40px;
-  background-color: #409eff;
-  color: white;
-  border-radius: 50%;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(135deg, #7dd3fc 0%, #bae6fd 100%); /* 更淺的藍色漸變 */
+  color: #0284c7; /* 淺藍色文字 */
+  border-radius: 0; /* 長方形 */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -2px 8px rgba(125, 211, 252, 0.3);
   z-index: 1000;
   transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 16px;
 }
 
 .back-to-top:hover {
-  background-color: #66b1ff;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #bae6fd 0%, #e0f2fe 100%);
+  box-shadow: 0 -4px 12px rgba(125, 211, 252, 0.4);
 }
 
-/* 导航按钮样式 */
-.navigation-buttons {
-  display: flex;
-  margin-left: auto;
-  gap: 10px;
+.back-to-top span {
+  color: #0284c7; /* 淺藍色文字 */
 }
 
+/* 導航按鈕樣式 */
 .nav-arrow {
-  padding: 8px 12px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%); /* 按照項目規範的淺藍色漸變 */
+  color: #1e3a8a; /* 按照項目規範的深藍色文字 */
+  border: none;
+  box-shadow: 0 4px 6px rgba(147, 197, 253, 0.2);
+  white-space: nowrap; /* 防止文字換行 */
+  min-width: auto; /* 避免按鈕過大 */
 }
 
-.prev-button, .next-button {
-  background-color: #409eff;
-  border-color: #409eff;
+.nav-arrow:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  opacity: 0.6;
+  color: #6b7280;
 }
 
 .prev-button:hover, .next-button:hover {
-  background-color: #66b1ff;
-  border-color: #66b1ff;
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 10px rgba(147, 197, 253, 0.3);
 }
 
-/* 手机端分页优化 */
+/* 手機端優化 */
+@media (max-width: 768px) {
+  .handbook-container {
+    padding: 0 15px 30px;
+    gap: 20px;
+  }
+  
+  .handbook-card {
+    border-radius: 10px;
+  }
+  
+  .page-title {
+    font-size: 26px;
+  }
+  
+  .card-title {
+    font-size: 20px;
+  }
+  
+  .card-content {
+    padding: 20px;
+  }
+  
+  .category-badge {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+  
+  .card-field {
+    font-size: 15px;
+  }
+}
 </style>

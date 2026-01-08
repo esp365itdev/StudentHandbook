@@ -10,7 +10,7 @@
         <div class="loading-spinner"></div>
         <p>正在登錄中...</p>
       </div>
-      
+
       <div v-if="showError" class="error-overlay">
         <div class="error-content">
           <h3>⚠️ 授權失敗</h3>
@@ -24,7 +24,7 @@
 
 <script>
 import service from '@/utils/request.js'
-import { ElMessage } from 'element-plus'
+import {ElMessage} from 'element-plus'
 
 export default {
   name: 'Login',
@@ -38,17 +38,17 @@ export default {
   mounted() {
     // 检查URL参数，看是否是错误状态
     this.checkUrlError();
-    
+
     // 如果是错误状态，不执行自动登录
     if (this.showError) {
       return;
     }
-    
+
     // 检查URL参数中的token（来自微信授权回调）
     this.checkTokenFromUrl();
     // 检查URL参数中的授权code
     this.checkWeChatAuthCode();
-    
+
     // 自动触发微信登录流程
     this.autoWechatLogin();
   },
@@ -57,24 +57,24 @@ export default {
     checkTokenFromUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
-      
+
       if (token) {
         // 保存token到本地存储
         localStorage.setItem('token', token);
-        
+
         // 清除URL中的token参数，避免在地址栏显示敏感信息
         urlParams.delete('token');
-        const newUrl = window.location.pathname + 
-          (urlParams.toString() ? '?' + urlParams.toString() : '') + 
-          window.location.hash;
+        const newUrl = window.location.pathname +
+            (urlParams.toString() ? '?' + urlParams.toString() : '') +
+            window.location.hash;
         window.history.replaceState({}, document.title, newUrl);
-        
+
         ElMessage.success('登錄成功');
         // 跳转到首页
         this.$router.push('/');
       }
     },
-    
+
     // 检查URL参数中是否有微信授权code
     async checkWeChatAuthCode() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -92,10 +92,10 @@ export default {
       if (code) {
         console.log('检测到微信授权code，开始登录流程');
         this.loginLoading = true;
-        
+
         try {
           const response = await service.get(`/wechat/oauth/callback?code=${code}&state=${state || 'default'}`);
-          
+
           if (response.data.code === 200) {
             // 由于request.js中的响应拦截器已经处理了token的保存
             // 这里不再需要手动保存token
@@ -113,20 +113,20 @@ export default {
         }
       }
     },
-    
+
     // 检查URL参数，确定是否显示错误
     checkUrlError() {
       const urlParams = new URLSearchParams(window.location.search);
       const error = urlParams.get('error');
-      
+
       if (error) {
         this.showError = true;
         this.errorMessage = '授權失敗無法進入系統，請聯繫學校管理員';
       }
-      
+
       return !!error;
     },
-    
+
     // 重试登录
     retryLogin() {
       this.showError = false;
@@ -139,10 +139,10 @@ export default {
     async autoWechatLogin() {
       // 检查是否在微信环境中
       const isWeChat = navigator.userAgent.includes('MicroMessenger');
-      
+
       if (isWeChat) {
         console.log('在微信环境中，自动触发微信授权');
-        
+
         // 尝试通过OAuth2方式获取用户信息
         await this.getWeChatUserInfoByOAuth();
       } else {
@@ -306,8 +306,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-overlay p {
@@ -321,17 +325,17 @@ export default {
   .login-container {
     padding: 10px;
   }
-  
+
   .login-form {
     padding: 20px;
     max-width: 100%;
   }
-  
+
   .school-logo-img {
     width: 80px;
     height: 80px;
   }
-  
+
   .welcome-title {
     font-size: 30px;
   }

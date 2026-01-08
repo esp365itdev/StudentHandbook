@@ -30,12 +30,12 @@
       </button> -->
     </div>
   </div>
-  
+
 </template>
 
 <script>
 import service from '@/utils/request.js'
-import { ElMessage } from 'element-plus'
+import {ElMessage} from 'element-plus'
 
 export default {
   name: 'Home',
@@ -55,22 +55,22 @@ export default {
     checkTokenFromUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
-      
+
       if (token) {
         // 保存token到本地存储
         localStorage.setItem('token', token);
-        
+
         // 清除URL中的token参数，避免在地址栏显示敏感信息
         urlParams.delete('token');
-        const newUrl = window.location.pathname + 
-          (urlParams.toString() ? '?' + urlParams.toString() : '') + 
-          window.location.hash;
+        const newUrl = window.location.pathname +
+            (urlParams.toString() ? '?' + urlParams.toString() : '') +
+            window.location.hash;
         window.history.replaceState({}, document.title, newUrl);
-        
+
         ElMessage.success('登錄成功');
       }
     },
-    
+
     // 检查是否存在token
     checkToken() {
       const token = localStorage.getItem('token');
