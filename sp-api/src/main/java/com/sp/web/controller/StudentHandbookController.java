@@ -1,6 +1,5 @@
 package com.sp.web.controller;
 
-import com.sp.common.annotation.Anonymous;
 import com.sp.common.annotation.Log;
 import com.sp.common.core.controller.BaseController;
 import com.sp.common.core.domain.AjaxResult;

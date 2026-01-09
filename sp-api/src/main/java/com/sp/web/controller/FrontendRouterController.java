@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * 前端路由控制器，用于处理Vue Router的History模式
  * 为特定的前端路由提供映射，避免与API端点冲突
  */
+@Anonymous
 @Controller
 public class FrontendRouterController {
 
