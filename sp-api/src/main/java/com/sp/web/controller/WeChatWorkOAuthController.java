@@ -1,10 +1,13 @@
 package com.sp.web.controller;
 
+import com.alibaba.fastjson.JSONArray;
 import com.sp.common.annotation.Anonymous;
 import com.sp.common.core.controller.BaseController;
 import com.sp.common.utils.WeChatWorkSchoolUtils;
 import com.sp.common.utils.WeChatWorkOAuth2Utils;
 import com.alibaba.fastjson.JSONObject;
+
+import com.sp.system.service.DepartmentService;
 import com.sp.system.service.TokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +35,9 @@ public class WeChatWorkOAuthController extends BaseController {
     
     @Autowired
     private WeChatWorkSchoolUtils weChatWorkSchoolUtils;
+    
+    @Autowired
+    private DepartmentService departmentService;
     
     @Autowired
     private TokenService tokenService;
@@ -91,7 +97,26 @@ public class WeChatWorkOAuthController extends BaseController {
                 
                 // 检查获取详细信息是否成功
                 if (!schoolUserInfo.containsKey("errcode") || schoolUserInfo.getIntValue("errcode") == 0) {
-                    logger.info("成功获取家校用户详细信息");
+                    logger.info("成功获取家校用户详细信息: {}", schoolUserInfo);
+                    
+                    /* // 检查详细信息中是否包含学生信息（在parent.children数组中）
+                    if (schoolUserInfo.containsKey("parent") && schoolUserInfo.getJSONObject("parent").containsKey("children")) {
+                        JSONArray childrenArray = schoolUserInfo.getJSONObject("parent").getJSONArray("children");
+                        
+                        if (childrenArray != null && !childrenArray.isEmpty()) {
+                            for (int i = 0; i < childrenArray.size(); i++) {
+                                JSONObject childObj = childrenArray.getJSONObject(i);
+                                if (childObj.containsKey("student_userid")) {
+                                    String studentUserid = childObj.getString("student_userid");
+                                    logger.info("从家长信息中获取到第{}个学生的student_userid: {}", i+1, studentUserid);
+                                    
+                                    // 使用student_userid再次调用SCHOOL_USER_DETAIL_URL获取学生信息
+                                    JSONObject studentInfo = weChatWorkSchoolUtils.getSchoolUserDetail(studentUserid);
+                                    logger.info("使用student_userid获取学生信息结果: {}", studentInfo.toJSONString());
+                                }
+                            }
+                        }
+                    } */
                     
                     // 清除临时session数据（如果不是测试情况和默认情况）
                     if (!isWechatTest && !isDefault) {

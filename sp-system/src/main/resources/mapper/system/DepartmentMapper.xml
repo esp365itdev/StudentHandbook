@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sp.system.mapper.DepartmentMapper">
+
+    <resultMap id="DepartmentResultMap" type="com.sp.system.entity.Department">
+        <id property="id" column="id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="registerYear" column="register_year"/>
+        <result property="standardGrade" column="standard_grade"/>
+        <result property="order" column="order_num"/>
+        <result property="isGraduated" column="is_graduated"/>
+        <result property="openGroupChat" column="open_group_chat"/>
+        <result property="groupChatId" column="group_chat_id"/>
+    </resultMap>
+
+    <insert id="insertDepartment" parameterType="com.sp.system.entity.Department">
+        INSERT INTO sys_department (id, parent_id, name, type, register_year, standard_grade, 
+                                   order_num, is_graduated, open_group_chat, group_chat_id)
+        VALUES (#{id}, #{parentId}, #{name}, #{type}, #{registerYear}, #{standardGrade},
+                #{order}, #{isGraduated}, #{openGroupChat}, #{groupChatId})
+    </insert>
+
+    <insert id="batchInsertDepartments" parameterType="java.util.List">
+        INSERT INTO sys_department (id, parent_id, name, type, register_year, standard_grade, 
+                                   order_num, is_graduated, open_group_chat, group_chat_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id}, #{item.parentId}, #{item.name}, #{item.type}, #{item.registerYear}, 
+             #{item.standardGrade}, #{item.order}, #{item.isGraduated}, #{item.openGroupChat}, 
+             #{item.groupChatId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            parent_id = VALUES(parent_id),
+            name = VALUES(name),
+            type = VALUES(type),
+            register_year = VALUES(register_year),
+            standard_grade = VALUES(standard_grade),
+            order_num = VALUES(order_num),
+            is_graduated = VALUES(is_graduated),
+            open_group_chat = VALUES(open_group_chat),
+            group_chat_id = VALUES(group_chat_id)
+    </insert>
+
+    <select id="selectById" parameterType="java.lang.Long" resultMap="DepartmentResultMap">
+        SELECT id, parent_id, name, type, register_year, standard_grade, order_num, 
+               is_graduated, open_group_chat, group_chat_id
+        FROM sys_department
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="DepartmentResultMap">
+        SELECT id, parent_id, name, type, register_year, standard_grade, order_num, 
+               is_graduated, open_group_chat, group_chat_id
+        FROM sys_department
+        ORDER BY parent_id, order_num
+    </select>
+
+    <select id="selectByParentId" parameterType="java.lang.Integer" resultMap="DepartmentResultMap">
+        SELECT id, parent_id, name, type, register_year, standard_grade, order_num, 
+               is_graduated, open_group_chat, group_chat_id
+        FROM sys_department
+        WHERE parent_id = #{parentId}
+        ORDER BY order_num
+    </select>
+
+    <update id="updateDepartment" parameterType="com.sp.system.entity.Department">
+        UPDATE sys_department
+        SET parent_id = #{parentId},
+            name = #{name},
+            type = #{type},
+            register_year = #{registerYear},
+            standard_grade = #{standardGrade},
+            order_num = #{order},
+            is_graduated = #{isGraduated},
+            open_group_chat = #{openGroupChat},
+            group_chat_id = #{groupChatId}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM sys_department WHERE id = #{id}
+    </delete>
+
+    <select id="countById" parameterType="java.lang.Long" resultType="int">
+        SELECT COUNT(1) 
+        FROM sys_department 
+        WHERE id = #{id}
+    </select>
+
+</mapper>
