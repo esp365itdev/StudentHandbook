@@ -3,7 +3,7 @@
     <div class="login-form">
       <div class="logo-section">
         <img src="../logo/sp.jpg" alt="School Logo" class="school-logo-img">
-        <h4 v-if="!showError" class="welcome-title">請稍等，正在自動驗證！！</h4>
+        <h4 v-if="!showError" class="welcome-title">請等候片刻，正在自動驗證。。。</h4>
       </div>
 
       <div v-if="loginLoading" class="loading-overlay">

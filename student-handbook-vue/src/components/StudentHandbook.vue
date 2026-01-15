@@ -28,8 +28,8 @@
         
         <!-- 左右方向按鈕 -->
         <div class="navigation-buttons">
-          <el-button class="nav-arrow prev-button" type="primary" icon="ArrowLeft" @click="prevPage" :disabled="currentPage === 1">上一頁</el-button>
-          <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight" @click="nextPage" :disabled="currentPage >= totalPages">下一頁</el-button>
+          <el-button class="nav-arrow prev-button" type="primary" icon="ArrowLeft" @click="showTodayData" :disabled="false">當天</el-button>
+          <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight" @click="showNextSevenDaysData" :disabled="false">未來七天</el-button>
         </div>
       </div>
     </div>
@@ -38,7 +38,7 @@
     <div class="handbook-container" v-loading="loading">
       <div 
         class="handbook-card"
-        v-for="(item,index) in paginatedGroupedHandbookList" 
+        v-for="(item,index) in paginatedGroupedHandbookList"
         :key="index"
       >
         <div class="card-header">
@@ -105,6 +105,7 @@ export default {
       showBackToTop: false,
       showNavigation: false, // 控制導航菜單的顯示
       showUserMenu: false, // 控制用戶菜單的顯示
+      viewMode: 'today', // 視圖模式: 'today' 或 'nextSevenDays'
       
       // 滑動相關數據
       touchStartX: 0,
@@ -214,16 +215,16 @@ export default {
       }
     },
     
-    // 獲取學生手冊列表
+    // 獲取學生手冊列表（從class_log表）
     async fetchHandbookList() {
       this.loading = true
       try {
         // 使用封裝的service實例，確保攜帶token
         const response = await service.get(API_ENDPOINTS.STUDENT_HANDBOOK_LIST)
         
-        // 根據後端返回的數據結構處理數據
+        // 根據後端返回的數據結構處理數據（現在是class_log表的結構）
         let rawData = [];
-        if (response.data.rows) {
+        if (response.data && response.data.rows) {
           rawData = response.data.rows;
         } else if(Array.isArray(response.data)) {
           // 如果後端直接返回數組
@@ -233,8 +234,18 @@ export default {
           rawData = response.data;
         }
         
-        //按時間分組數據
+        // 按時間分組數據
+        console.log('原始數據:', rawData);
         this.groupDataByTime(rawData);
+        
+        // 根據當前視圖模式過濾數據
+        if (this.viewMode === 'nextSevenDays') {
+          this.showNextSevenDaysDataInner();
+        } else {
+          // 默認為顯示今天數據
+          this.showTodayDataInner();
+        }
+        
         console.log('獲取到的數據:', response.data)
       } catch (error) {
         console.error('獲取學生手冊列表失敗:', error)
@@ -246,16 +257,38 @@ export default {
       }
     },
     
+    // 根據日期篩選數據：當前頁顯示今天，下頁顯示未來7天
+    filterDataByDate() {
+      const todayData = [];
+      const nextSevenDaysData = [];
+      
+      this.allGroupedHandbookList.forEach(item => {
+        if (this.isToday(item.timeRange)) {
+          todayData.push(item);
+        } else if (this.isInNextSevenDays(item.timeRange)) {
+          nextSevenDaysData.push(item);
+        }
+      });
+      
+      // 更新數據為今天和未來7天的數據
+      this.allGroupedHandbookList = [...todayData, ...nextSevenDaysData];
+      
+      // 重置到第一頁
+      this.currentPage = 1;
+    },
+    
     //按時間分組數據
     groupDataByTime(data) {
       const grouped = {};
       
-      //按時間分組
+      console.log('處理每項數據:', data);
+      //按時間分組，使用class_log表的字段
       data.forEach(item => {
-        const timeKey = item.startTime; // 只使用開始時間作為分組鍵
+        // 使用startDate作为分组键
+        const timeKey = item.startDate || item.updateDate || '未設定日期'; 
         if (!grouped[timeKey]) {
           grouped[timeKey] = {
-            timeRange: item.startTime, // 卡片標題只顯示開始時間
+            timeRange: timeKey, // 使用日期作为卡片标题
             entries: [],
             categories: {} // 用於存儲類別分組
           };
@@ -263,13 +296,13 @@ export default {
         
         //添加條目到總列表
         grouped[timeKey].entries.push({
-          subject: item.subject,
-          content: item.content,
-          category: item.category
+          subject: item.course || '未設定課程',
+          content: item.content || '無內容',
+          category: item.courseType || '未分類'
         });
         
         //按類別分組
-        const category = item.category || '未分類';
+        const category = item.courseType || '未分類';
         if (!grouped[timeKey].categories[category]) {
           grouped[timeKey].categories[category] = {
             category: category,
@@ -277,9 +310,9 @@ export default {
           };
         }
         grouped[timeKey].categories[category].entries.push({
-          subject: item.subject,
-          content: item.content,
-          category: item.category
+          subject: item.course || '未設定課程',
+          content: item.content || '無內容',
+          category: item.courseType || '未分類'
         });
       });
       
@@ -321,37 +354,129 @@ export default {
       // 重置到第一頁
       this.currentPage = 1;
     },
+    
+    // 檢查是否是今天
+    isToday(dateString) {
+      const today = new Date();
+      const checkDate = this.parseDate(dateString);
+      
+      return today.getDate() === checkDate.getDate() &&
+             today.getMonth() === checkDate.getMonth() &&
+             today.getFullYear() === checkDate.getFullYear();
+    },
+    
+    // 檢查是否是未來7天內
+    isInNextSevenDays(dateString) {
+      const today = new Date();
+      const checkDate = this.parseDate(dateString);
+      
+      // 設置今天開始時間
+      const startDate = new Date(today);
+      startDate.setHours(0, 0, 0, 0);
+      
+      // 設置7天後的時間
+      const endDate = new Date(today);
+      endDate.setDate(today.getDate() + 7);
+      endDate.setHours(23, 59, 59, 999);
+      
+      return checkDate >= startDate && checkDate <= endDate;
+    },
 
     // 解析日期字符串為Date對象的輔助函數
     parseDate(dateString) {
-      // 假設日期格式為 dd/mm/yyyy或 d/m/yyyy
-      const parts = dateString.split('/');
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1; // 月份從0開始
-      const year = parseInt(parts[2], 10);
-      return new Date(year, month, day);
+      // 支持多種日期格式：dd/mm/yyyy, yyyy-mm-dd, yyyy-mm-dd HH:MM:SS
+      if (!dateString) return new Date();
+      
+      // 如果是包含时间的完整日期格式 (yyyy-mm-dd HH:MM:SS)
+      if (typeof dateString === 'string' && dateString.includes(':')) {
+        return new Date(dateString);
+      }
+      
+      // 如果是 dd/mm/yyyy 格式
+      if (typeof dateString === 'string' && dateString.includes('/')) {
+        const parts = dateString.split('/');
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // 月份從0開始
+        const year = parseInt(parts[2], 10);
+        return new Date(year, month, day);
+      }
+      
+      // 如果是 yyyy-mm-dd 格式
+      if (typeof dateString === 'string' && dateString.includes('-')) {
+        return new Date(dateString);
+      }
+      
+      // 默认返回当前日期
+      return new Date();
     },
     
-    // 上一頁
-    prevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-        // 滾動到頂部
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      }
+    // 顯示當天數據
+    showTodayData() {
+      this.viewMode = 'today';
+      // 重新獲取數據，這會觸發相應的過濾
+      this.fetchHandbookList();
+      // 滾動到頂部
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
     },
-    // 下一頁
+    
+    // 顯示未來七天數據
+    showNextSevenDaysData() {
+      this.viewMode = 'nextSevenDays';
+      // 重新獲取數據，這會觸發相應的過濾
+      this.fetchHandbookList();
+      // 滾動到頂部
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    },
+    
+    // 顯示當天數據（內部函數）
+    showTodayDataInner() {
+      const todayData = [];
+      
+      this.allGroupedHandbookList.forEach(item => {
+        if (this.isToday(item.timeRange)) {
+          todayData.push(item);
+        }
+      });
+      
+      // 更新數據為今天數據
+      this.allGroupedHandbookList = todayData;
+      
+      // 重置到第一頁
+      this.currentPage = 1;
+    },
+    
+    // 顯示未來七天數據（內部函數）
+    showNextSevenDaysDataInner() {
+      const nextSevenDaysData = [];
+      
+      this.allGroupedHandbookList.forEach(item => {
+        if (this.isInNextSevenDays(item.timeRange)) {
+          nextSevenDaysData.push(item);
+        }
+      });
+      
+      // 更新數據為未來七天的數據
+      this.allGroupedHandbookList = nextSevenDaysData;
+      
+      // 重置到第一頁
+      this.currentPage = 1;
+    },
+    
+    // 上一页 - 显示当天数据
+    prevPage() {
+      this.currentPage = 1; // 跳转到第一页，显示当天数据
+    },
+    
+    // 下一页 - 显示未来10天数据
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
-        // 滾動到頂部
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
       }
     }
   }

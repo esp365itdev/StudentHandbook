@@ -58,8 +58,8 @@ public class TokenInterceptor implements HandlerInterceptor {
         Method method = handlerMethod.getMethod();
 
         // 检查是否有Anonymous注解，有则跳过token验证
-        if (method.getDeclaringClass().isAnnotationPresent(Anonymous.class) ||
-                method.isAnnotationPresent(Anonymous.class)) {
+        Anonymous anonymousAnno = method.getAnnotation(Anonymous.class);
+        if (anonymousAnno != null) {
             return true;
         }
 
