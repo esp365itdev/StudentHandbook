@@ -28,8 +28,8 @@
         
         <!-- 左右方向按鈕 -->
         <div class="navigation-buttons">
-          <el-button class="nav-arrow prev-button" type="primary" icon="ArrowLeft" @click="showTodayData" :disabled="false">當天</el-button>
-          <el-button class="nav-arrow next-button" type="primary" icon="ArrowRight" @click="showNextSevenDaysData" :disabled="false">未來七天</el-button>
+          <el-button class="nav-arrow prev-button" :class="{'active': activeButton === 'today'}" type="primary" icon="ArrowLeft" @click="showTodayData" :disabled="false">當天</el-button>
+          <el-button class="nav-arrow next-button" :class="{'active': activeButton === 'future'}" type="primary" icon="ArrowRight" @click="showNextSevenDaysData" :disabled="false">未來七天</el-button>
         </div>
       </div>
     </div>
@@ -106,6 +106,7 @@ export default {
       showNavigation: false, // 控制導航菜單的顯示
       showUserMenu: false, // 控制用戶菜單的顯示
       viewMode: 'today', // 視圖模式: 'today' 或 'nextSevenDays'
+      activeButton: 'today', // 追蹤當前選中的按鈕
       
       // 滑動相關數據
       touchStartX: 0,
@@ -129,6 +130,7 @@ export default {
   },
   mounted() {
     this.checkIsMobile()
+    this.activeButton = 'today'; // 初始化時設置當天按鈕為活躍狀態
     this.fetchHandbookList()
     window.addEventListener('resize', this.checkIsMobile)
     // 添加滾動事件監聽器
@@ -252,6 +254,8 @@ export default {
         ElMessage.error('獲取數據失敗: ' + (error.message || '未知錯誤'))
         // 使用空數組，不顯示示例數據
         this.groupDataByTime([]);
+        // 即使出现错误也要应用当天视图
+        this.showTodayDataInner();
       } finally {
         this.loading = false
       }
@@ -284,6 +288,11 @@ export default {
       console.log('處理每項數據:', data);
       //按時間分組，使用class_log表的字段
       data.forEach(item => {
+        // 过滤非'功課'和'測驗'类型的条目
+        if (item.courseType !== '功課' && item.courseType !== '測驗') {
+          return;
+        }
+        
         // 使用startDate作为分组键
         const timeKey = item.startDate || item.updateDate || '未設定日期'; 
         if (!grouped[timeKey]) {
@@ -326,14 +335,18 @@ export default {
       
       //對每個時間分組內的類別進行排序，並將類別對象轉換為數組
       this.allGroupedHandbookList.forEach(item => {
-        // 轉換類別對象為數組
-        item.categoryGroups = Object.values(item.categories);
+        // 只保留'功課'和'測驗'类别，过滤掉其他类别
+        item.categoryGroups = Object.values(item.categories).filter(categoryGroup => {
+          return categoryGroup.category === '功課' || categoryGroup.category === '測驗';
+        });
         
         // 對類別進行排序
         item.categoryGroups.sort((a, b) => {
-          //確保"未分類"排在最後
-          if(a.category === '未分類') return 1;
-          if (b.category === '未分類') return -1;
+          // 确保'測驗'排在前面，然后是'功課'
+          if(a.category === '測驗' && b.category !== '測驗') return -1;
+          if(b.category === '測驗' && a.category !== '測驗') return 1;
+          if(a.category === '功課' && b.category !== '功課') return -1;
+          if(b.category === '功課' && a.category !== '功課') return 1;
           return a.category.localeCompare(b.category);
         });
         
@@ -413,6 +426,7 @@ export default {
     // 顯示當天數據
     showTodayData() {
       this.viewMode = 'today';
+      this.activeButton = 'today'; // 更新活動按鈕狀態
       // 重新獲取數據，這會觸發相應的過濾
       this.fetchHandbookList();
       // 滾動到頂部
@@ -425,6 +439,7 @@ export default {
     // 顯示未來七天數據
     showNextSevenDaysData() {
       this.viewMode = 'nextSevenDays';
+      this.activeButton = 'future'; // 更新活動按鈕狀態
       // 重新獲取數據，這會觸發相應的過濾
       this.fetchHandbookList();
       // 滾動到頂部
@@ -550,7 +565,7 @@ export default {
   margin-right: 0; /* 移除固定間距，使用gap控制 */
   padding: 12px 18px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%); /* 按照項目規範的淺藍色漸變 */
+  background: linear-gradient(135deg, #2563eb 0%, #dbeafe 100%); /* 按照項目規範的淺藍色漸變 */
   color: #1e3a8a; /* 按照項目規範的深藍色文字 */
   border: none;
   box-shadow: 0 4px 6px rgba(147, 197, 253, 0.2);
@@ -654,12 +669,12 @@ export default {
 }
 
 .category-badge {
-  background: linear-gradient(135deg, #7dd3fc 0%, #bae6fd 100%); /* 更淺的藍色漸變 */
-  color: #0284c7; /* 淺藍色文字 */
+  background: #409eff; /* 普通類別使用藍色背景 */
+  color: white; /* 白色文字 */
   padding: 8px 16px;
   border-radius: 24px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 600; /* 粗體 */
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(125, 211, 252, 0.2);
 }
@@ -670,8 +685,9 @@ export default {
 
 /* 測驗/考試類別的特殊樣式 */
 .exam-badge {
-  background: linear-gradient(135deg, #fda4af 0%, #f87171 100%) !important; /* 淺粉到淺紅色漸變 */
-  color: #b91c1c; /* 淺紅色文字 */
+  background: #e91e63 !important; /* 粉紅色背景 */
+  color: white; /* 白色文字 */
+  font-weight: 600; /* 粗體 */
 }
 
 .card-field {
@@ -752,10 +768,10 @@ export default {
   font-weight: 600;
   font-size: 15px;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%); /* 按照項目規範的淺藍色漸變 */
-  color: #1e3a8a; /* 按照項目規範的深藍色文字 */
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%); /* 按照用戶要求的新漸變配色 */
+  color: #1e40af; /* 深藍色文字 */
   border: none;
-  box-shadow: 0 4px 6px rgba(147, 197, 253, 0.2);
+  box-shadow: 0 4px 6px rgba(96, 165, 250, 0.2);
   white-space: nowrap; /* 防止文字換行 */
   min-width: auto; /* 避免按鈕過大 */
 }
@@ -767,10 +783,17 @@ export default {
   color: #6b7280;
 }
 
+.nav-arrow.active {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); /* 統一的高亮藍色漸層 */
+  color: white; /* 白色文字提高對比度 */
+  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
+}
+
 .prev-button:hover, .next-button:hover {
-  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   transform: translateY(-3px);
-  box-shadow: 0 6px 10px rgba(147, 197, 253, 0.3);
+  box-shadow: 0 6px 10px rgba(37, 99, 235, 0.3);
 }
 
 /* 手機端優化 */

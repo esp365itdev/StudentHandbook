@@ -23,6 +23,20 @@ public interface ClassLogMapper {
     ClassLog selectClassLogById(@Param("id") String id);
     
     /**
+     * 根据ID查询课程日志列表（用于处理可能的重复记录）
+     * @param id 课程日志ID
+     * @return 课程日志列表
+     */
+    List<ClassLog> selectClassLogsById(@Param("id") String id);
+    
+    /**
+     * 根据ID列表批量查询课程日志
+     * @param ids 课程日志ID列表
+     * @return 课程日志列表
+     */
+    List<ClassLog> selectClassLogsByIds(@Param("ids") List<String> ids);
+    
+    /**
      * 插入课程日志数据
      * @param classLog 课程日志信息
      * @return 影响行数

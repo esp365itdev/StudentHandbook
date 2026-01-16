@@ -42,21 +42,73 @@ public class ClassLogTransferService {
             return;
         }
 
-        // 逐个处理每条记录
-        for (ClassLog classLog : classLogs) {
-            // 尝试根据ID查询现有记录
-            ClassLog existingLog = classLogMapper.selectClassLogById(classLog.getId());
-            
-            if (existingLog != null) {
-                // 如果记录存在，则更新
-                updateClassLog(classLog);
-            } else {
-                // 如果记录不存在，则插入
-                insertClassLog(classLog);
+        // 提取所有ID
+        List<String> ids = classLogs.stream()
+            .map(ClassLog::getId)
+            .filter(id -> id != null && !id.trim().isEmpty())
+            .distinct()
+            .collect(java.util.stream.Collectors.toList());
+        
+        if (ids.isEmpty()) {
+            logger.info("没有有效的课程日志ID需要处理");
+            return;
+        }
+        
+        // 批量查询现有记录
+        List<ClassLog> existingLogs = classLogMapper.selectClassLogsByIds(ids);
+        
+        // 将现有记录放入Map便于快速查找
+        java.util.Map<String, ClassLog> existingLogsMap = new java.util.HashMap<>();
+        for (ClassLog existingLog : existingLogs) {
+            if (existingLog != null && existingLog.getId() != null) {
+                existingLogsMap.put(existingLog.getId(), existingLog);
             }
         }
+        
+        // 分离需要插入和更新的记录
+        List<ClassLog> toInsert = new java.util.ArrayList<>();
+        List<ClassLog> toUpdate = new java.util.ArrayList<>();
+        
+        for (ClassLog classLog : classLogs) {
+            if (classLog.getId() == null || classLog.getId().trim().isEmpty()) {
+                continue; // 跳过ID为空的记录
+            }
+            
+            if (existingLogsMap.containsKey(classLog.getId())) {
+                // 记录已存在，需要更新
+                toUpdate.add(classLog);
+            } else {
+                // 记录不存在，需要插入
+                toInsert.add(classLog);
+            }
+        }
+        
+        // 批量插入新记录
+        if (!toInsert.isEmpty()) {
+            for (ClassLog classLog : toInsert) {
+                try {
+                    insertClassLog(classLog);
+                } catch (Exception e) {
+                    logger.error("插入课程日志数据时发生错误，ID: {}，错误: {}", classLog.getId(), e.getMessage());
+                }
+            }
+            logger.info("成功插入 {} 条新课程日志数据", toInsert.size());
+        }
+        
+        // 批量更新现有记录
+        if (!toUpdate.isEmpty()) {
+            for (ClassLog classLog : toUpdate) {
+                try {
+                    updateClassLog(classLog);
+                } catch (Exception e) {
+                    logger.error("更新课程日志数据时发生错误，ID: {}，错误: {}", classLog.getId(), e.getMessage());
+                }
+            }
+            logger.info("成功更新 {} 条课程日志数据", toUpdate.size());
+        }
 
-        logger.info("成功传输 {} 条课程日志数据到目标数据库", classLogs.size());
+        logger.info("成功传输 {} 条课程日志数据到目标数据库 ({} 条插入, {} 条更新)", 
+            classLogs.size(), toInsert.size(), toUpdate.size());
     }
     
     private void insertClassLog(ClassLog classLog) {

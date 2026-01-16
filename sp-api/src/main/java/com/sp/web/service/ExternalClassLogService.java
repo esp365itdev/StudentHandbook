@@ -80,7 +80,7 @@ public class ExternalClassLogService {
      */
     public List<ClassLog> getAllClassLogsFromExternal() {
         try {
-            String sql = "SELECT id, studentClass, teacher, course, courseType, content, startDate, endDate, updateDate FROM class_log";
+            String sql = "SELECT id, studentClass, teacher, course, courseType, content, startDate, endDate, updateDate FROM class_log WHERE DATE(startDate) >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) ORDER BY startDate";
             return sourceJdbcTemplate.query(sql, new ClassLogRowMapper());
         } catch (Exception e) {
             logger.error("从外部数据库获取课程日志数据失败: {}", e.getMessage());

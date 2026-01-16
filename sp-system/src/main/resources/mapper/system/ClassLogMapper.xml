@@ -23,13 +23,28 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectAllClassLogs" resultMap="ClassLogResult">
         <include refid="selectClassLogVo"/>
-        WHERE DATE(startDate) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+        WHERE DATE(startDate) >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+        AND courseType IN ('功課', '測驗')
         ORDER BY startDate
     </select>
 
     <select id="selectClassLogById" parameterType="String" resultMap="ClassLogResult">
         <include refid="selectClassLogVo"/>
         WHERE id = #{id}
+        LIMIT 1
+    </select>
+    
+    <select id="selectClassLogsById" parameterType="String" resultMap="ClassLogResult">
+        <include refid="selectClassLogVo"/>
+        WHERE id = #{id}
+    </select>
+    
+    <select id="selectClassLogsByIds" parameterType="java.util.List" resultMap="ClassLogResult">
+        <include refid="selectClassLogVo"/>
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </select>
     
     <insert id="insertClassLog" parameterType="com.sp.system.entity.ClassLog">
