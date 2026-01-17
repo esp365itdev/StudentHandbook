@@ -24,6 +24,10 @@ public class Token extends BaseEntity {
     @TableField("user_id")
     private Long userId;
 
+    /** 家长用户ID */
+    @TableField("parent_user_id")
+    private String parentUserId;
+
     /** Token值 */
     @TableField("token")
     private String token;
@@ -46,6 +50,14 @@ public class Token extends BaseEntity {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getParentUserId() {
+        return parentUserId;
+    }
+
+    public void setParentUserId(String parentUserId) {
+        this.parentUserId = parentUserId;
     }
 
     public String getToken() {

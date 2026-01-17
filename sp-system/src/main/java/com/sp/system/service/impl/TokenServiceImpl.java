@@ -70,4 +70,32 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
     public boolean removeTokenByUserId(Long userId) {
         return this.tokenMapper.deleteByUserId(userId) > 0;
     }
+    
+    /**
+     * 为家长用户创建token
+     *
+     * @param userId 用户ID
+     * @param parentUserId 家长用户ID
+     * @return token值
+     */
+    public String createTokenWithParentUserId(Long userId, String parentUserId) {
+        // 先删除该用户之前的token
+        this.tokenMapper.deleteByUserId(userId);
+
+        // 创建新token
+        String tokenValue = UUID.randomUUID().toString();
+
+        Token token = new Token();
+        token.setUserId(userId);
+        token.setParentUserId(parentUserId);
+        token.setToken(tokenValue);
+        token.setCreateTime(LocalDateTime.now());
+        token.setUpdateTime(LocalDateTime.now());
+        token.setExpireTime(LocalDateTime.now().plusDays(expireTimeInDays));
+
+        // 使用自定义的insertToken方法
+        this.tokenMapper.insertToken(token);
+
+        return tokenValue;
+    }
 }

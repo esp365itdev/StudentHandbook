@@ -28,9 +28,9 @@ public class SchoolNoticeTask {
     private WeChatWorkSchoolUtils weChatWorkSchoolUtils;
 
     /**
-     * 每天下午6点执行学校通知发送任务（北京时间）
+     * 每周一到周五下午6点执行学校通知发送任务（北京时间）
      */
-    @Scheduled(cron = "0 0 18 * * ?", zone = "Asia/Shanghai")
+    @Scheduled(cron = "0 0 18 ? * MON-FRI", zone = "Asia/Shanghai")
     public void sendSchoolNotice() {
         logger.info("开始执行定时学校通知发送任务");
 

@@ -27,9 +27,9 @@ public class ClassLogSyncTask {
     private ClassLogTransferService classLogTransferService;
 
     /**
-     * 每天下午5点30分执行课程日志数据同步（北京时间）
+     * 每天下午5点40分执行课程日志数据同步（北京时间）
      */
-    @Scheduled(cron = "0 40 17 * * ?", zone = "Asia/Shanghai")
+    @Scheduled(cron = "0 40 17 ? * MON-FRI", zone = "Asia/Shanghai")
     public void syncClassLogData() {
         logger.info("开始执行课程日志数据同步任务");
 

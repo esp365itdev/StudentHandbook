@@ -55,4 +55,19 @@ create table sys_department (
                                 primary key (id)
 ) engine=innodb comment = '部门表';
 
+-- 家长学生关系表
+-- ----------------------------
+drop table if exists sys_parent_student_relation;
+create table sys_parent_student_relation (
+  id                bigint(20)      not null auto_increment    comment '主键ID',
+  parent_user_id    varchar(64)     not null                   comment '家长用户ID',
+  student_user_id   varchar(64)     not null                   comment '学生用户ID',
+  student_name      varchar(100)    default null               comment '学生姓名',
+  relation_desc     varchar(50)     default '家长'               comment '关系描述',
+  create_time       datetime                                   comment '创建时间',
+  update_time       datetime                                   comment '更新时间',
+  primary key (id),
+  unique key uk_parent_student (parent_user_id, student_user_id)
+) engine=innodb auto_increment=1 comment = '家长学生关系表';
+
 

@@ -28,4 +28,13 @@ public interface TokenService {
      * @return 是否删除成功
      */
     boolean removeTokenByUserId(Long userId);
+    
+    /**
+     * 为家长用户创建token
+     *
+     * @param userId 用户ID
+     * @param parentUserId 家长用户ID
+     * @return token值
+     */
+    String createTokenWithParentUserId(Long userId, String parentUserId);
 }
