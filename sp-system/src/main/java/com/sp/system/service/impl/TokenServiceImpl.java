@@ -98,4 +98,25 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
 
         return tokenValue;
     }
+    
+    @Override
+    public String getParentUserIdByToken(String tokenValue) {
+        if (tokenValue == null || tokenValue.isEmpty()) {
+            return null;
+        }
+        
+        Token token = this.tokenMapper.selectByTokenValue(tokenValue);
+        if (token == null) {
+            return null;
+        }
+        
+        // 检查token是否过期
+        if (token.getExpireTime().isBefore(LocalDateTime.now())) {
+            // 删除过期token
+            this.tokenMapper.deleteById(token.getId());
+            return null;
+        }
+        
+        return token.getParentUserId();
+    }
 }

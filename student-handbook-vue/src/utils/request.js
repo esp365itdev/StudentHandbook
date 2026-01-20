@@ -50,12 +50,15 @@ service.interceptors.response.use(
     },
     error => {
         console.log('err' + error)// for debug
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-            // token过期/无效或无权限访问，都跳转到登录页面
+        if (error.response && error.response.status === 401) {
+            // token过期/无效，跳转到登录页面
             localStorage.removeItem('token')
             // 重定向到登录页面
             window.location.href = '/sp-api/login'
             ElMessage.error('请先登录')
+        } else if (error.response && error.response.status === 403) {
+            // 无权限访问
+            ElMessage.error('无权限访问该资源')
         }
         return Promise.reject(error)
     }

@@ -2,7 +2,9 @@
 
 // 定义通用的API端点路径
 const apiEndpoints = {
-    STUDENT_HANDBOOK_LIST: '/system/handbook/list'
+    STUDENT_HANDBOOK_LIST: '/system/handbook/list',
+    STUDENT_HANDBOOK_STUDENTS: '/system/handbook/students',
+    SWITCH_STUDENT: '/system/handbook/switch-student'
 };
 
 // 获取基础URL - 从环境变量读取或者使用默认值
@@ -24,6 +26,9 @@ for (const [key, value] of Object.entries(apiEndpoints)) {
     const path = value.startsWith('/') ? value : '/' + value;
     API_ENDPOINTS[key] = baseURL + path;
 }
+
+// 导出单独的BASE_URL，便于其他地方使用
+export { baseURL };
 
 export {API_ENDPOINTS};
 

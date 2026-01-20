@@ -54,6 +54,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/captchaImage",
                         "/profile/**",
                         "/system/handbook/list",
+                        "/system/handbook/students",
                         "/sp-api/",
                         "/sp-api",
                         "/sp-api/assets/**",

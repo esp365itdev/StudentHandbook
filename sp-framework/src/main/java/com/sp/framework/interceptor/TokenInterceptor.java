@@ -73,8 +73,9 @@ public class TokenInterceptor implements HandlerInterceptor {
 
         // 验证token
         if (StringUtils.isEmpty(token) || !tokenService.validateToken(token)) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.getWriter().write("{\"code\":403,\"msg\":\"无效的token\"}");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":401,\"msg\":\"无效的token\"}");
             return false;
         }
 
