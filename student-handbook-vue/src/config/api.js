@@ -3,6 +3,7 @@
 // 定义通用的API端点路径
 const apiEndpoints = {
     STUDENT_HANDBOOK_LIST: '/system/handbook/list',
+    STUDENT_HANDBOOK_PAST_MONTH: '/system/handbook/pastMonth',
     STUDENT_HANDBOOK_STUDENTS: '/system/handbook/students',
     SWITCH_STUDENT: '/system/handbook/switchStudent'
 };

@@ -6,35 +6,40 @@
     <div class="header-container">
       <!-- 頁面標題和按鈕容器 -->
       <div class="title-and-buttons">
-        <!-- 返回首頁按鈕 -->
-        <el-button class="home-btn" type="primary" @click="goHome">
-          <template #icon>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path
-                  d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5V14h3v1.5a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146ZM11.5 14v-6h-3v6h3Z"/>
-            </svg>
-          </template>
-          返回首頁
-        </el-button>
+        <div class="top-buttons">
+          <!-- 返回首頁按鈕 -->
+          <el-button class="home-btn" type="primary" @click="goHome">
+            <template #icon>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path
+                    d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5V14h3v1.5a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146ZM11.5 14v-6h-3v6h3Z"/>
+              </svg>
+            </template>
+            返回首頁
+          </el-button>
 
-        <!-- 用戶切換按鈕 -->
-        <el-button class="user-switch-btn" type="primary" plain @click="toggleUserMenu">
-          <template #icon>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path
-                  d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zM10 9.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
-            </svg>
-          </template>
-          切換學生
-        </el-button>
+          <!-- 用戶切換按鈕 -->
+          <el-button class="user-switch-btn" type="primary" plain @click="toggleUserMenu">
+            <template #icon>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path
+                    d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zM10 9.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
+              </svg>
+            </template>
+            切換學生
+          </el-button>
+        </div>
 
         <!-- 左右方向按鈕 -->
         <div class="navigation-buttons">
+          <el-button class="nav-arrow" :class="{'active': activeButton === 'pastMonth'}" type="primary"
+                     @click="showPastMonthData" :disabled="false">過去一個月
+          </el-button>
           <el-button class="nav-arrow prev-button" :class="{'active': activeButton === 'today'}" type="primary"
-                     icon="ArrowLeft" @click="showTodayData" :disabled="false">當天
+                     @click="showTodayData" :disabled="false">當天
           </el-button>
           <el-button class="nav-arrow next-button" :class="{'active': activeButton === 'future'}" type="primary"
-                     icon="ArrowRight" @click="showNextSevenDaysData" :disabled="false">未來七天
+                     @click="showNextSevenDaysData" :disabled="false">未來七天
           </el-button>
         </div>
       </div>
@@ -48,7 +53,7 @@
           :key="index"
       >
         <div class="card-header">
-          <h3 class="card-title">{{ item.timeRange }}</h3>
+          <h3 class="card-title">{{ item.timeRange }} {{ getDayOfWeek(item.timeRange) }}</h3>
         </div>
 
         <div class="card-content">
@@ -291,6 +296,8 @@ export default {
         // 根據當前視圖模式過濾數據
         if (this.viewMode === 'nextSevenDays') {
           this.showNextSevenDaysDataInner();
+        } else if (this.viewMode === 'pastMonth') {
+          this.showPastMonthDataInner();
         } else {
           // 默認為顯示今天數據
           this.showTodayDataInner();
@@ -451,6 +458,37 @@ export default {
       return new Date();
     },
 
+    // 獲取日期對應的星期幾
+    getDayOfWeek(dateString) {
+      if (!dateString) return '';
+      
+      // 解析日期字符串
+      let date = this.parseDate(dateString);
+      if (!(date instanceof Date) || isNaN(date)) {
+        // 如果解析失敗，嘗試其他格式
+        // 支援 dd/MM/yyyy 格式
+        if (typeof dateString === 'string' && dateString.includes('/')) {
+          const parts = dateString.split('/');
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // 月份從0開始
+            const year = parseInt(parts[2], 10);
+            date = new Date(year, month, day);
+          }
+        } else if (typeof dateString === 'string' && dateString.includes('-')) {
+          date = new Date(dateString);
+        } else {
+          return '';
+        }
+      }
+
+      // 星期幾的中文映射
+      const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+      const weekday = date.getDay(); // 0 (Sunday) to 6 (Saturday)
+      
+      return `(${weekdays[weekday]})`;
+    },
+
     // 顯示當天數據
     showTodayData() {
       this.viewMode = 'today';
@@ -462,6 +500,179 @@ export default {
         top: 0,
         behavior: 'smooth'
       });
+    },
+
+    // 顯示過去一個月數據
+    showPastMonthData() {
+      this.viewMode = 'pastMonth';
+      this.activeButton = 'pastMonth'; // 更新活動按鈕狀態
+      // 直接調用新的接口獲取過去一個月的數據
+      this.fetchPastMonthHandbookList();
+      // 滾動到頂部
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    },
+    
+    // 獲取過去一個月的學生手冊列表
+    async fetchPastMonthHandbookList() {
+      this.loading = true;
+      try {
+        // 使用封裝的service實例，確保攜帶token
+        const response = await service.get(API_ENDPOINTS.STUDENT_HANDBOOK_PAST_MONTH);
+
+        // 根據後端返回的數據結構處理數據
+        let rawData = [];
+        if (response.data && response.data.rows) {
+          rawData = response.data.rows;
+        } else if (Array.isArray(response.data)) {
+          // 如果後端直接返回數組
+          rawData = response.data;
+        } else {
+          // 如果是其他結構，嘗試直接使用
+          rawData = response.data;
+        }
+
+        // 按時間分組數據，但不進行額外排序，保持後端返回的順序
+        this.groupDataByTimeWithoutSort(rawData);
+
+        // 重置到第一頁
+        this.currentPage = 1;
+
+      } catch (error) {
+        console.error('獲取過去一個月學生手冊列表失敗:', error);
+        ElMessage.error('獲取數據失敗: ' + (error.message || '未知錯誤'));
+        // 使用空數組
+        this.groupDataByTime([]);
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    //按時間分組數據但不排序（保持後端返回的順序）
+    groupDataByTimeWithoutSort(data) {
+      const grouped = {};
+      const order = []; // 保存原始順序
+
+      //按時間分組，使用class_log表的字段
+      data.forEach(item => {
+        // 过滤非'功課'和'測驗'类型的条目
+        if (item.courseType !== '功課' && item.courseType !== '測驗') {
+          return;
+        }
+
+        // 使用startDate作为分组键
+        const timeKey = item.startDate || item.updateDate || '未設定日期';
+        if (!grouped[timeKey]) {
+          grouped[timeKey] = {
+            timeRange: timeKey, // 使用日期作为卡片标题
+            entries: [],
+            categories: {} // 用於存儲類別分組
+          };
+          order.push(timeKey); // 记录原始顺序
+        }
+
+        //添加條目到總列表
+        grouped[timeKey].entries.push({
+          subject: item.course || '未設定課程',
+          content: item.content || '無內容',
+          category: item.courseType || '未分類'
+        });
+
+        //按類別分組
+        const category = item.courseType || '未分類';
+        if (!grouped[timeKey].categories[category]) {
+          grouped[timeKey].categories[category] = {
+            category: category,
+            entries: []
+          };
+        }
+        grouped[timeKey].categories[category].entries.push({
+          subject: item.course || '未設定課程',
+          content: item.content || '無內容',
+          category: item.courseType || '未分類'
+        });
+      });
+
+      //根據原始順序構建結果數組，不進行額外排序
+      this.allGroupedHandbookList = order.map(timeKey => {
+        const item = grouped[timeKey];
+        
+        // 只保留'功課'和'測驗'类别，过滤掉其他类别
+        item.categoryGroups = Object.values(item.categories).filter(categoryGroup => {
+          return categoryGroup.category === '功課' || categoryGroup.category === '測驗';
+        });
+
+        // 對類別進行排序
+        item.categoryGroups.sort((a, b) => {
+          // 确保'測驗'排在前面，然后是'功課'
+          if (a.category === '測驗' && b.category !== '測驗') return -1;
+          if (b.category === '測驗' && a.category !== '測驗') return 1;
+          if (a.category === '功課' && b.category !== '功課') return -1;
+          if (b.category === '功課' && a.category !== '功課') return 1;
+          return a.category.localeCompare(b.category);
+        });
+
+        // 對每個類別內的條目進行排序
+        item.categoryGroups.forEach(categoryGroup => {
+          categoryGroup.entries.sort((a, b) => {
+            //先按科目排序
+            const subjectComparison = a.subject.localeCompare(b.subject);
+            if (subjectComparison !== 0) {
+              return subjectComparison;
+            }
+            // 如果科目相同，按內容排序
+            return a.content.localeCompare(b.content);
+          });
+        });
+        
+        return item;
+      });
+
+      // 重置到第一頁
+      this.currentPage = 1;
+    },
+    
+    // 檢查是否在過去一個月內
+    isInPastMonth(dateString) {
+      const now = new Date();
+      const checkDate = this.parseDate(dateString);
+
+      // 設置一個月前的日期
+      const pastMonthStart = new Date(now);
+      pastMonthStart.setMonth(now.getMonth() - 1);
+      
+      // 設置今天的時間範圍
+      const todayStart = new Date(now);
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const todayEnd = new Date(now);
+      todayEnd.setHours(23, 59, 59, 999);
+
+      return checkDate >= pastMonthStart && checkDate <= todayEnd;
+    },
+    
+    // 顯示過去一個月數據（內部函數）
+    showPastMonthDataInner() {
+      const pastMonthData = [];
+
+      this.allGroupedHandbookList.forEach(item => {
+        if (this.isInPastMonth(item.timeRange)) {
+          pastMonthData.push(item);
+        }
+      });
+
+      // 更新數據為過去一個月的數據，並按倒序排序（最新的在前）
+      this.allGroupedHandbookList = pastMonthData.sort((a, b) => {
+        // 將日期字符串轉換為實際日期對象進行比較
+        const dateA = this.parseDate(a.timeRange);
+        const dateB = this.parseDate(b.timeRange);
+        return dateB - dateA; // 倒序：較新的日期在前
+      });
+
+      // 重置到第一頁
+      this.currentPage = 1;
     },
 
     // 顯示未來七天數據
@@ -487,8 +698,13 @@ export default {
         }
       });
 
-      // 更新數據為今天數據
-      this.allGroupedHandbookList = todayData;
+      // 更新數據為今天數據，並按倒序排序（最新的在前）
+      this.allGroupedHandbookList = todayData.sort((a, b) => {
+        // 將日期字符串轉換為實際日期對象進行比較
+        const dateA = this.parseDate(a.timeRange);
+        const dateB = this.parseDate(b.timeRange);
+        return dateB - dateA; // 倒序：較新的日期在前
+      });
 
       // 重置到第一頁
       this.currentPage = 1;
@@ -504,8 +720,13 @@ export default {
         }
       });
 
-      // 更新數據為未來七天的數據
-      this.allGroupedHandbookList = nextSevenDaysData;
+      // 更新數據為未來七天的數據，並按倒序排序（最新的在前）
+      this.allGroupedHandbookList = nextSevenDaysData.sort((a, b) => {
+        // 將日期字符串轉換為實際日期對象進行比較
+        const dateA = this.parseDate(a.timeRange);
+        const dateB = this.parseDate(b.timeRange);
+        return dateB - dateA; // 倒序：較新的日期在前
+      });
 
       // 重置到第一頁
       this.currentPage = 1;
@@ -599,11 +820,44 @@ export default {
 
 .title-and-buttons {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center; /* 內容居中對齊 */
   width: 100%;
   max-width: 800px; /* 限制最大寬度 */
   gap: 15px; /* 組件間距 */
+}
+
+.top-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  width: 100%;
+}
+
+.left-aligned {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.right-aligned {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.center-aligned {
+  display: flex;
+  justify-content: center;
+}
+
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  flex-shrink: 0; /* 防止按鈕容器收縮 */
 }
 
 
@@ -649,7 +903,10 @@ export default {
 
 .navigation-buttons {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
+  width: 100%;
   flex-shrink: 0; /* 防止按鈕容器收縮 */
 }
 

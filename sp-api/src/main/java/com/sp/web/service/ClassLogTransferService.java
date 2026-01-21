@@ -118,4 +118,17 @@ public class ClassLogTransferService {
     private void updateClassLog(ClassLog classLog) {
         classLogMapper.updateClassLogById(classLog);
     }
+    
+    /**
+     * 获取过去一个月的ClassLog数据
+     */
+    public List<ClassLog> getPastMonthClassLogs() {
+        try {
+            return classLogMapper.selectPastMonthClassLogs();
+        } catch (Exception e) {
+            logger.error("从本地数据库获取过去一个月课程日志数据失败: {}", e.getMessage());
+            // 返回空列表而不是抛出异常，以防止前端页面因后端错误而空白
+            return java.util.Collections.emptyList();
+        }
+    }
 }

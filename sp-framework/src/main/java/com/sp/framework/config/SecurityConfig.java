@@ -49,9 +49,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(
                         "/",
                         "/profile/**",
-                        "/system/handbook/list",
-                        "/system/handbook/students",
-                        "/system/handbook/switchStudent",
+                        "/system/handbook/**",
                         "/wechat/callback/**",
                         "/wechat/oauth/callback",
                         "/tool/swagger/**",

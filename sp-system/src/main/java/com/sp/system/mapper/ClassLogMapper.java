@@ -49,4 +49,10 @@ public interface ClassLogMapper {
      * @return 影响行数
      */
     int updateClassLogById(ClassLog classLog);
+    
+    /**
+     * 查询过去一个月的课程日志数据
+     * @return 课程日志列表
+     */
+    List<ClassLog> selectPastMonthClassLogs();
 }
