@@ -15,31 +15,31 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/wechat/callback")
 public class WeChatWorkCallbackController extends BaseController {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(WeChatWorkCallbackController.class);
-    
+
     // 回调配置参数
     @Value("${wechat.work.callback.token}")
     private String token;
-    
+
     @Value("${wechat.work.callback.encodingAesKey}")
     private String encodingAesKey;
-    
+
     @Value("${wechat.work.callback.corpId}")
     private String corpId;
-    
+
     //永久授权码（用于第三方应用）
     @Value("${wechat.work.callback.permanentCode}")
     private String permanentCode;
-    
+
     /**
      * 验证URL有效性
      * 企业微信在配置回调URL时会发送GET请求进行验证
      *
      * @param msgSignature 微信加密签名
-     * @param timestamp 时间戳
-     * @param nonce 随机数
-     * @param echostr 加密的随机字符串
+     * @param timestamp    时间戳
+     * @param nonce        随机数
+     * @param echostr      加密的随机字符串
      * @return 解密后的echostr
      */
     @Anonymous
@@ -49,26 +49,26 @@ public class WeChatWorkCallbackController extends BaseController {
             @RequestParam("timestamp") String timestamp,
             @RequestParam("nonce") String nonce,
             @RequestParam("echostr") String echostr) {
-        
+
         logger.info("接收到企业微信URL验证请求: msg_signature={}, timestamp={}, nonce={}, echostr={}",
                 msgSignature, timestamp, nonce, echostr);
 
         logger.info("本地配置: token={}, encodingAesKey={}", token, encodingAesKey);
-        
+
         try {
             // 先对echostr进行预处理，将空格转换回加号
             String processedEchostr = echostr.replace(" ", "+");
-            
+
             // 使用处理后的参数进行签名验证
             if (!WeChatWorkCallbackUtils.verifySignatureWithEchoStr(token, timestamp, nonce, processedEchostr, msgSignature)) {
                 logger.warn("签名验证失败");
                 return "";
             }
-            
+
             // 直接使用处理后的echostr进行解密，不再进行额外的URL解码
             // 因为URL解码会把"+"转换为空格，破坏Base64格式
             String result = WeChatWorkCallbackUtils.decryptEchoStr(processedEchostr, encodingAesKey);
-            
+
             // 在1秒内响应GET请求，响应内容为上一步得到的明文消息内容
             logger.info("URL验证成功，返回结果: {}", result);
             return result;
@@ -77,14 +77,14 @@ public class WeChatWorkCallbackController extends BaseController {
             return "";
         }
     }
-    
+
     /**
      * 接收企业微信推送的消息
      *
      * @param msgSignature 微信加密签名
-     * @param timestamp 时间戳
-     * @param nonce 随机数
-     * @param postData 推送的数据
+     * @param timestamp    时间戳
+     * @param nonce        随机数
+     * @param postData     推送的数据
      * @return 响应结果
      */
     @Anonymous
@@ -93,23 +93,23 @@ public class WeChatWorkCallbackController extends BaseController {
             @RequestParam("msg_signature") String msgSignature,
             @RequestParam("timestamp") String timestamp,
             @RequestParam("nonce") String nonce,
-            @RequestBody String postData){
-        
+            @RequestBody String postData) {
+
         logger.info("接收到企业微信推送消息: msg_signature={}, timestamp={}, nonce={}, postData={}",
                 msgSignature, timestamp, nonce, postData);
 
         logger.info("本地配置: token={}, encodingAesKey={}", token, encodingAesKey);
-        
+
         try {
             // 验证签名
             if (!WeChatWorkCallbackUtils.verifySignature(token, timestamp, nonce, msgSignature)) {
                 logger.warn("签名验证失败");
                 return "fail";
             }
-            
+
             // 解析XML数据
             // 注意：实际业务中需要解析XML并处理不同类型的消息
-            
+
             logger.info("消息处理成功");
             return "success";
         } catch (Exception e) {

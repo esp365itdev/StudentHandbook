@@ -1,6 +1,5 @@
-
 <template>
-  <div class="student-handbook" 
+  <div class="student-handbook"
        @touchstart="handleTouchStart"
        @touchmove="handleTouchMove"
        @touchend="handleTouchEnd">
@@ -11,73 +10,79 @@
         <el-button class="home-btn" type="primary" @click="goHome">
           <template #icon>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5V14h3v1.5a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146ZM11.5 14v-6h-3v6h3Z"/>
+              <path
+                  d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5V14h3v1.5a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146ZM11.5 14v-6h-3v6h3Z"/>
             </svg>
           </template>
           返回首頁
         </el-button>
-        
+
         <!-- 用戶切換按鈕 -->
         <el-button class="user-switch-btn" type="primary" plain @click="toggleUserMenu">
           <template #icon>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zM10 9.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
+              <path
+                  d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zM10 9.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
             </svg>
           </template>
           切換學生
         </el-button>
-        
+
         <!-- 左右方向按鈕 -->
         <div class="navigation-buttons">
-          <el-button class="nav-arrow prev-button" :class="{'active': activeButton === 'today'}" type="primary" icon="ArrowLeft" @click="showTodayData" :disabled="false">當天</el-button>
-          <el-button class="nav-arrow next-button" :class="{'active': activeButton === 'future'}" type="primary" icon="ArrowRight" @click="showNextSevenDaysData" :disabled="false">未來七天</el-button>
+          <el-button class="nav-arrow prev-button" :class="{'active': activeButton === 'today'}" type="primary"
+                     icon="ArrowLeft" @click="showTodayData" :disabled="false">當天
+          </el-button>
+          <el-button class="nav-arrow next-button" :class="{'active': activeButton === 'future'}" type="primary"
+                     icon="ArrowRight" @click="showNextSevenDaysData" :disabled="false">未來七天
+          </el-button>
         </div>
       </div>
     </div>
-    
+
     <!-- 卡片式數據展示 -->
     <div class="handbook-container" v-loading="loading">
-      <div 
-        class="handbook-card"
-        v-for="(item,index) in paginatedGroupedHandbookList"
-        :key="index"
+      <div
+          class="handbook-card"
+          v-for="(item,index) in paginatedGroupedHandbookList"
+          :key="index"
       >
         <div class="card-header">
           <h3 class="card-title">{{ item.timeRange }}</h3>
         </div>
-        
+
         <div class="card-content">
           <!-- 按類別分組顯示條目 -->
-          <div v-for="(categoryGroup, categoryIndex) in item.categoryGroups" 
+          <div v-for="(categoryGroup, categoryIndex) in item.categoryGroups"
                :key="categoryIndex"
                class="category-group">
             <!-- 類別標籤 -->
             <div class="category-container">
               <div class="category-row">
-                <span 
-                  class="category-badge"
-                  :class="{ 'exam-badge': categoryGroup.category === '測驗' || categoryGroup.category === '考试' }"
+                <span
+                    class="category-badge"
+                    :class="{ 'exam-badge': categoryGroup.category === '測驗' || categoryGroup.category === '考试' }"
                 >
                   {{ categoryGroup.category }}
                 </span>
               </div>
             </div>
-            
+
             <!-- 該類別下的條目 -->
-            <div 
-              class="card-field" 
-              v-for="(entry, entryIndex) in categoryGroup.entries" 
-              :key="entryIndex"
+            <div
+                class="card-field"
+                v-for="(entry, entryIndex) in categoryGroup.entries"
+                :key="entryIndex"
 
             >
-             <span class="field-value">{{ entry.subject }} : {{ entry.content }}</span>
+              <span class="field-value">{{ entry.subject }} : {{ entry.content }}</span>
             </div>
           </div>
         </div>
       </div>
       <!-- 空狀態 -->
       <div v-if="paginatedGroupedHandbookList.length === 0 && !loading" class="empty-state">
-        <el-empty description="暂无数据" />
+        <el-empty description="暂无数据"/>
       </div>
     </div>
     <!-- 回到頂部按鈕 -->
@@ -86,48 +91,46 @@
     </div>
 
     <!-- 學生選擇對話框 -->
-    <el-dialog
-      v-model="studentSelectionDialogVisible"
-      title="請選擇要切換的學生"
-      :width="isMobile ? '90%' : '30%'"
-      :before-close="() => { studentSelectionDialogVisible = false; }"
-      class="custom-student-dialog"
-    >
-      <div class="student-selection-content">
-        <div class="student-list">
-          <el-radio-group v-model="selectedStudent" class="student-options-group">
-            <el-radio
-              v-for="student in studentOptions"
-              :key="student"
-              :label="student"
-              class="student-item-radio"
-            >
-              <span class="student-name">{{ student }}</span>
-            </el-radio>
-          </el-radio-group>
+    <div v-if="studentSelectionDialogVisible" class="custom-modal-overlay" @click="closeStudentSelectionDialog">
+      <div class="custom-student-dialog" @click.stop>
+        <div class="modal-header">
+          <h3>請選擇要切換的學生</h3>
+          <button class="close-btn" @click="closeStudentSelectionDialog">×</button>
+        </div>
+        <div class="student-selection-content">
+          <div class="student-list">
+            <el-radio-group v-model="selectedStudent" class="student-options-group">
+              <el-radio
+                  v-for="student in studentOptions"
+                  :key="student"
+                  :label="student"
+                  class="student-item-radio"
+              >
+                <span class="student-name">{{ student }}</span>
+              </el-radio>
+            </el-radio-group>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <el-button @click="studentSelectionDialogVisible = false" size="large" class="dialog-cancel-btn">取消
+          </el-button>
+          <el-button type="primary" @click="confirmStudentSwitchTemp" size="large" class="dialog-confirm-btn">確認
+          </el-button>
         </div>
       </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="studentSelectionDialogVisible = false" size="large" class="dialog-cancel-btn">取消</el-button>
-          <el-button type="primary" @click="confirmStudentSwitchTemp" size="large" class="dialog-confirm-btn">確認</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    </div>
   </div>
 </template>
 
 <script>
 import service from '@/utils/request.js'
-import { API_ENDPOINTS } from '@/config/api.js'
-import { ElMessage } from 'element-plus'
-import { ElDialog } from 'element-plus'
+import {API_ENDPOINTS} from '@/config/api.js'
+import {ElMessage} from 'element-plus'
 
 export default {
   name: 'StudentHandbook',
-  components: {
-    ElDialog,
-  },
+  components: {},
+
   data() {
     return {
       loading: false,
@@ -138,12 +141,12 @@ export default {
       showBackToTop: false,
       viewMode: 'today', // 視圖模式: 'today' 或 'nextSevenDays'
       activeButton: 'today', // 追蹤當前選中的按鈕
-      
+
       // 學生選擇相關
       studentSelectionDialogVisible: false, // 控制學生選擇對話框顯示
       studentOptions: [], // 學生選項
       selectedStudent: '', // 已選擇的學生
-      
+
       // 滑動相關數據
       touchStartX: 0,
       touchStartY: 0,
@@ -152,11 +155,6 @@ export default {
     }
   },
   computed: {
-    // 計算總頁數
-    totalPages() {
-      return Math.ceil(this.allGroupedHandbookList.length / this.pageSize);
-    },
-    
     // 計算當前頁需要顯示的數據
     paginatedGroupedHandbookList() {
       const startIndex = (this.currentPage - 1) * this.pageSize;
@@ -182,32 +180,29 @@ export default {
     checkIsMobile() {
       this.isMobile = window.innerWidth < 768
     },
-    
-
-    
     // 返回首頁
     goHome() {
       this.$router.push('/');
     },
-    
+
     // 切換用戶菜單顯示狀態
     async toggleUserMenu() {
       try {
         // 从前端存储获取token
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        
+
         if (!token) {
           ElMessage.error('请先登录获取访问令牌');
           return;
         }
-        
+
         // 调用后端API获取当前token关联的学生列表
         // token会在axios拦截器中自动添加到请求头
         const response = await service.get(API_ENDPOINTS.STUDENT_HANDBOOK_STUDENTS);
-        
+
         if (response.data.code === 200) {
           const students = response.data.data;
-          
+
           if (students && students.length > 0) {
             // 设置学生选项并打开对话框
             this.studentOptions = students;
@@ -224,13 +219,13 @@ export default {
         ElMessage.error('獲取學生列表失敗: ' + (error.message || '網絡錯誤'));
       }
     },
-    
+
     //處理滾動事件，控制回到頂部按鈕的顯示
     handleScroll() {
       // 當滾動超過300px時顯示回到頂部按鈕
       this.showBackToTop = window.pageYOffset > 300
     },
-    
+
     // 滾動到頂部
     scrollToTop() {
       window.scrollTo({
@@ -238,35 +233,28 @@ export default {
         behavior: 'smooth' // 平滑滾動
       })
     },
-    
+
     // 觸摸開始事件
     handleTouchStart(event) {
       const touch = event.touches[0];
       this.touchStartX = touch.clientX;
       this.touchStartY = touch.clientY;
     },
-    
-    // 觸摸移動事件
-    handleTouchMove(event) {
-      // 可以在這裡添加一些視覺反饋
-    },
-    
     // 觸摸結束事件
     handleTouchEnd(event) {
       const touch = event.changedTouches[0];
       this.touchEndX = touch.clientX;
       this.touchEndY = touch.clientY;
-      
+
       this.handleSwipeGesture();
     },
-    
     //處理滑動手勢
     handleSwipeGesture() {
       const deltaX = this.touchEndX - this.touchStartX;
       const deltaY = this.touchEndY - this.touchStartY;
       const absDeltaX = Math.abs(deltaX);
       const absDeltaY = Math.abs(deltaY);
-      
+
       //判斷是否為有效的向右滑動
       // 條件：水平滑動距離大於垂直滑動距離，且水平滑動距離足夠大（50px），且方向為向右
       if (absDeltaX > absDeltaY && absDeltaX > 50 && deltaX > 0) {
@@ -274,29 +262,29 @@ export default {
         this.$router.push('/');
       }
     },
-    
+
     // 獲取學生手冊列表（從class_log表）
     async fetchHandbookList() {
       this.loading = true
       try {
         // 使用封裝的service實例，確保攜帶token
         const response = await service.get(API_ENDPOINTS.STUDENT_HANDBOOK_LIST)
-        
+
         // 根據後端返回的數據結構處理數據（現在是class_log表的結構）
         let rawData = [];
         if (response.data && response.data.rows) {
           rawData = response.data.rows;
-        } else if(Array.isArray(response.data)) {
+        } else if (Array.isArray(response.data)) {
           // 如果後端直接返回數組
           rawData = response.data;
         } else {
           // 如果是其他結構，嘗試直接使用
           rawData = response.data;
         }
-        
+
         // 按時間分組數據
         this.groupDataByTime(rawData);
-        
+
         // 根據當前視圖模式過濾數據
         if (this.viewMode === 'nextSevenDays') {
           this.showNextSevenDaysDataInner();
@@ -304,7 +292,7 @@ export default {
           // 默認為顯示今天數據
           this.showTodayDataInner();
         }
-        
+
 
       } catch (error) {
         console.error('獲取學生手冊列表失敗:', error)
@@ -317,22 +305,21 @@ export default {
         this.loading = false
       }
     },
-    
 
-    
+
     //按時間分組數據
     groupDataByTime(data) {
       const grouped = {};
-      
+
       //按時間分組，使用class_log表的字段
       data.forEach(item => {
         // 过滤非'功課'和'測驗'类型的条目
         if (item.courseType !== '功課' && item.courseType !== '測驗') {
           return;
         }
-        
+
         // 使用startDate作为分组键
-        const timeKey = item.startDate || item.updateDate || '未設定日期'; 
+        const timeKey = item.startDate || item.updateDate || '未設定日期';
         if (!grouped[timeKey]) {
           grouped[timeKey] = {
             timeRange: timeKey, // 使用日期作为卡片标题
@@ -340,14 +327,14 @@ export default {
             categories: {} // 用於存儲類別分組
           };
         }
-        
+
         //添加條目到總列表
         grouped[timeKey].entries.push({
           subject: item.course || '未設定課程',
           content: item.content || '無內容',
           category: item.courseType || '未分類'
         });
-        
+
         //按類別分組
         const category = item.courseType || '未分類';
         if (!grouped[timeKey].categories[category]) {
@@ -362,7 +349,7 @@ export default {
           category: item.courseType || '未分類'
         });
       });
-      
+
       //轉換為數組並按時間順序排序（從早到晚）
       this.allGroupedHandbookList = Object.values(grouped).sort((a, b) => {
         // 將日期字符串轉換為實際日期對象進行比較
@@ -370,24 +357,24 @@ export default {
         const dateB = this.parseDate(b.timeRange);
         return dateA - dateB;
       });
-      
+
       //對每個時間分組內的類別進行排序，並將類別對象轉換為數組
       this.allGroupedHandbookList.forEach(item => {
         // 只保留'功課'和'測驗'类别，过滤掉其他类别
         item.categoryGroups = Object.values(item.categories).filter(categoryGroup => {
           return categoryGroup.category === '功課' || categoryGroup.category === '測驗';
         });
-        
+
         // 對類別進行排序
         item.categoryGroups.sort((a, b) => {
           // 确保'測驗'排在前面，然后是'功課'
-          if(a.category === '測驗' && b.category !== '測驗') return -1;
-          if(b.category === '測驗' && a.category !== '測驗') return 1;
-          if(a.category === '功課' && b.category !== '功課') return -1;
-          if(b.category === '功課' && a.category !== '功課') return 1;
+          if (a.category === '測驗' && b.category !== '測驗') return -1;
+          if (b.category === '測驗' && a.category !== '測驗') return 1;
+          if (a.category === '功課' && b.category !== '功課') return -1;
+          if (b.category === '功課' && a.category !== '功課') return 1;
           return a.category.localeCompare(b.category);
         });
-        
+
         // 對每個類別內的條目進行排序
         item.categoryGroups.forEach(categoryGroup => {
           categoryGroup.entries.sort((a, b) => {
@@ -401,35 +388,35 @@ export default {
           });
         });
       });
-      
+
       // 重置到第一頁
       this.currentPage = 1;
     },
-    
+
     // 檢查是否是今天
     isToday(dateString) {
       const today = new Date();
       const checkDate = this.parseDate(dateString);
-      
+
       return today.getDate() === checkDate.getDate() &&
-             today.getMonth() === checkDate.getMonth() &&
-             today.getFullYear() === checkDate.getFullYear();
+          today.getMonth() === checkDate.getMonth() &&
+          today.getFullYear() === checkDate.getFullYear();
     },
-    
+
     // 檢查是否是未來7天內
     isInNextSevenDays(dateString) {
       const today = new Date();
       const checkDate = this.parseDate(dateString);
-      
+
       // 設置今天開始時間
       const startDate = new Date(today);
       startDate.setHours(0, 0, 0, 0);
-      
+
       // 設置7天後的時間
       const endDate = new Date(today);
       endDate.setDate(today.getDate() + 7);
       endDate.setHours(23, 59, 59, 999);
-      
+
       return checkDate >= startDate && checkDate <= endDate;
     },
 
@@ -437,12 +424,12 @@ export default {
     parseDate(dateString) {
       // 支持多種日期格式：dd/mm/yyyy, yyyy-mm-dd, yyyy-mm-dd HH:MM:SS
       if (!dateString) return new Date();
-      
+
       // 如果是包含时间的完整日期格式 (yyyy-mm-dd HH:MM:SS)
       if (typeof dateString === 'string' && dateString.includes(':')) {
         return new Date(dateString);
       }
-      
+
       // 如果是 dd/mm/yyyy 格式
       if (typeof dateString === 'string' && dateString.includes('/')) {
         const parts = dateString.split('/');
@@ -451,16 +438,16 @@ export default {
         const year = parseInt(parts[2], 10);
         return new Date(year, month, day);
       }
-      
+
       // 如果是 yyyy-mm-dd 格式
       if (typeof dateString === 'string' && dateString.includes('-')) {
         return new Date(dateString);
       }
-      
+
       // 默认返回当前日期
       return new Date();
     },
-    
+
     // 顯示當天數據
     showTodayData() {
       this.viewMode = 'today';
@@ -473,7 +460,7 @@ export default {
         behavior: 'smooth'
       });
     },
-    
+
     // 顯示未來七天數據
     showNextSevenDaysData() {
       this.viewMode = 'nextSevenDays';
@@ -486,39 +473,44 @@ export default {
         behavior: 'smooth'
       });
     },
-    
+
     // 顯示當天數據（內部函數）
     showTodayDataInner() {
       const todayData = [];
-      
+
       this.allGroupedHandbookList.forEach(item => {
         if (this.isToday(item.timeRange)) {
           todayData.push(item);
         }
       });
-      
+
       // 更新數據為今天數據
       this.allGroupedHandbookList = todayData;
-      
+
       // 重置到第一頁
       this.currentPage = 1;
     },
-    
+
     // 顯示未來七天數據（內部函數）
     showNextSevenDaysDataInner() {
       const nextSevenDaysData = [];
-      
+
       this.allGroupedHandbookList.forEach(item => {
         if (this.isInNextSevenDays(item.timeRange)) {
           nextSevenDaysData.push(item);
         }
       });
-      
+
       // 更新數據為未來七天的數據
       this.allGroupedHandbookList = nextSevenDaysData;
-      
+
       // 重置到第一頁
       this.currentPage = 1;
+    },
+
+    // 关闭学生选择对话框
+    closeStudentSelectionDialog() {
+      this.studentSelectionDialogVisible = false;
     },
 
     // 临时确认切换学生（不调用接口）
@@ -527,13 +519,13 @@ export default {
         ElMessage.warning('请选择一个学生');
         return;
       }
-      
+
       ElMessage.success({
         message: `已成功切換到學生: ${this.selectedStudent}`,
         duration: 2000
       });
       this.studentSelectionDialogVisible = false;
-      
+
       // 刷新手冊列表以显示新选择的学生的数据
       this.fetchHandbookList();
     }
@@ -571,7 +563,6 @@ export default {
   max-width: 800px; /* 限制最大寬度 */
   gap: 15px; /* 組件間距 */
 }
-
 
 
 .home-btn {
@@ -835,59 +826,27 @@ export default {
     padding: 0 15px 30px;
     gap: 20px;
   }
-  
+
   .handbook-card {
     border-radius: 10px;
   }
-  
 
-  
   .card-title {
     font-size: 20px;
   }
-  
+
   .card-content {
     padding: 20px;
   }
-  
+
   .category-badge {
     padding: 6px 14px;
     font-size: 13px;
   }
-  
+
   .card-field {
     font-size: 15px;
   }
-}
-
-/* 學生選擇對話框樣式 */
-:deep(.custom-student-dialog .el-dialog) {
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  background: transparent !important; /* 去除白底 */
-  backdrop-filter: blur(10px); /* 毛玻璃效果 */
-}
-
-:deep(.custom-student-dialog .el-dialog__header) {
-  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); /* 藍色漸變頭部 */
-  padding: 20px;
-  border-radius: 16px 16px 0 0;
-  position: relative;
-  text-align: center;
-}
-
-:deep(.custom-student-dialog .el-dialog__title) {
-  color: white;
-  font-weight: 700;
-  font-size: 18px;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-:deep(.custom-student-dialog .el-dialog__body) {
-  padding: 25px;
-  background: transparent; /* 透明身體部分 */
-  color: white;
 }
 
 /* 學生選擇項目的樣式 */
@@ -946,28 +905,19 @@ export default {
   font-weight: 600 !important;
 }
 
-/* 確保手機上選中狀態文字變白色 */
-@media (max-width: 768px) {
-  :deep(.el-radio__input.is-checked + .el-radio__label),
-  :deep(.el-radio.is-checked .el-radio__label),
-  :deep(.el-radio.is-checked .student-name),
-  :deep(.el-radio__input.is-checked + .el-radio__label .student-name) {
-    color: white !important;
-    font-weight: 600 !important;
-    text-shadow: 0 0 2px rgba(255, 255, 255, 0.5) !important;
-  }
-}
-
 .student-name {
   font-size: 16px;
-  color: #334155;
+  color: white;
   transition: color 0.3s ease;
+  font-weight: 600;
 }
 
 :deep(.el-radio.is-checked .student-name),
-:deep(.el-radio__input.is-checked + .el-radio__label .student-name) {
+:deep(.el-radio__input.is-checked + .el-radio__label .student-name),
+:deep(.el-radio.is-checked .student-item-radio .student-name),
+:deep(.el-radio__input.is-checked .student-item-radio .student-name) {
   color: white !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   text-shadow: 0 0 2px rgba(255, 255, 255, 0.5) !important;
 }
 
@@ -990,80 +940,17 @@ export default {
     color: white !important;
     box-shadow: 0 6px 16px rgba(15, 23, 42, 0.4) !important;
   }
-  
-  :deep(.el-radio.is-checked .student-name),
-  :deep(.el-radio__input.is-checked + .el-radio__label .student-name) {
-    color: white !important;
-    font-weight: 600 !important;
-    text-shadow: 0 0 2px rgba(255, 255, 255, 0.5) !important;
-  }
-}
 
-/* 最高优先级覆盖样式，确保手机上选中状态正确显示 */
-@media (max-width: 768px) {
-  :deep(.el-radio.is-checked .student-item-radio),
-  :deep(.el-radio__input.is-checked .student-item-radio),
-  :deep(.el-radio__input.is-checked + .el-radio__label),
-  :deep(.el-radio.is-checked .el-radio__label) {
-    color: white !important;
-    background: #0f172a !important;
-    border-color: #0f172a !important;
-    font-weight: 600 !important;
-  }
-  
   :deep(.el-radio.is-checked .student-name),
   :deep(.el-radio__input.is-checked + .el-radio__label .student-name),
-  :deep(.el-radio.is-checked .student-name span),
-  :deep(.el-radio__input.is-checked + .el-radio__label .student-name span) {
+  :deep(.el-radio.is-checked .student-item-radio .student-name),
+  :deep(.el-radio__input.is-checked .student-item-radio .student-name) {
     color: white !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     text-shadow: 0 0 2px rgba(255, 255, 255, 0.5) !important;
   }
 }
 
-/* 针对所有设备加强选中状态样式 */
-:deep(.el-radio.is-checked) {
-  .student-item-radio {
-    color: white !important;
-    background: #0f172a !important;
-    border-color: #0f172a !important;
-    font-weight: 600 !important;
-  }
-  
-  .student-name {
-    color: white !important;
-    font-weight: 600 !important;
-    text-shadow: 0 0 2px rgba(255, 255, 255, 0.5) !important;
-  }
-}
-
-/* 对话框底部按钮样式 */
-
-
-.dialog-footer {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.el-button {
-  border-radius: 12px;
-  padding: 12px 24px;
-  font-weight: 600;
-}
-
-.el-button--primary {
-  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-  border: none;
-  color: white;
-}
-
-.el-button--primary:hover {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
-}
 
 .dialog-cancel-btn {
   background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%) !important;
@@ -1112,28 +999,87 @@ export default {
   box-shadow: 0 6px 12px rgba(37, 99, 235, 0.4) !important;
 }
 
-
-
-
-
-/* 对话框遮罩层样式 */
-.custom-student-dialog .el-overlay {
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, rgba(12, 74, 160, 0.6) 100%) !important; /* 從向漸變遮罩 */
+/* 自定义模态对话框样式 */
+.custom-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, rgba(12, 74, 160, 0.6) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(8px);
 }
 
-/* 对话框动画效果 */
-.custom-student-dialog .el-dialog {
-  animation: dialogScaleIn 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+.custom-student-dialog {
+  background: transparent;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  width: 30%;
+  max-width: 90%;
+  animation: modalSlideIn 0.3s ease-out;
 }
 
-@keyframes dialogScaleIn {
-  from {
-    transform: scale(0.7) translateY(30px);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1) translateY(0);
-    opacity: 1;
+.modal-header {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  padding: 20px;
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.3s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.student-selection-content {
+  padding: 25px;
+  background: transparent;
+  color: white;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+  padding: 0 25px 25px;
+}
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+  .custom-student-dialog {
+    width: 90%;
   }
 }
 </style>

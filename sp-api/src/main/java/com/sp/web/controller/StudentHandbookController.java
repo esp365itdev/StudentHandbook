@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/system/handbook")
 public class StudentHandbookController extends BaseController {
-    
+
     @Autowired
     private ClassLogTransferService classLogTransferService;
-    
+
     @Autowired
     private IParentStudentRelationService parentStudentRelationService;
-    
+
     @Autowired
     private TokenService tokenService;
 
@@ -40,37 +40,37 @@ public class StudentHandbookController extends BaseController {
         try {
             // 从外部class_log表获取数据
             List<ClassLog> classLogs = classLogTransferService.getAllClassLogsFromExternal();
-            
+
             // 构造TableDataInfo返回
             TableDataInfo dataTable = new TableDataInfo();
             dataTable.setCode(200);
             dataTable.setRows(classLogs);
             dataTable.setTotal(classLogs.size());
-            
+
             return dataTable;
         } catch (Exception e) {
             logger.error("获取课程日志列表失败: {}", e.getMessage());
-            
+
             // 构造TableDataInfo返回空数据
             TableDataInfo dataTable = new TableDataInfo();
             dataTable.setCode(200);
             dataTable.setRows(java.util.Collections.emptyList());
             dataTable.setTotal(0);
-            
+
             return dataTable;
         }
     }
-    
+
     @Log(title = "获取课程日志详细信息", businessType = BusinessType.SELECT)
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") String id) {
         // 从外部class_log表获取指定ID的数据
         List<ClassLog> classLogs = classLogTransferService.getAllClassLogsFromExternal();
         ClassLog classLog = classLogs.stream()
-            .filter(log -> id.equals(log.getId()))
-            .findFirst()
-            .orElse(null);
-        
+                .filter(log -> id.equals(log.getId()))
+                .findFirst()
+                .orElse(null);
+
         return AjaxResult.success(classLog);
     }
 
@@ -99,12 +99,12 @@ public class StudentHandbookController extends BaseController {
 
             // 根据家长用户ID查询关联的学生
             List<ParentStudentRelation> relations = parentStudentRelationService.selectByParentId(parentUserId);
-            
+
             // 提取学生姓名列表
             List<String> studentNames = relations.stream()
-                .map(ParentStudentRelation::getStudentName)
-                .distinct()
-                .collect(Collectors.toList());
+                    .map(ParentStudentRelation::getStudentName)
+                    .distinct()
+                    .collect(Collectors.toList());
 
             return AjaxResult.success(studentNames);
         } catch (Exception e) {
@@ -143,7 +143,7 @@ public class StudentHandbookController extends BaseController {
             // 验证家长是否确实关联了该学生
             List<ParentStudentRelation> relations = parentStudentRelationService.selectByParentId(parentUserId);
             boolean studentExists = relations.stream()
-                .anyMatch(relation -> studentName.equals(relation.getStudentName()));
+                    .anyMatch(relation -> studentName.equals(relation.getStudentName()));
 
             if (!studentExists) {
                 return AjaxResult.error("家长未关联该学生，无法切换");
