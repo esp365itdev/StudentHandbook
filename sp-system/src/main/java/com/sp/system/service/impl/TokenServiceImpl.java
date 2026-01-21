@@ -38,7 +38,7 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
         // 检查token是否过期
         if (token.getExpireTime().isBefore(LocalDateTime.now())) {
             // 删除过期token
-            this.baseMapper.deleteById(token.getId());
+            this.tokenMapper.deleteById(token.getId());
             return false;
         }
 
@@ -118,5 +118,26 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
         }
         
         return token.getParentUserId();
+    }
+    
+    @Override
+    public Long getUserIdByToken(String tokenValue) {
+        if (tokenValue == null || tokenValue.isEmpty()) {
+            return null;
+        }
+        
+        Token token = this.tokenMapper.selectByTokenValue(tokenValue);
+        if (token == null) {
+            return null;
+        }
+        
+        // 检查token是否过期
+        if (token.getExpireTime().isBefore(LocalDateTime.now())) {
+            // 删除过期token
+            this.tokenMapper.deleteById(token.getId());
+            return null;
+        }
+        
+        return token.getUserId();
     }
 }

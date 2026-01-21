@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 学生手册Controller
@@ -100,13 +99,8 @@ public class StudentHandbookController extends BaseController {
             // 根据家长用户ID查询关联的学生
             List<ParentStudentRelation> relations = parentStudentRelationService.selectByParentId(parentUserId);
 
-            // 提取学生姓名列表
-            List<String> studentNames = relations.stream()
-                    .map(ParentStudentRelation::getStudentName)
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            return AjaxResult.success(studentNames);
+            // 返回完整的relations数据，前端可以从里面获取studentName
+            return AjaxResult.success(relations);
         } catch (Exception e) {
             logger.error("获取关联学生列表失败: {}", e.getMessage());
             return AjaxResult.error("获取学生列表失败: " + e.getMessage());
@@ -114,7 +108,7 @@ public class StudentHandbookController extends BaseController {
     }
 
     @Log(title = "切换学生", businessType = BusinessType.UPDATE)
-    @PostMapping("/switch-student")
+    @PostMapping("/switchStudent")
     public AjaxResult switchStudent(@RequestBody Map<String, String> requestBody) {
         try {
             String token = getRequest().getHeader("Authorization");
@@ -130,8 +124,12 @@ public class StudentHandbookController extends BaseController {
             }
 
             String studentName = requestBody.get("studentName");
+            String studentUserId = requestBody.get("studentUserId");
             if (studentName == null || studentName.isEmpty()) {
                 return AjaxResult.error("学生姓名不能为空");
+            }
+            if (studentUserId == null || studentUserId.isEmpty()) {
+                return AjaxResult.error("学生用户ID不能为空");
             }
 
             // 验证token是否有效并获取家长ID
@@ -143,15 +141,12 @@ public class StudentHandbookController extends BaseController {
             // 验证家长是否确实关联了该学生
             List<ParentStudentRelation> relations = parentStudentRelationService.selectByParentId(parentUserId);
             boolean studentExists = relations.stream()
-                    .anyMatch(relation -> studentName.equals(relation.getStudentName()));
+                    .anyMatch(relation -> studentName.equals(relation.getStudentName()) && 
+                           studentUserId.equals(relation.getStudentUserId()));
 
             if (!studentExists) {
                 return AjaxResult.error("家长未关联该学生，无法切换");
             }
-
-            // 在这里可以添加逻辑来存储当前选择的学生（如保存到session或缓存）
-            // 例如，可以使用Redis或Session来存储当前选择的学生信息
-            // request.getSession().setAttribute("currentStudent", studentName);
 
             return AjaxResult.success("切换学生成功", studentName);
         } catch (Exception e) {

@@ -4,7 +4,7 @@
 const apiEndpoints = {
     STUDENT_HANDBOOK_LIST: '/system/handbook/list',
     STUDENT_HANDBOOK_STUDENTS: '/system/handbook/students',
-    SWITCH_STUDENT: '/system/handbook/switch-student'
+    SWITCH_STUDENT: '/system/handbook/switchStudent'
 };
 
 // 获取基础URL - 从环境变量读取或者使用默认值

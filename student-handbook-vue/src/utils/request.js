@@ -55,10 +55,10 @@ service.interceptors.response.use(
             localStorage.removeItem('token')
             // 重定向到登录页面
             window.location.href = '/sp-api/login'
-            ElMessage.error('请先登录')
+            ElMessage.error('請先登錄')
         } else if (error.response && error.response.status === 403) {
             // 无权限访问
-            ElMessage.error('无权限访问该资源')
+            ElMessage.error('無權限訪問資源')
         }
         return Promise.reject(error)
     }

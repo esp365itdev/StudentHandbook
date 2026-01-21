@@ -3,6 +3,8 @@ package com.sp.framework.interceptor;
 import com.sp.common.annotation.Anonymous;
 import com.sp.common.utils.StringUtils;
 import com.sp.system.service.TokenService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,8 @@ import java.lang.reflect.Method;
  */
 @Component
 public class TokenInterceptor implements HandlerInterceptor {
+
+    private static final Logger logger = LoggerFactory.getLogger(TokenInterceptor.class);
 
     @Autowired
     private TokenService tokenService;
@@ -78,6 +82,9 @@ public class TokenInterceptor implements HandlerInterceptor {
             response.getWriter().write("{\"code\":401,\"msg\":\"无效的token\"}");
             return false;
         }
+        
+        // 验证成功，记录日志
+        logger.info("Token验证成功，token: {}，请求路径: {}", token, requestURI);
 
         return true;
     }

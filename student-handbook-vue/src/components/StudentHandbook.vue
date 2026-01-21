@@ -82,7 +82,7 @@
       </div>
       <!-- 空狀態 -->
       <div v-if="paginatedGroupedHandbookList.length === 0 && !loading" class="empty-state">
-        <el-empty description="暂无数据"/>
+        <p class="no-data-text">暂无数据</p>
       </div>
     </div>
     <!-- 回到頂部按鈕 -->
@@ -101,12 +101,12 @@
           <div class="student-list">
             <el-radio-group v-model="selectedStudent" class="student-options-group">
               <el-radio
-                  v-for="student in studentOptions"
-                  :key="student"
-                  :label="student"
+                  v-for="relation in studentRelations"
+                  :key="relation.studentUserId"
+                  :label="relation.studentName"
                   class="student-item-radio"
               >
-                <span class="student-name">{{ student }}</span>
+                <span class="student-name">{{ relation.studentName }}</span>
               </el-radio>
             </el-radio-group>
           </div>
@@ -146,6 +146,7 @@ export default {
       studentSelectionDialogVisible: false, // 控制學生選擇對話框顯示
       studentOptions: [], // 學生選項
       selectedStudent: '', // 已選擇的學生
+      studentRelations: [], // 存儲家長與學生關係的完整數據
 
       // 滑動相關數據
       touchStartX: 0,
@@ -192,7 +193,7 @@ export default {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
         if (!token) {
-          ElMessage.error('请先登录获取访问令牌');
+          ElMessage.error('請先登錄獲取訪問令牌');
           return;
         }
 
@@ -201,12 +202,14 @@ export default {
         const response = await service.get(API_ENDPOINTS.STUDENT_HANDBOOK_STUDENTS);
 
         if (response.data.code === 200) {
-          const students = response.data.data;
+          const relations = response.data.data;
 
-          if (students && students.length > 0) {
-            // 设置学生选项并打开对话框
-            this.studentOptions = students;
-            this.selectedStudent = students[0]; // 默认选择第一个学生
+          if (relations && relations.length > 0) {
+            // 存储完整的关系数据，包含studentName和studentUserId
+            this.studentRelations = relations;
+            // 从relations数据中提取studentName作为选项
+            this.studentOptions = relations.map(relation => relation.studentName);
+            this.selectedStudent = relations[0].studentName; // 默认选择第一个学生的姓名
             this.studentSelectionDialogVisible = true;
           } else {
             ElMessage.info('當前帳號未關聯任何學生');
@@ -513,21 +516,60 @@ export default {
       this.studentSelectionDialogVisible = false;
     },
 
-    // 临时确认切换学生（不调用接口）
-    confirmStudentSwitchTemp() {
+    // 确认切换学生
+    async confirmStudentSwitchTemp() {
       if (!this.selectedStudent) {
-        ElMessage.warning('请选择一个学生');
+        ElMessage.warning('請選擇一個學生');
         return;
       }
 
-      ElMessage.success({
-        message: `已成功切換到學生: ${this.selectedStudent}`,
-        duration: 2000
-      });
-      this.studentSelectionDialogVisible = false;
-
-      // 刷新手冊列表以显示新选择的学生的数据
-      this.fetchHandbookList();
+      try {
+        // 检查studentRelations是否存在
+        if (!this.studentRelations || !Array.isArray(this.studentRelations)) {
+          ElMessage.error('學生關係數據未加載');
+          return;
+        }
+        
+        // 根据选择的学生姓名找到对应的studentUserId
+        const selectedRelation = this.studentRelations.find(
+          relation => relation && relation.studentName === this.selectedStudent
+        );
+        
+        if (!selectedRelation) {
+          ElMessage.error('找不到對於學生信息');
+          return;
+        }
+        
+        const studentUserId = selectedRelation.studentUserId;
+        
+        // 确保studentUserId存在
+        if (!studentUserId) {
+          ElMessage.error('學生用戶ID缺失');
+          return;
+        }
+        
+        // 调用后端API切换学生
+        const response = await service.post(API_ENDPOINTS.SWITCH_STUDENT, {
+          studentName: this.selectedStudent,
+          studentUserId: studentUserId
+        });
+        
+        if (response.data.code === 200) {
+          ElMessage.success({
+            message: `已成功切換到學生`,
+            duration: 1000
+          });
+          this.studentSelectionDialogVisible = false;
+          
+          // 刷新手冊列表以显示新选择的学生的数据
+          this.fetchHandbookList();
+        } else {
+          ElMessage.error(response.data.msg || '切換學生失敗');
+        }
+      } catch (error) {
+        console.error('切換學生失敗:', error);
+        ElMessage.error('切換學生失敗: ' + (error.message || '切換學生失敗'));
+      }
     }
   }
 }
@@ -753,6 +795,14 @@ export default {
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   margin: 20px;
+}
+
+.no-data-text {
+  font-weight: bold;
+  text-align: center;
+  font-size: 18px;
+  color: #606266;
+  margin: 0;
 }
 
 /* 回到頂部按鈕樣式 */

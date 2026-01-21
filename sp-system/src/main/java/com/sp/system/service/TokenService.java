@@ -45,4 +45,12 @@ public interface TokenService {
      * @return 家长用户ID
      */
     String getParentUserIdByToken(String tokenValue);
+    
+    /**
+     * 根据token值获取用户ID
+     *
+     * @param tokenValue token值
+     * @return 用户ID
+     */
+    Long getUserIdByToken(String tokenValue);
 }
