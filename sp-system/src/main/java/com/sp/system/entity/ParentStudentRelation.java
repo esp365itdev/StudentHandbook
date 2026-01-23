@@ -34,6 +34,14 @@ public class ParentStudentRelation extends BaseEntity {
     @TableField("relation_desc")
     private String relationDesc;
 
+    /** 家长手机号 */
+    @TableField("mobile")
+    private String mobile;
+
+    /** 家长外部用户ID */
+    @TableField("external_userid")
+    private String externalUserid;
+
     public Long getId() {
         return id;
     }
@@ -72,6 +80,22 @@ public class ParentStudentRelation extends BaseEntity {
 
     public void setRelationDesc(String relationDesc) {
         this.relationDesc = relationDesc;
+    }
+
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
+    }
+
+    public String getExternalUserid() {
+        return externalUserid;
+    }
+
+    public void setExternalUserid(String externalUserid) {
+        this.externalUserid = externalUserid;
     }
 
 }

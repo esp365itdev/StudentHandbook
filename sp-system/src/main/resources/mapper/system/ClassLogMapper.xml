@@ -23,7 +23,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectAllClassLogs" resultMap="ClassLogResult">
         <include refid="selectClassLogVo"/>
-        WHERE DATE(startDate) >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+        WHERE DATE(startDate) >= CURDATE()
         AND courseType IN ('功課', '測驗')
         ORDER BY startDate
     </select>
@@ -66,10 +66,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         WHERE id = #{id}
     </update>
     
-    <select id="selectPastMonthClassLogs" resultMap="ClassLogResult">
+        <select id="selectPastMonthClassLogs" resultMap="ClassLogResult">
         <include refid="selectClassLogVo"/>
         WHERE startDate BETWEEN DATE_SUB(CURDATE(), INTERVAL 1 MONTH) AND DATE_SUB(CURDATE(), INTERVAL 1 DAY)
         AND courseType IN ('功課', '測驗')
         ORDER BY startDate desc
+    </select>
+    
+    <select id="selectTodayClassLogs" parameterType="String" resultMap="ClassLogResult">
+        <include refid="selectClassLogVo"/>
+        WHERE DATE(startDate) = CURDATE()
+        AND courseType IN ('功課', '測驗')
+        ORDER BY startDate
+    </select>
+    
+    <select id="selectNextSevenDaysClassLogs" parameterType="String" resultMap="ClassLogResult">
+        <include refid="selectClassLogVo"/>
+        WHERE DATE(startDate) BETWEEN DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+        AND courseType IN ('功課', '測驗')
+        ORDER BY startDate
     </select>
 </mapper>

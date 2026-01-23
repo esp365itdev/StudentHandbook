@@ -72,24 +72,69 @@ public class StudentHandbookController extends BaseController {
             return createErrorResponse();
         }
     }
+    
+    @Log(title = "查询当天课程日志列表", businessType = BusinessType.SELECT)
+    @GetMapping("/today")
+    public TableDataInfo listToday() {
+        try {
+            // 验证token
+            String parentUserId = validateToken();
+            if (parentUserId == null) {
+                return createUnauthorizedResponse();
+            }
+            
+            // 从外部class_log表获取当天的数据
+            List<ClassLog> classLogs = classLogTransferService.getTodayClassLogs();
+
+            return createSuccessResponse(classLogs);
+        } catch (Exception e) {
+            logger.error("获取当天课程日志列表失败: {}", e.getMessage());
+            return createErrorResponse();
+        }
+    }
+    
+    @Log(title = "查询未来七天课程日志列表（不含当天）", businessType = BusinessType.SELECT)
+    @GetMapping("/nextSevenDays")
+    public TableDataInfo listNextSevenDays() {
+        try {
+            // 验证token
+            String parentUserId = validateToken();
+            if (parentUserId == null) {
+                return createUnauthorizedResponse();
+            }
+            
+            // 从外部class_log表获取未来七天（不含当天）的数据
+            List<ClassLog> classLogs = classLogTransferService.getNextSevenDaysClassLogs();
+
+            return createSuccessResponse(classLogs);
+        } catch (Exception e) {
+            logger.error("获取未来七天课程日志列表失败: {}", e.getMessage());
+            return createErrorResponse();
+        }
+    }
 
     @Log(title = "获取课程日志详细信息", businessType = BusinessType.SELECT)
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") String id) {
-        // 验证token
-        String parentUserId = validateToken();
-        if (parentUserId == null) {
-            return AjaxResult.error("无效的访问令牌或用户未登录");
-        }
-        
-        // 从外部class_log表获取指定ID的数据
-        List<ClassLog> classLogs = classLogTransferService.getAllClassLogsFromExternal();
-        ClassLog classLog = classLogs.stream()
-                .filter(log -> id.equals(log.getId()))
-                .findFirst()
-                .orElse(null);
+        try {
+            // 验证token
+            String parentUserId = validateToken();
+            if (parentUserId == null) {
+                return AjaxResult.error("无效的访问令牌或用户未登录");
+            }
+            
+            // 从外部class_log表获取指定ID的数据
+            List<ClassLog> classLogs = classLogTransferService.getAllClassLogsFromExternal();
+            ClassLog classLog = classLogs.stream()
+                    .filter(log -> id.equals(log.getId()))
+                    .findFirst()
+                    .orElse(null);
 
-        return AjaxResult.success(classLog);
+            return AjaxResult.success(classLog);
+        } catch (Exception e) {
+            logger.error("获取课程日志详细信息失败: {}", e.getMessage());
+            return AjaxResult.error("获取课程日志详细信息失败: " + e.getMessage());
+        }
     }
 
     @Log(title = "获取当前家长关联的学生列表", businessType = BusinessType.SELECT)

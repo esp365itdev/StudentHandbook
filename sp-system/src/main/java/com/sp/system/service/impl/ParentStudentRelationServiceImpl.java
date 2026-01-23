@@ -6,6 +6,7 @@ import com.sp.system.service.IParentStudentRelationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -17,17 +18,6 @@ public class ParentStudentRelationServiceImpl implements IParentStudentRelationS
 
     @Autowired
     private ParentStudentRelationMapper parentStudentRelationMapper;
-
-    /**
-     * 查询家长学生关系列表
-     *
-     * @param parentStudentRelation 家长学生关系信息
-     * @return 家长学生关系集合
-     */
-    @Override
-    public List<ParentStudentRelation> selectParentStudentRelationList(ParentStudentRelation parentStudentRelation) {
-        return parentStudentRelationMapper.selectParentStudentRelationList(parentStudentRelation);
-    }
 
     /**
      * 根据家长ID和学生ID查询关系
@@ -50,19 +40,6 @@ public class ParentStudentRelationServiceImpl implements IParentStudentRelationS
     @Override
     public List<ParentStudentRelation> selectByParentId(String parentUserId) {
         return parentStudentRelationMapper.selectByParentId(parentUserId);
-    }
-
-    /**
-     * 绑定家长与学生关系
-     *
-     * @param parentUserId 家长用户ID
-     * @param studentUserId 学生用户ID
-     * @param relationDesc 关系描述
-     * @return 成功或失败
-     */
-    @Override
-    public boolean bindParentStudentRelation(String parentUserId, String studentUserId, String relationDesc) {
-        return bindParentStudentRelation(parentUserId, studentUserId, relationDesc, null);
     }
 
     /**
@@ -96,21 +73,40 @@ public class ParentStudentRelationServiceImpl implements IParentStudentRelationS
             return result > 0;
         }
     }
-
+    
     /**
-     * 解绑家长与学生关系
+     * 插入家长学生关系
      *
-     * @param parentUserId 家长用户ID
-     * @param studentUserId 学生用户ID
-     * @return 成功或失败
+     * @param parentStudentRelation 家长学生关系
+     * @return 结果
      */
     @Override
-    public boolean unbindParentStudentRelation(String parentUserId, String studentUserId) {
-        ParentStudentRelation relation = selectByParentAndStudent(parentUserId, studentUserId);
-        if (relation != null) {
-            int result = parentStudentRelationMapper.deleteById(relation.getId());
-            return result > 0;
-        }
-        return false;
+    public int insert(ParentStudentRelation parentStudentRelation) {
+        parentStudentRelation.setCreateTime(LocalDateTime.now());
+        parentStudentRelation.setUpdateTime(LocalDateTime.now());
+        return parentStudentRelationMapper.insert(parentStudentRelation);
     }
+
+    /**
+     * 删除家长学生关系
+     *
+     * @param id 家长学生关系ID
+     * @return 结果
+     */
+    @Override
+    public int deleteById(Long id) {
+        return parentStudentRelationMapper.deleteById(id);
+    }
+
+    /**
+     * 安全插入家长学生关系（如果不存在则插入，否则更新）
+     *
+     * @param parentStudentRelation 家长学生关系
+     * @return 结果
+     */
+    @Override
+    public int insertIfNotExists(ParentStudentRelation parentStudentRelation) {
+        return parentStudentRelationMapper.insertIgnore(parentStudentRelation);
+    }
+
 }

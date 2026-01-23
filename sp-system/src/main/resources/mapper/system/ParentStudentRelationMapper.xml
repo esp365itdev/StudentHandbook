@@ -8,6 +8,8 @@
         <result property="studentUserId" column="student_user_id"/>
         <result property="studentName" column="student_name"/>
         <result property="relationDesc" column="relation_desc"/>
+        <result property="mobile" column="mobile"/>
+        <result property="externalUserid" column="external_userid"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
     </resultMap>
@@ -26,6 +28,12 @@
             </if>
             <if test="relationDesc != null and relationDesc != ''">
                 relation_desc,
+            </if>
+            <if test="mobile != null and mobile != ''">
+                mobile,
+            </if>
+            <if test="externalUserid != null and externalUserid != ''">
+                external_userid,
             </if>
             <if test="createTime != null">
                 create_time,
@@ -47,6 +55,12 @@
             <if test="relationDesc != null and relationDesc != ''">
                 #{relationDesc},
             </if>
+            <if test="mobile != null and mobile != ''">
+                #{mobile},
+            </if>
+            <if test="externalUserid != null and externalUserid != ''">
+                #{externalUserid},
+            </if>
             <if test="createTime != null">
                 #{createTime},
             </if>
@@ -54,6 +68,68 @@
                 #{updateTime},
             </if>
         </trim>
+    </insert>
+
+    <insert id="insertIgnore" parameterType="com.sp.system.entity.ParentStudentRelation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_parent_student_relation
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="parentUserId != null and parentUserId != ''">
+                parent_user_id,
+            </if>
+            <if test="studentUserId != null and studentUserId != ''">
+                student_user_id,
+            </if>
+            <if test="studentName != null and studentName != ''">
+                student_name,
+            </if>
+            <if test="relationDesc != null and relationDesc != ''">
+                relation_desc,
+            </if>
+            <if test="mobile != null and mobile != ''">
+                mobile,
+            </if>
+            <if test="externalUserid != null and externalUserid != ''">
+                external_userid,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="parentUserId != null and parentUserId != ''">
+                #{parentUserId},
+            </if>
+            <if test="studentUserId != null and studentUserId != ''">
+                #{studentUserId},
+            </if>
+            <if test="studentName != null and studentName != ''">
+                #{studentName},
+            </if>
+            <if test="relationDesc != null and relationDesc != ''">
+                #{relationDesc},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                #{mobile},
+            </if>
+            <if test="externalUserid != null and externalUserid != ''">
+                #{externalUserid},
+            </if>
+            <if test="createTime != null">
+                #{createTime},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime},
+            </if>
+        </trim>
+        ON DUPLICATE KEY UPDATE
+            student_name = #{studentName},
+            relation_desc = #{relationDesc},
+            mobile = #{mobile},
+            external_userid = #{externalUserid},
+            update_time = #{updateTime}
     </insert>
 
     <update id="updateById" parameterType="com.sp.system.entity.ParentStudentRelation">
@@ -71,6 +147,12 @@
             <if test="relationDesc != null and relationDesc != ''">
                 relation_desc = #{relationDesc},
             </if>
+            <if test="mobile != null and mobile != ''">
+                mobile = #{mobile},
+            </if>
+            <if test="externalUserid != null and externalUserid != ''">
+                external_userid = #{externalUserid},
+            </if>
             <if test="updateTime != null">
                 update_time = #{updateTime},
             </if>
@@ -79,7 +161,7 @@
     </update>
 
     <sql id="selectParentStudentRelationVo">
-        select id, parent_user_id, student_user_id, student_name, relation_desc, create_time, update_time
+        select id, parent_user_id, student_user_id, student_name, relation_desc, mobile, external_userid, create_time, update_time
         from sys_parent_student_relation
     </sql>
 
@@ -99,19 +181,19 @@
     </select>
 
     <select id="selectByParentAndStudent" parameterType="map" resultMap="ParentStudentRelationResult">
-        select id, parent_user_id, student_user_id, student_name, relation_desc, create_time, update_time
+        select id, parent_user_id, student_user_id, student_name, relation_desc, mobile, external_userid, create_time, update_time
         from sys_parent_student_relation
         where parent_user_id = #{parentUserId} and student_user_id = #{studentUserId}
     </select>
 
     <select id="selectByParentId" parameterType="String" resultMap="ParentStudentRelationResult">
-        select id, parent_user_id, student_user_id, student_name, relation_desc, create_time, update_time
+        select id, parent_user_id, student_user_id, student_name, relation_desc, mobile, external_userid, create_time, update_time
         from sys_parent_student_relation
         where parent_user_id = #{parentUserId}
     </select>
 
     <select id="selectById" parameterType="Long" resultMap="ParentStudentRelationResult">
-        select id, parent_user_id, student_user_id, student_name, relation_desc, create_time, update_time
+        select id, parent_user_id, student_user_id, student_name, relation_desc, mobile, external_userid, create_time, update_time
         from sys_parent_student_relation
         where id = #{id}
     </select>

@@ -31,13 +31,7 @@ public class WeChatWorkOAuthController extends BaseController {
     private WeChatWorkOAuth2Utils weChatWorkOAuth2Utils;
 
     @Autowired
-    private WeChatWorkSchoolUtils weChatWorkSchoolUtils;
-
-    @Autowired
     private TokenService tokenService;
-
-    @Autowired
-    private IParentStudentRelationService parentStudentRelationService;
 
     @Value("${sp.token.expireTime:7}")
     private int expireTimeInDays;
@@ -90,105 +84,44 @@ public class WeChatWorkOAuthController extends BaseController {
                         userInfo.getString("parent_userid") : userInfo.getString("student_userid");
                 logger.info("企业微信家校授权成功，用户ID: {}", userId);
 
-                // 使用获取到的用户ID，调用接口获取详细的家校用户信息
-                JSONObject schoolUserInfo = weChatWorkSchoolUtils.getSchoolUserDetail(userId);
-
-                // 检查获取详细信息是否成功
-                if (!schoolUserInfo.containsKey("errcode") || schoolUserInfo.getIntValue("errcode") == 0) {
-                    logger.info("成功获取家校用户详细信息: {}", schoolUserInfo);
-
-                    // 检查是否是家长用户，如果是家长则处理家长与学生的关系绑定
-                    if (schoolUserInfo.getInteger("user_type") != null && schoolUserInfo.getInteger("user_type") == 2) {
-                        // 用户类型为家长
-                        JSONObject parent = schoolUserInfo.getJSONObject("parent");
-                        if (parent != null && parent.getJSONArray("children") != null) {
-                            String parentUserId = parent.getString("parent_userid");
-
-                            // 遍历家长的孩子列表，建立绑定关系
-                            parent.getJSONArray("children").forEach(child -> {
-                                JSONObject childObj = (JSONObject) child;
-                                String studentUserId = childObj.getString("student_userid");
-                                String relation = childObj.getString("relation");
-
-                                // 获取学生姓名
-                                String studentName = null;
-                                try {
-                                    JSONObject studentDetail = weChatWorkSchoolUtils.getSchoolUserDetail(studentUserId);
-                                    if (studentDetail != null && studentDetail.containsKey("student")) {
-                                        JSONObject studentInfo = studentDetail.getJSONObject("student");
-                                        studentName = studentInfo.getString("name");
-                                    }
-                                } catch (Exception e) {
-                                    logger.error("获取学生详细信息失败: 学生ID={}, 错误={}", studentUserId, e.getMessage());
-                                }
-
-                                // 绑定家长与学生关系
-                                boolean bindSuccess = parentStudentRelationService.bindParentStudentRelation(
-                                        parentUserId,
-                                        studentUserId,
-                                        relation,
-                                        studentName
-                                );
-
-                                if (bindSuccess) {
-                                    logger.info("成功绑定家长与学生关系: 家长={}, 学生={}, 学生姓名={}, 关系={}", parentUserId, studentUserId, studentName, relation);
-                                } else {
-                                    logger.error("绑定家长与学生关系失败: 家长={}, 学生={}, 学生姓名={}, 关系={}", parentUserId, studentUserId, studentName, relation);
-                                }
-                            });
-                        }
-                    }
-
-                    // 清除临时session数据（如果不是测试情况和默认情况）
-                    if (!isWechatTest && !isDefault) {
-                        session.removeAttribute("wechat_oauth_state");
-                    }
-
-                    // 生成token（使用用户ID的哈希值作为用户ID，因为原ID可能是字符串）
-                    // 这里我们使用一个简单的哈希算法来生成数字ID
-                    long numericUserId = userId.hashCode();
-                    if (numericUserId < 0) {
-                        numericUserId = Math.abs(numericUserId);
-                    }
-                    if (numericUserId == 0) {
-                        numericUserId = System.currentTimeMillis();
-                    }
-
-                    String token;
-                    // 如果是家长用户，使用带有parentUserId的方法创建token
-                    if (schoolUserInfo.getInteger("user_type") != null && schoolUserInfo.getInteger("user_type") == 2) {
-                        JSONObject parent = schoolUserInfo.getJSONObject("parent");
-                        if (parent != null) {
-                            String parentUserId = parent.getString("parent_userid");
-                            // 由于TokenService接口没有暴露该方法，我们直接使用TokenService的实现类
-                            token = tokenService.createTokenWithParentUserId(numericUserId, parentUserId);
-                        } else {
-                            token = tokenService.createToken(numericUserId);
-                        }
-                    } else {
-                        token = tokenService.createToken(numericUserId);
-                    }
-
-                    logger.info("为用户 {} 生成token: {}", numericUserId, token);
-
-                    // 构建重定向URL，将token作为参数传递给前端
-                    String redirectUrl = "/sp-api/?token=" + token;
-
-                    // 如果是测试状态，重定向到登录页面，否则重定义到首页
-                    if (isWechatTest || isDefault) {
-                        redirectUrl = "/sp-api/?token=" + token;
-                    } else {
-                        redirectUrl = "/sp-api/?token=" + token;
-                    }
-
-                    // 重定向到前端页面
-                    response.sendRedirect(redirectUrl);
-                } else {
-                    logger.error("获取家校用户详细信息失败: {}", schoolUserInfo.getString("errmsg"));
-                    // 重定向到错误页面
-                    response.sendRedirect("/sp-api/login?error=user_detail_failed&message=" +
-                            java.net.URLEncoder.encode(schoolUserInfo.getString("errmsg"), "UTF-8"));
+                // 清除临时session数据（如果不是测试情况和默认情况）
+                if (!isWechatTest && !isDefault) {
+                    session.removeAttribute("wechat_oauth_state");
                 }
+
+                // 生成token（使用用户ID的哈希值作为用户ID，因为原ID可能是字符串）
+                // 这里我们使用一个简单的哈希算法来生成数字ID
+                long numericUserId = userId.hashCode();
+                if (numericUserId < 0) {
+                    numericUserId = Math.abs(numericUserId);
+                }
+                if (numericUserId == 0) {
+                    numericUserId = System.currentTimeMillis();
+                }
+
+                String token;
+                // 如果是家长用户（在userInfo中直接检查），使用带有parentUserId的方法创建token
+                if (userInfo.containsKey("parent_userid")) {
+                    String parentUserId = userInfo.getString("parent_userid");
+                    token = tokenService.createTokenWithParentUserId(numericUserId, parentUserId);
+                } else {
+                    token = tokenService.createToken(numericUserId);
+                }
+
+                logger.info("为用户 {} 生成token: {}", numericUserId, token);
+
+                // 构建重定向URL，将token作为参数传递给前端
+                String redirectUrl = "/sp-api/?token=" + token;
+
+                // 如果是测试状态，重定向到登录页面，否则重定义到首页
+                if (isWechatTest || isDefault) {
+                    redirectUrl = "/sp-api/?token=" + token;
+                } else {
+                    redirectUrl = "/sp-api/?token=" + token;
+                }
+
+                // 重定向到前端页面
+                response.sendRedirect(redirectUrl);
             } else {
                 logger.error("获取企业微信家校用户信息失败: {}", userInfo.getString("errmsg"));
                 // 重定向到错误页面

@@ -131,4 +131,30 @@ public class ClassLogTransferService {
             return java.util.Collections.emptyList();
         }
     }
+    
+    /**
+     * 获取当天的ClassLog数据
+     */
+    public List<ClassLog> getTodayClassLogs() {
+        try {
+            return classLogMapper.selectTodayClassLogs();
+        } catch (Exception e) {
+            logger.error("从本地数据库获取当天课程日志数据失败: {}", e.getMessage());
+            // 返回空列表而不是抛出异常，以防止前端页面因后端错误而空白
+            return java.util.Collections.emptyList();
+        }
+    }
+    
+    /**
+     * 获取未来七天（不含当天）的ClassLog数据
+     */
+    public List<ClassLog> getNextSevenDaysClassLogs() {
+        try {
+            return classLogMapper.selectNextSevenDaysClassLogs();
+        } catch (Exception e) {
+            logger.error("从本地数据库获取未来七天课程日志数据失败: {}", e.getMessage());
+            // 返回空列表而不是抛出异常，以防止前端页面因后端错误而空白
+            return java.util.Collections.emptyList();
+        }
+    }
 }

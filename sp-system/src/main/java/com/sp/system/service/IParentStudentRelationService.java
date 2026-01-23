@@ -9,13 +9,6 @@ import java.util.List;
  *
  */
 public interface IParentStudentRelationService {
-    /**
-     * 查询家长学生关系列表
-     *
-     * @param parentStudentRelation 家长学生关系信息
-     * @return 家长学生关系集合
-     */
-    List<ParentStudentRelation> selectParentStudentRelationList(ParentStudentRelation parentStudentRelation);
 
     /**
      * 根据家长ID和学生ID查询关系
@@ -35,16 +28,6 @@ public interface IParentStudentRelationService {
     List<ParentStudentRelation> selectByParentId(String parentUserId);
 
     /**
-     * 绑定家长与学生关系
-     *
-     * @param parentUserId 家长用户ID
-     * @param studentUserId 学生用户ID
-     * @param relationDesc 关系描述
-     * @return 成功或失败
-     */
-    boolean bindParentStudentRelation(String parentUserId, String studentUserId, String relationDesc);
-
-    /**
      * 绑定家长与学生关系（带学生姓名）
      *
      * @param parentUserId 家长用户ID
@@ -56,11 +39,28 @@ public interface IParentStudentRelationService {
     boolean bindParentStudentRelation(String parentUserId, String studentUserId, String relationDesc, String studentName);
 
     /**
-     * 解绑家长与学生关系
+     * 新增家长学生关系
      *
-     * @param parentUserId 家长用户ID
-     * @param studentUserId 学生用户ID
-     * @return 成功或失败
+     * @param parentStudentRelation 家长学生关系
+     * @return 结果
      */
-    boolean unbindParentStudentRelation(String parentUserId, String studentUserId);
+    int insert(ParentStudentRelation parentStudentRelation);
+
+    /**
+     * 删除家长学生关系
+     *
+     * @param id 家长学生关系ID
+     * @return 结果
+     */
+    int deleteById(Long id);
+
+    /**
+     * 安全插入家长学生关系（如果不存在则插入，否则更新）
+     *
+     * @param parentStudentRelation 家长学生关系
+     * @return 结果
+     */
+    int insertIfNotExists(ParentStudentRelation parentStudentRelation);
+
+
 }

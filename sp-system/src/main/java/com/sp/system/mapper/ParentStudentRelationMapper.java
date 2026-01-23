@@ -68,4 +68,12 @@ public interface ParentStudentRelationMapper {
      * @return 结果
      */
     int deleteById(@Param("id") Long id);
+
+    /**
+     * 安全插入家长学生关系（如果不存在）
+     *
+     * @param parentStudentRelation 家长学生关系信息
+     * @return 结果
+     */
+    int insertIgnore(ParentStudentRelation parentStudentRelation);
 }

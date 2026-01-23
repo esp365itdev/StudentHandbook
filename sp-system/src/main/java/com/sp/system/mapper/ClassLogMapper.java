@@ -55,4 +55,16 @@ public interface ClassLogMapper {
      * @return 课程日志列表
      */
     List<ClassLog> selectPastMonthClassLogs();
+    
+    /**
+     * 查询当天的课程日志数据
+     * @return 课程日志列表
+     */
+    List<ClassLog> selectTodayClassLogs();
+    
+    /**
+     * 查询未来七天（不含当天）的课程日志数据
+     * @return 课程日志列表
+     */
+    List<ClassLog> selectNextSevenDaysClassLogs();
 }

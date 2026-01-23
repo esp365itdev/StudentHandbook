@@ -114,6 +114,10 @@
                 <span class="student-name">{{ relation.studentName }}</span>
               </el-radio>
             </el-radio-group>
+            <!-- 学生列表为空时的提示 -->
+            <div v-if="studentRelations.length === 0" class="empty-student-list">
+              <p class="no-student-text">暂无学生数据</p>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -413,13 +417,14 @@ export default {
           today.getFullYear() === checkDate.getFullYear();
     },
 
-    // 檢查是否是未來7天內
+    // 檢查是否是未來7天內（不含今天）
     isInNextSevenDays(dateString) {
       const today = new Date();
       const checkDate = this.parseDate(dateString);
 
-      // 設置今天開始時間
+      // 設置明天開始時間（不含今天）
       const startDate = new Date(today);
+      startDate.setDate(today.getDate() + 1);
       startDate.setHours(0, 0, 0, 0);
 
       // 設置7天後的時間
@@ -493,13 +498,48 @@ export default {
     showTodayData() {
       this.viewMode = 'today';
       this.activeButton = 'today'; // 更新活動按鈕狀態
-      // 重新獲取數據，這會觸發相應的過濾
-      this.fetchHandbookList();
+      // 直接調用新的接口獲取當天的數據
+      this.fetchTodayHandbookList();
       // 滾動到頂部
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
+    },
+    
+    // 獲取當天的學生手冊列表
+    async fetchTodayHandbookList() {
+      this.loading = true;
+      try {
+        // 使用封裝的service實例，確保攜帶token
+        const response = await service.get(API_ENDPOINTS.STUDENT_HANDBOOK_TODAY);
+
+        // 根據後端返回的數據結構處理數據
+        let rawData = [];
+        if (response.data && response.data.rows) {
+          rawData = response.data.rows;
+        } else if (Array.isArray(response.data)) {
+          // 如果後端直接返回數組
+          rawData = response.data;
+        } else {
+          // 如果是其他結構，嘗試直接使用
+          rawData = response.data;
+        }
+
+        // 按時間分組數據
+        this.groupDataByTime(rawData);
+
+        // 重置到第一頁
+        this.currentPage = 1;
+
+      } catch (error) {
+        console.error('獲取當天學生手冊列表失敗:', error);
+        ElMessage.error('獲取數據失敗: ' + (error.message || '未知錯誤'));
+        // 使用空數組
+        this.groupDataByTime([]);
+      } finally {
+        this.loading = false;
+      }
     },
 
     // 顯示過去一個月數據
@@ -679,13 +719,48 @@ export default {
     showNextSevenDaysData() {
       this.viewMode = 'nextSevenDays';
       this.activeButton = 'future'; // 更新活動按鈕狀態
-      // 重新獲取數據，這會觸發相應的過濾
-      this.fetchHandbookList();
+      // 直接調用新的接口獲取未來七天（不含今天）的數據
+      this.fetchNextSevenDaysHandbookList();
       // 滾動到頂部
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
+    },
+    
+    // 獲取未來七天（不含今天）的學生手冊列表
+    async fetchNextSevenDaysHandbookList() {
+      this.loading = true;
+      try {
+        // 使用封裝的service實例，確保攜帶token
+        const response = await service.get(API_ENDPOINTS.STUDENT_HANDBOOK_NEXT_SEVEN_DAYS);
+
+        // 根據後端返回的數據結構處理數據
+        let rawData = [];
+        if (response.data && response.data.rows) {
+          rawData = response.data.rows;
+        } else if (Array.isArray(response.data)) {
+          // 如果後端直接返回數組
+          rawData = response.data;
+        } else {
+          // 如果是其他結構，嘗試直接使用
+          rawData = response.data;
+        }
+
+        // 按時間分組數據
+        this.groupDataByTime(rawData);
+
+        // 重置到第一頁
+        this.currentPage = 1;
+
+      } catch (error) {
+        console.error('獲取未來七天學生手冊列表失敗:', error);
+        ElMessage.error('獲取數據失敗: ' + (error.message || '未知錯誤'));
+        // 使用空數組
+        this.groupDataByTime([]);
+      } finally {
+        this.loading = false;
+      }
     },
 
     // 顯示當天數據（內部函數）
@@ -1173,6 +1248,19 @@ export default {
   border: none; /* 移除邊框 */
   max-height: unset; /* 移除最大高度限制 */
   overflow-y: visible; /* 移除滾動條 */
+}
+
+.empty-student-list {
+  text-align: center;
+  padding: 20px;
+}
+
+.no-student-text {
+  font-weight: bold;
+  text-align: center;
+  font-size: 16px;
+  color: #606266;
+  margin: 0;
 }
 
 .student-item-radio {
