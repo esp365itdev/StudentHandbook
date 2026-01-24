@@ -5,10 +5,14 @@ import com.sp.system.entity.Token;
 import com.sp.system.mapper.TokenMapper;
 import com.sp.system.service.TokenService;
 import com.sp.common.utils.uuid.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 
 /**
@@ -18,6 +22,8 @@ import java.time.LocalDateTime;
 @Service
 public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements TokenService {
 
+    private static final Logger logger = LoggerFactory.getLogger(TokenServiceImpl.class);
+
     @Autowired
     private TokenMapper tokenMapper;
     
@@ -25,6 +31,7 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
     private int expireTimeInDays;
 
     @Override
+    @Transactional
     public boolean validateToken(String tokenValue) {
         if (tokenValue == null || tokenValue.isEmpty()) {
             return false;
@@ -46,6 +53,7 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
     }
 
     @Override
+    @Transactional
     public String createToken(Long userId) {
         // 先删除该用户之前的token
         this.tokenMapper.deleteByUserId(userId);
@@ -65,11 +73,6 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
 
         return tokenValue;
     }
-
-    @Override
-    public boolean removeTokenByUserId(Long userId) {
-        return this.tokenMapper.deleteByUserId(userId) > 0;
-    }
     
     /**
      * 为家长用户创建token
@@ -78,6 +81,7 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
      * @param parentUserId 家长用户ID
      * @return token值
      */
+    @Transactional
     public String createTokenWithParentUserId(Long userId, String parentUserId) {
         // 先删除该用户之前的token
         this.tokenMapper.deleteByUserId(userId);
@@ -100,6 +104,7 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
     }
     
     @Override
+    @Transactional
     public String getParentUserIdByToken(String tokenValue) {
         if (tokenValue == null || tokenValue.isEmpty()) {
             return null;
@@ -119,25 +124,35 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
         
         return token.getParentUserId();
     }
-    
+
     @Override
-    public Long getUserIdByToken(String tokenValue) {
-        if (tokenValue == null || tokenValue.isEmpty()) {
+    public String getParentUserIdFromRequest(HttpServletRequest request) {
+        try {
+            // 从请求头中获取token
+            String token = request.getHeader("Authorization");
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            } else {
+                // 尝试从参数中获取
+                token = request.getParameter("token");
+            }
+
+            if (token == null || token.isEmpty()) {
+                logger.error("验证token失败: 缺少访问令牌");
+                return null;
+            }
+
+            // 验证token是否有效并获取家长ID
+            String parentUserId = getParentUserIdByToken(token);
+            if (parentUserId == null) {
+                logger.error("验证token失败: 无效的访问令牌或用户未登录");
+                return null;
+            }
+            
+            return parentUserId;
+        } catch (Exception e) {
+            logger.error("验证token时发生异常: {}", e.getMessage());
             return null;
         }
-        
-        Token token = this.tokenMapper.selectByTokenValue(tokenValue);
-        if (token == null) {
-            return null;
-        }
-        
-        // 检查token是否过期
-        if (token.getExpireTime().isBefore(LocalDateTime.now())) {
-            // 删除过期token
-            this.tokenMapper.deleteById(token.getId());
-            return null;
-        }
-        
-        return token.getUserId();
     }
 }

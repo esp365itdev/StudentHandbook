@@ -6,6 +6,7 @@ import com.sp.system.mapper.DepartmentParentBindingMapper;
 import com.sp.system.service.DepartmentParentBindingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 部门家长绑定服务层实现类
@@ -18,26 +19,13 @@ public class DepartmentParentBindingServiceImpl extends ServiceImpl<DepartmentPa
     private DepartmentParentBindingMapper departmentParentBindingMapper;
 
     @Override
-    public int insert(DepartmentParentBinding binding) {
-        return departmentParentBindingMapper.insert(binding);
+    @Transactional
+    public void deleteByDepartmentId(Long departmentId) {
+        departmentParentBindingMapper.deleteByDepartmentId(departmentId);
     }
 
     @Override
-    public boolean updateById(DepartmentParentBinding binding) {
-        return departmentParentBindingMapper.updateById(binding) > 0;
-    }
-
-    @Override
-    public int deleteById(Long id) {
-        return departmentParentBindingMapper.deleteById(id);
-    }
-
-    @Override
-    public int deleteByDepartmentId(Long departmentId) {
-        return departmentParentBindingMapper.deleteByDepartmentId(departmentId);
-    }
-
-    @Override
+    @Transactional
     public boolean insertIfNotExists(DepartmentParentBinding binding) {
         // 使用 INSERT IGNORE 来避免重复键错误
         departmentParentBindingMapper.insertIgnore(binding);

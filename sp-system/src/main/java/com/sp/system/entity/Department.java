@@ -1,7 +1,5 @@
 package com.sp.system.entity;
 
-import java.util.List;
-
 /**
  * 企业微信部门实体类
  */

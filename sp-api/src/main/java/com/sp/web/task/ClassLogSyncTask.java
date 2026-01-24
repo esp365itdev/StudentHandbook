@@ -1,7 +1,7 @@
 package com.sp.web.task;
 
 import com.sp.system.entity.ClassLog;
-import com.sp.web.service.ClassLogTransferService;
+import com.sp.system.service.IClassLogService;
 import com.sp.web.service.ExternalClassLogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,7 @@ public class ClassLogSyncTask {
     private ExternalClassLogService externalClassLogService;
     
     @Autowired
-    private ClassLogTransferService classLogTransferService;
+    private IClassLogService classLogService;
 
     /**
      * 每天下午5点40分执行课程日志数据同步（北京时间）
@@ -41,7 +41,7 @@ public class ClassLogSyncTask {
                 logger.info("从外部数据库获取到 {} 条课程日志数据", classLogs.size());
 
                 // 将数据传输到目标数据库
-                classLogTransferService.batchUpsertClassLogs(classLogs);
+                classLogService.batchUpsertClassLogs(classLogs);
 
                 logger.info("课程日志数据同步任务完成");
             } else {

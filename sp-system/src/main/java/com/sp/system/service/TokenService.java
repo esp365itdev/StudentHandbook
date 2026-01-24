@@ -1,5 +1,7 @@
 package com.sp.system.service;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * TokenService接口
  *
@@ -22,14 +24,6 @@ public interface TokenService {
     String createToken(Long userId);
 
     /**
-     * 删除用户的token
-     *
-     * @param userId 用户ID
-     * @return 是否删除成功
-     */
-    boolean removeTokenByUserId(Long userId);
-    
-    /**
      * 为家长用户创建token
      *
      * @param userId 用户ID
@@ -45,12 +39,12 @@ public interface TokenService {
      * @return 家长用户ID
      */
     String getParentUserIdByToken(String tokenValue);
-    
+
     /**
-     * 根据token值获取用户ID
+     * 从HTTP请求中验证token并获取家长用户ID
      *
-     * @param tokenValue token值
-     * @return 用户ID
+     * @param request HTTP请求
+     * @return 家长用户ID，验证失败返回null
      */
-    Long getUserIdByToken(String tokenValue);
+    String getParentUserIdFromRequest(HttpServletRequest request);
 }

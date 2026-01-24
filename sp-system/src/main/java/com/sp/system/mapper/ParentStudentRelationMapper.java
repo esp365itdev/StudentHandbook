@@ -12,22 +12,6 @@ import java.util.List;
  */
 @Mapper
 public interface ParentStudentRelationMapper {
-    /**
-     * 查询家长学生关系列表
-     *
-     * @param parentStudentRelation 家长学生关系信息
-     * @return 家长学生关系集合
-     */
-    List<ParentStudentRelation> selectParentStudentRelationList(ParentStudentRelation parentStudentRelation);
-
-    /**
-     * 根据家长ID和学生ID查询关系
-     *
-     * @param parentUserId 家长用户ID
-     * @param studentUserId 学生用户ID
-     * @return 家长学生关系
-     */
-    ParentStudentRelation selectByParentAndStudent(@Param("parentUserId") String parentUserId, @Param("studentUserId") String studentUserId);
 
     /**
      * 根据家长ID查询学生列表
@@ -36,38 +20,6 @@ public interface ParentStudentRelationMapper {
      * @return 家长学生关系集合
      */
     List<ParentStudentRelation> selectByParentId(@Param("parentUserId") String parentUserId);
-
-    /**
-     * 根据ID查询家长学生关系
-     *
-     * @param id 关系ID
-     * @return 家长学生关系
-     */
-    ParentStudentRelation selectById(@Param("id") Long id);
-
-    /**
-     * 新增家长学生关系
-     *
-     * @param parentStudentRelation 家长学生关系信息
-     * @return 结果
-     */
-    int insert(ParentStudentRelation parentStudentRelation);
-
-    /**
-     * 修改家长学生关系
-     *
-     * @param parentStudentRelation 家长学生关系信息
-     * @return 结果
-     */
-    int updateById(ParentStudentRelation parentStudentRelation);
-
-    /**
-     * 删除家长学生关系
-     *
-     * @param id 关系ID
-     * @return 结果
-     */
-    int deleteById(@Param("id") Long id);
 
     /**
      * 安全插入家长学生关系（如果不存在）

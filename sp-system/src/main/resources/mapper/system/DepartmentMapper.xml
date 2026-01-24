@@ -16,13 +16,6 @@
         <result property="groupChatId" column="group_chat_id"/>
     </resultMap>
 
-    <insert id="insertDepartment" parameterType="com.sp.system.entity.Department">
-        INSERT INTO sys_department (id, parent_id, name, type, register_year, standard_grade, 
-                                   order_num, is_graduated, open_group_chat, group_chat_id)
-        VALUES (#{id}, #{parentId}, #{name}, #{type}, #{registerYear}, #{standardGrade},
-                #{order}, #{isGraduated}, #{openGroupChat}, #{groupChatId})
-    </insert>
-
     <insert id="batchInsertDepartments" parameterType="java.util.List">
         INSERT INTO sys_department (id, parent_id, name, type, register_year, standard_grade, 
                                    order_num, is_graduated, open_group_chat, group_chat_id)
@@ -48,45 +41,6 @@
         SELECT id, parent_id, name, type, register_year, standard_grade, order_num, 
                is_graduated, open_group_chat, group_chat_id
         FROM sys_department
-        WHERE id = #{id}
-    </select>
-
-    <select id="selectAll" resultMap="DepartmentResultMap">
-        SELECT id, parent_id, name, type, register_year, standard_grade, order_num, 
-               is_graduated, open_group_chat, group_chat_id
-        FROM sys_department
-        ORDER BY parent_id, order_num
-    </select>
-
-    <select id="selectByParentId" parameterType="java.lang.Integer" resultMap="DepartmentResultMap">
-        SELECT id, parent_id, name, type, register_year, standard_grade, order_num, 
-               is_graduated, open_group_chat, group_chat_id
-        FROM sys_department
-        WHERE parent_id = #{parentId}
-        ORDER BY order_num
-    </select>
-
-    <update id="updateDepartment" parameterType="com.sp.system.entity.Department">
-        UPDATE sys_department
-        SET parent_id = #{parentId},
-            name = #{name},
-            type = #{type},
-            register_year = #{registerYear},
-            standard_grade = #{standardGrade},
-            order_num = #{order},
-            is_graduated = #{isGraduated},
-            open_group_chat = #{openGroupChat},
-            group_chat_id = #{groupChatId}
-        WHERE id = #{id}
-    </update>
-
-    <delete id="deleteById" parameterType="java.lang.Long">
-        DELETE FROM sys_department WHERE id = #{id}
-    </delete>
-
-    <select id="countById" parameterType="java.lang.Long" resultType="int">
-        SELECT COUNT(1) 
-        FROM sys_department 
         WHERE id = #{id}
     </select>
 

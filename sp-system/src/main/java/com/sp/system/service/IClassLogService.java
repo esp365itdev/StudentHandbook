@@ -9,26 +9,50 @@ import java.util.List;
  * 课程日志Service接口
  */
 public interface IClassLogService {
-    /**
-     * 查询课程日志列表
-     *
-     * @param classLog 课程日志信息
-     * @return 课程日志集合
-     */
-    TableDataInfo selectClassLogList(ClassLog classLog);
 
     /**
-     * 根据ID获取课程日志信息
-     *
-     * @param id 课程日志ID
-     * @return 课程日志信息
-     */
-    ClassLog getClassLogById(String id);
-
-    /**
-     * 查询所有课程日志
-     *
+     * 根据家长用户ID获取课程日志列表
+     * 
+     * @param parentUserId 家长用户ID
      * @return 课程日志列表
      */
-    List<ClassLog> selectAllClassLogs();
+    List<ClassLog> getClassLogListByParentUserId(String parentUserId);
+
+    /**
+     * 根据家长用户ID获取当天的课程日志列表
+     * 
+     * @param parentUserId 家长用户ID
+     * @return 课程日志列表
+     */
+    List<ClassLog> getTodayClassLogListByParentUserId(String parentUserId);
+    
+    /**
+     * 根据家长用户ID获取未来七天（不含当天）的课程日志列表
+     * 
+     * @param parentUserId 家长用户ID
+     * @return 课程日志列表
+     */
+    List<ClassLog> getNextSevenDaysClassLogListByParentUserId(String parentUserId);
+    
+    /**
+     * 根据家长用户ID和日志ID获取课程日志详细信息
+     * 
+     * @param id 课程日志ID
+     * @param parentUserId 家长用户ID
+     * @return 课程日志信息
+     */
+    ClassLog getClassLogDetailByParentUserId(String id, String parentUserId);
+    
+    /**
+     * 批量插入或更新ClassLog数据到目标数据库
+     */
+    void batchUpsertClassLogs(List<ClassLog> classLogs);
+    
+    /**
+     * 根据家长用户ID获取过去一个月的课程日志列表
+     * 
+     * @param parentUserId 家长用户ID
+     * @return 课程日志列表
+     */
+    List<ClassLog> getPastMonthClassLogListByParentUserId(String parentUserId);
 }

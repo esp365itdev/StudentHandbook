@@ -10,58 +10,6 @@
         <result property="updateTime" column="update_time"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.sp.system.entity.DepartmentParentBinding" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO sys_department_parent_binding
-        <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="departmentId != null">
-                department_id,
-            </if>
-            <if test="parentUserId != null and parentUserId != ''">
-                parent_user_id,
-            </if>
-            <if test="createTime != null">
-                create_time,
-            </if>
-            <if test="updateTime != null">
-                update_time,
-            </if>
-        </trim>
-        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
-            <if test="departmentId != null">
-                #{departmentId},
-            </if>
-            <if test="parentUserId != null and parentUserId != ''">
-                #{parentUserId},
-            </if>
-            <if test="createTime != null">
-                #{createTime},
-            </if>
-            <if test="updateTime != null">
-                #{updateTime},
-            </if>
-        </trim>
-    </insert>
-
-    <update id="updateById" parameterType="com.sp.system.entity.DepartmentParentBinding">
-        UPDATE sys_department_parent_binding
-        <set>
-            <if test="departmentId != null">
-                department_id = #{departmentId},
-            </if>
-            <if test="parentUserId != null and parentUserId != ''">
-                parent_user_id = #{parentUserId},
-            </if>
-            <if test="updateTime != null">
-                update_time = #{updateTime},
-            </if>
-        </set>
-        WHERE id = #{id}
-    </update>
-
-    <select id="selectByDepartmentId" parameterType="long" resultType="java.lang.String">
-        SELECT parent_user_id FROM sys_department_parent_binding WHERE department_id = #{departmentId}
-    </select>
-
     <select id="selectByParentUserId" parameterType="string" resultType="java.lang.Long">
         SELECT department_id FROM sys_department_parent_binding WHERE parent_user_id = #{parentUserId}
     </select>
@@ -69,25 +17,6 @@
     <delete id="deleteByDepartmentId" parameterType="long">
         DELETE FROM sys_department_parent_binding WHERE department_id = #{departmentId}
     </delete>
-
-    <delete id="deleteByParentUserId" parameterType="string">
-        DELETE FROM sys_department_parent_binding WHERE parent_user_id = #{parentUserId}
-    </delete>
-
-    <select id="selectById" parameterType="Long" resultMap="DepartmentParentBindingResult">
-        select id, department_id, parent_user_id, create_time, update_time
-        from sys_department_parent_binding
-        where id = #{id}
-    </select>
-
-    <delete id="deleteById" parameterType="Long">
-        delete from sys_department_parent_binding where id = #{id}
-    </delete>
-
-    <select id="checkBindingExists" resultType="java.lang.Long">
-        SELECT id FROM sys_department_parent_binding 
-        WHERE department_id = #{departmentId} AND parent_user_id = #{parentUserId}
-    </select>
 
     <insert id="insertIgnore" parameterType="com.sp.system.entity.DepartmentParentBinding">
         INSERT INTO sys_department_parent_binding
