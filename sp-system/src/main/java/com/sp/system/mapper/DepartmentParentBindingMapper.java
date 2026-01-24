@@ -31,4 +31,10 @@ public interface DepartmentParentBindingMapper extends BaseMapper<DepartmentPare
      * @return 影响的行数
      */
     int insertIgnore(DepartmentParentBinding binding);
+
+    /**
+     * 查询所有唯一的家长用户ID
+     * @return 家长用户ID列表
+     */
+    List<String> selectAllParentUserIds();
 }

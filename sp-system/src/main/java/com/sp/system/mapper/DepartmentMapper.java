@@ -21,4 +21,9 @@ public interface DepartmentMapper {
      */
     void batchInsertDepartments(List<Department> departments);
 
+    /**
+     * 查询特定结构的班级部门ID
+     * @return 部门ID
+     */
+    Long selectClassDepartmentId();
 }

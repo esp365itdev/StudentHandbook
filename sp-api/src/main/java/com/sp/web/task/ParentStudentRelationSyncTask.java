@@ -7,6 +7,7 @@ import com.sp.common.utils.http.HttpUtils;
 import com.sp.system.entity.DepartmentParentBinding;
 import com.sp.system.entity.ParentStudentRelation;
 import com.sp.system.service.DepartmentParentBindingService;
+import com.sp.system.service.DepartmentService;
 import com.sp.system.service.IParentStudentRelationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,9 @@ public class ParentStudentRelationSyncTask {
     @Autowired
     private DepartmentParentBindingService departmentParentBindingService;
 
+    @Autowired
+    private DepartmentService departmentService;
+
     private static final AtomicBoolean isExecuting = new AtomicBoolean(false);
 
     /**
@@ -50,11 +54,18 @@ public class ParentStudentRelationSyncTask {
         }
         
         try {
-            logger.info("开始执行家长学生关系同步任务，部门ID: 16593");
+            // 动态获取目标部门ID
+            Long targetDepartmentId = departmentService.getClassDepartmentId();
+            if (targetDepartmentId == null) {
+                logger.error("无法获取目标部门ID，同步任务终止");
+                return;
+            }
+            
+            logger.info("开始执行家长学生关系同步任务，部门ID: {}", targetDepartmentId);
 
             // 获取access_token并调用获取部门家长列表接口
             String accessToken = weChatWorkSchoolUtils.getAccessToken();
-            String parentListUrl = "https://qyapi.weixin.qq.com/cgi-bin/school/user/list_parent?access_token=" + accessToken + "&department_id=16593";
+            String parentListUrl = "https://qyapi.weixin.qq.com/cgi-bin/school/user/list_parent?access_token=" + accessToken + "&department_id=" + targetDepartmentId;
 
             String parentResponse = HttpUtils.sendGet(parentListUrl);
             logger.info("获取部门家长列表结果: {}", parentResponse);
@@ -67,7 +78,7 @@ public class ParentStudentRelationSyncTask {
                     logger.info("成功获取到 {} 个家长信息", parentsArray.size());
                     
                     // 清除旧的部门家长绑定数据
-                    departmentParentBindingService.deleteByDepartmentId(16593L);
+                    departmentParentBindingService.deleteByDepartmentId(targetDepartmentId);
                     
                     // 遍历家长数据并保存到数据库
                     for (int i = 0; i < parentsArray.size(); i++) {
@@ -76,20 +87,6 @@ public class ParentStudentRelationSyncTask {
                         String parentUserId = parentObj.getString("parent_userid");
                         String mobile = parentObj.getString("mobile");
                         String externalUserid = parentObj.getString("external_userid");
-                        
-                        // 创建部门家长绑定记录
-                        DepartmentParentBinding binding = new DepartmentParentBinding();
-                        binding.setDepartmentId(16593L);
-                        binding.setParentUserId(parentUserId);
-                        binding.setCreateTime(LocalDateTime.now());
-                        binding.setUpdateTime(LocalDateTime.now());
-                        
-                        boolean bindingResult = departmentParentBindingService.insertIfNotExists(binding);
-                        if (bindingResult) {
-                            logger.info("  已创建/确认部门家长绑定记录: parentUserId={}, departmentId={}", parentUserId, 16593L);
-                        } else {
-                            logger.warn("  创建部门家长绑定记录失败: parentUserId={}, departmentId={}", parentUserId, 16593L);
-                        }
                         
                         // 处理孩子信息数组
                         JSONArray childrenArray = parentObj.getJSONArray("children");
@@ -101,6 +98,21 @@ public class ParentStudentRelationSyncTask {
                                 String studentUserId = childObj.getString("student_userid");
                                 String relation = childObj.getString("relation");
                                 String name = childObj.getString("name");
+                                
+                                // 创建部门家长绑定记录（带学生ID）
+                                DepartmentParentBinding binding = new DepartmentParentBinding();
+                                binding.setDepartmentId(targetDepartmentId);
+                                binding.setParentUserId(parentUserId);
+                                binding.setStudentUserId(studentUserId); // 添加学生用户ID
+                                binding.setCreateTime(LocalDateTime.now());
+                                binding.setUpdateTime(LocalDateTime.now());
+                                
+                                boolean bindingResult = departmentParentBindingService.insertIfNotExists(binding);
+                                if (bindingResult) {
+                                    logger.info("  已创建/确认部门家长绑定记录: parentUserId={}, studentUserId={}, departmentId={}", parentUserId, studentUserId, targetDepartmentId);
+                                } else {
+                                    logger.warn("  创建部门家长绑定记录失败: parentUserId={}, studentUserId={}, departmentId={}", parentUserId, studentUserId, targetDepartmentId);
+                                }
                                 
                                 // 使用安全插入方法处理家长学生关系记录（如果不存在则插入，否则更新）
                                 ParentStudentRelation relationEntity = new ParentStudentRelation();
@@ -122,9 +134,21 @@ public class ParentStudentRelationSyncTask {
                             }
                         } else {
                             logger.info("  孩子数量: 0");
+                            // 创建部门家长绑定记录（无学生ID）
+                            DepartmentParentBinding binding = new DepartmentParentBinding();
+                            binding.setDepartmentId(targetDepartmentId);
+                            binding.setParentUserId(parentUserId);
+                            binding.setCreateTime(LocalDateTime.now());
+                            binding.setUpdateTime(LocalDateTime.now());
+                            
+                            boolean bindingResult = departmentParentBindingService.insertIfNotExists(binding);
+                            if (bindingResult) {
+                                logger.info("  已创建/确认部门家长绑定记录: parentUserId={}, departmentId={}", parentUserId, targetDepartmentId);
+                            } else {
+                                logger.warn("  创建部门家长绑定记录失败: parentUserId={}, departmentId={}", parentUserId, targetDepartmentId);
+                            }
                         }
                     }
-                    
                     logger.info("家长数据同步完成，共处理 {} 个家长", parentsArray.size());
                 } else {
                     logger.info("部门家长列表为空");
@@ -138,7 +162,6 @@ public class ParentStudentRelationSyncTask {
             // 确保执行完成后释放锁
             isExecuting.set(false);
         }
-
         logger.info("家长学生关系同步任务执行完成");
     }
 }

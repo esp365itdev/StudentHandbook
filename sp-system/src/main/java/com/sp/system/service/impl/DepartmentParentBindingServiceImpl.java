@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * 部门家长绑定服务层实现类
  *
@@ -31,5 +33,10 @@ public class DepartmentParentBindingServiceImpl extends ServiceImpl<DepartmentPa
         departmentParentBindingMapper.insertIgnore(binding);
         // INSERT IGNORE 如果记录已存在则不会插入，影响行数为0；如果插入新记录则影响行数为1
         return true; // 总是返回true，因为无论是否实际插入，操作都是成功的
+    }
+
+    @Override
+    public List<String> getAllParentUserIds() {
+        return departmentParentBindingMapper.selectAllParentUserIds();
     }
 }

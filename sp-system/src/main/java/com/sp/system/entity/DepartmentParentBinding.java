@@ -26,6 +26,10 @@ public class DepartmentParentBinding extends BaseEntity {
     @TableField("parent_user_id")
     private String parentUserId;
 
+    /** 学生用户ID */
+    @TableField("student_user_id")
+    private String studentUserId;
+
     public Long getId() {
         return id;
     }
@@ -48,5 +52,13 @@ public class DepartmentParentBinding extends BaseEntity {
 
     public void setParentUserId(String parentUserId) {
         this.parentUserId = parentUserId;
+    }
+
+    public String getStudentUserId() {
+        return studentUserId;
+    }
+
+    public void setStudentUserId(String studentUserId) {
+        this.studentUserId = studentUserId;
     }
 }

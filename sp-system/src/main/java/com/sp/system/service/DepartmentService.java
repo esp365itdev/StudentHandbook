@@ -21,4 +21,9 @@ public interface DepartmentService {
      */
     List<Department> getDepartmentsByParentUserId(String parentUserId);
 
+    /**
+     * 查询特定结构的班级部门ID
+     * @return 部门ID
+     */
+    Long getClassDepartmentId();
 }

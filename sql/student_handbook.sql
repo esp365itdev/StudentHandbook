@@ -53,10 +53,10 @@ create table sys_department_parent_binding (
   id                bigint(20)      not null auto_increment    comment '主键ID',
   department_id     bigint(20)      not null                   comment '部门ID',
   parent_user_id    varchar(64)     not null                   comment '家长用户ID',
+  student_user_id   varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '学生用户ID',
   create_time       datetime                                   comment '创建时间',
   update_time       datetime                                   comment '更新时间',
-  primary key (id),
-  unique key uk_dept_parent (department_id, parent_user_id)
+  primary key (id)
 ) engine=innodb auto_increment=1 comment = '部门家长绑定表';
 
 -- Token表

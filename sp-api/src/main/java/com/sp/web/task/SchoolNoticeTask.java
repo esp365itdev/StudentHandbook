@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.sp.common.utils.WeChatWorkSchoolUtils;
 import com.sp.common.utils.http.HttpUtils;
+import com.sp.system.service.DepartmentParentBindingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ public class SchoolNoticeTask {
     @Autowired
     private WeChatWorkSchoolUtils weChatWorkSchoolUtils;
 
+    @Autowired
+    private DepartmentParentBindingService departmentParentBindingService;
+
     private static final AtomicBoolean isExecuting = new AtomicBoolean(false);
     /**
      * 每周一到周五下午6点执行学校通知发送任务（北京时间）
@@ -47,9 +51,8 @@ public class SchoolNoticeTask {
             Map<String, Object> noticeRequest = new HashMap<>();
             noticeRequest.put("recv_scope", 0);
 
-            List<String> toParentUserId = new ArrayList<>();
-            toParentUserId.add("e4634d7bc64afa3e3462c6d6e4f6fd74");
-            toParentUserId.add("983f1781f310cb24e15da86cc43efd55");
+            // 从sys_department_parent_binding表获取parent_user_id列表
+            List<String> toParentUserId = departmentParentBindingService.getAllParentUserIds();
 
             noticeRequest.put("to_parent_userid", toParentUserId);
             noticeRequest.put("to_student_userid", new ArrayList<>());

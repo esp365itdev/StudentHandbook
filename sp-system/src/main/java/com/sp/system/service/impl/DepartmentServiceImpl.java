@@ -50,4 +50,8 @@ public class DepartmentServiceImpl implements DepartmentService {
        
     }
 
+    @Override
+    public Long getClassDepartmentId() {
+        return departmentMapper.selectClassDepartmentId();
+    }
 }

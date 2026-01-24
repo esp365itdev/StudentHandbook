@@ -44,4 +44,15 @@
         WHERE id = #{id}
     </select>
 
+    <select id="selectClassDepartmentId" resultType="java.lang.Long">
+        SELECT d1.id
+        FROM sys_department d1
+        JOIN sys_department d2 ON d1.parent_id = d2.id
+        JOIN sys_department d3 ON d2.parent_id = d3.id
+        WHERE 
+          d3.type = 3 AND d3.name = '2025' AND d3.parent_id = 2
+          AND d2.type = 2 AND d2.name = 'P2'
+          AND d1.type = 1 AND d1.name = 'P2_F_家長'
+    </select>
+
 </mapper>
