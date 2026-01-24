@@ -10,10 +10,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 课程日志数据同步定时任务
- * 每天下午5点30分同步外部服务器的class_log数据
+ * 每週一到週五午5点40分执行课程日志数据同步（北京时间）
  */
 @Component
 public class ClassLogSyncTask {
@@ -26,14 +27,22 @@ public class ClassLogSyncTask {
     @Autowired
     private IClassLogService classLogService;
 
+    private static final AtomicBoolean isExecuting = new AtomicBoolean(false);
+    
     /**
-     * 每天下午5点40分执行课程日志数据同步（北京时间）
+     * 每週一到週五午5点40分执行课程日志数据同步（北京时间）
      */
     @Scheduled(cron = "0 40 17 ? * MON-FRI", zone = "Asia/Shanghai")
     public void syncClassLogData() {
-        logger.info("开始执行课程日志数据同步任务");
-
+        // 使用AtomicBoolean确保同一时间只有一个实例在执行
+        if (!isExecuting.compareAndSet(false, true)) {
+            logger.info("课程日志数据同步任务已在执行中，跳过本次执行");
+            return;
+        }
+        
         try {
+            logger.info("开始执行课程日志数据同步任务");
+
             // 从外部数据库获取所有课程日志数据
             List<ClassLog> classLogs = externalClassLogService.getAllClassLogsFromExternal();
             
@@ -49,6 +58,9 @@ public class ClassLogSyncTask {
             }
         } catch (Exception e) {
             logger.error("同步课程日志数据失败", e);
+        } finally {
+            // 确保执行完成后释放锁
+            isExecuting.set(false);
         }
 
         logger.info("课程日志数据同步任务执行完成");

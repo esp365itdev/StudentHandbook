@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 部门数据同步定时任务
@@ -30,14 +31,22 @@ public class DepartmentSyncTask {
     @Autowired
     private DepartmentService departmentService;
 
+    private static final AtomicBoolean isExecuting = new AtomicBoolean(false);
+
     /**
      * 每天凌晨12点执行部门数据同步
      */
     @Scheduled(cron = "0 0 0 * * ?")
     public void syncDepartmentData() {
-        logger.info("开始执行部门数据同步任务");
-
+        // 使用AtomicBoolean确保同一时间只有一个实例在执行
+        if (!isExecuting.compareAndSet(false, true)) {
+            logger.info("部门数据同步任务已在执行中，跳过本次执行");
+            return;
+        }
+        
         try {
+            logger.info("开始执行部门数据同步任务");
+
             // 获取access_token并调用部门列表接口
             String accessToken = weChatWorkSchoolUtils.getAccessToken();
             String departmentListUrl = "https://qyapi.weixin.qq.com/cgi-bin/school/department/list?access_token=" + accessToken;
@@ -81,6 +90,9 @@ public class DepartmentSyncTask {
             }
         } catch (Exception e) {
             logger.error("同步部门数据失败", e);
+        } finally {
+            // 确保执行完成后释放锁
+            isExecuting.set(false);
         }
 
         logger.info("部门数据同步任务执行完成");

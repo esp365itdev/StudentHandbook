@@ -15,10 +15,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 家长学生关系同步定时任务
- * 每天0点开始更新部门ID为16593的家长数据
+ *
  */
 @Component
 public class ParentStudentRelationSyncTask {
@@ -34,15 +35,23 @@ public class ParentStudentRelationSyncTask {
     @Autowired
     private DepartmentParentBindingService departmentParentBindingService;
 
+    private static final AtomicBoolean isExecuting = new AtomicBoolean(false);
+
     /**
      * 每天凌晨0点执行部门家长数据同步
-     * 部门ID为16593
+     *
      */
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "0 30 0 * * ?")
     public void syncParentStudentRelationData() {
-        logger.info("开始执行家长学生关系同步任务，部门ID: 16593");
-
+        // 使用AtomicBoolean确保同一时间只有一个实例在执行
+        if (!isExecuting.compareAndSet(false, true)) {
+            logger.info("家长学生关系同步任务已在执行中，跳过本次执行");
+            return;
+        }
+        
         try {
+            logger.info("开始执行家长学生关系同步任务，部门ID: 16593");
+
             // 获取access_token并调用获取部门家长列表接口
             String accessToken = weChatWorkSchoolUtils.getAccessToken();
             String parentListUrl = "https://qyapi.weixin.qq.com/cgi-bin/school/user/list_parent?access_token=" + accessToken + "&department_id=16593";
@@ -125,6 +134,9 @@ public class ParentStudentRelationSyncTask {
             }
         } catch (Exception e) {
             logger.error("同步家长学生关系数据失败", e);
+        } finally {
+            // 确保执行完成后释放锁
+            isExecuting.set(false);
         }
 
         logger.info("家长学生关系同步任务执行完成");

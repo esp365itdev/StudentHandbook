@@ -14,10 +14,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 学校通知定时发送任务
- * 每天下午6点定时发送学校通知给家长和学生
+ * 每周一到周五下午6点执行学校通知发送任务（北京时间）
  */
 @Component
 public class SchoolNoticeTask {
@@ -27,24 +28,34 @@ public class SchoolNoticeTask {
     @Autowired
     private WeChatWorkSchoolUtils weChatWorkSchoolUtils;
 
+    private static final AtomicBoolean isExecuting = new AtomicBoolean(false);
     /**
      * 每周一到周五下午6点执行学校通知发送任务（北京时间）
      */
     @Scheduled(cron = "0 0 18 ? * MON-FRI", zone = "Asia/Shanghai")
     public void sendSchoolNotice() {
-        logger.info("开始执行定时学校通知发送任务");
-
+        // 使用AtomicBoolean确保同一时间只有一个实例在执行
+        if (!isExecuting.compareAndSet(false, true)) {
+            logger.info("学校通知发送任务已在执行中，跳过本次执行");
+            return;
+        }
+        
         try {
+            logger.info("开始执行定时学校通知发送任务");
+
             // 构造请求参数
             Map<String, Object> noticeRequest = new HashMap<>();
             noticeRequest.put("recv_scope", 0);
 
-            noticeRequest.put("to_parent_userid", new ArrayList<>());
+            List<String> toParentUserId = new ArrayList<>();
+            toParentUserId.add("e4634d7bc64afa3e3462c6d6e4f6fd74");
+            toParentUserId.add("983f1781f310cb24e15da86cc43efd55");
+
+            noticeRequest.put("to_parent_userid", toParentUserId);
             noticeRequest.put("to_student_userid", new ArrayList<>());
 
-            List<String> toPartyIds = new ArrayList<>();
-            toPartyIds.add("16593");
-            noticeRequest.put("to_party", toPartyIds);
+
+            noticeRequest.put("to_party", new ArrayList<>());
             noticeRequest.put("toall", 0);
             noticeRequest.put("msgtype", "text");
             noticeRequest.put("agentid", 1000033);
@@ -75,6 +86,9 @@ public class SchoolNoticeTask {
             logger.info("学校通知发送结果: errcode={}, errmsg={}", result.getInteger("errcode"), result.getString("errmsg"));
         } catch (Exception e) {
             logger.error("定时发送学校通知失败", e);
+        } finally {
+            // 确保执行完成后释放锁
+            isExecuting.set(false);
         }
 
         logger.info("定时学校通知发送任务执行完成");
