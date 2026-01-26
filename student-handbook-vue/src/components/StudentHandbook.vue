@@ -19,7 +19,7 @@
           </el-button>
 
           <!-- 用戶切換按鈕 -->
-          <el-button class="user-switch-btn" type="primary" plain @click="toggleUserMenu">
+          <el-button v-if="false" class="user-switch-btn" type="primary" plain @click="toggleUserMenu">
             <template #icon>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path
